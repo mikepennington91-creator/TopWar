@@ -119,6 +119,81 @@ export default function Settings() {
     }
   };
 
+  const handleAddModerator = async (e) => {
+    e.preventDefault();
+    
+    if (!addModForm.username || !addModForm.password) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('moderator_token');
+      await axios.post(
+        `${API}/auth/register`,
+        addModForm,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`Moderator ${addModForm.username} added successfully!`);
+      setAddModForm({ username: "", password: "", role: "moderator" });
+      fetchModerators();
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.detail || "Failed to add moderator");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleStatus = async (username, currentStatus) => {
+    const newStatus = currentStatus === "active" ? "disabled" : "active";
+    const action = newStatus === "active" ? "enable" : "disable";
+    
+    if (!window.confirm(`Are you sure you want to ${action} ${username}?`)) {
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('moderator_token');
+      await axios.patch(
+        `${API}/moderators/${username}/status`,
+        { status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`Moderator ${username} ${action}d successfully!`);
+      fetchModerators();
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.detail || `Failed to ${action} moderator`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteModerator = async (username) => {
+    if (!window.confirm(`Are you sure you want to DELETE ${username}? This action cannot be undone!`)) {
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('moderator_token');
+      await axios.delete(
+        `${API}/moderators/${username}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`Moderator ${username} deleted successfully!`);
+      fetchModerators();
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.detail || "Failed to delete moderator");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getRoleBadge = (role) => {
     const colors = {
       admin: "text-red-400",
