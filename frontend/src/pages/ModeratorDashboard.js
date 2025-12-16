@@ -278,37 +278,50 @@ export default function ModeratorDashboard() {
               <tbody className="divide-y divide-slate-800">
                 {filteredApplications.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-8 text-center text-slate-400">
+                    <td colSpan="7" className="px-6 py-8 text-center text-slate-400">
                       No applications found.
                     </td>
                   </tr>
                 ) : (
-                  filteredApplications.map((app) => (
-                    <tr key={app.id} data-testid={`application-row-${app.id}`} className="hover:bg-slate-900/30 transition-colors">
-                      <td className="px-6 py-4">
-                        <div>
-                          <p className="font-semibold text-slate-200">{app.name}</p>
-                          <p className="text-sm text-slate-500 mono">{app.discord_handle}</p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-slate-300">{app.position}</td>
-                      <td className="px-6 py-4 text-slate-300 mono">{app.server}</td>
-                      <td className="px-6 py-4">{getStatusBadge(app.status)}</td>
-                      <td className="px-6 py-4 text-slate-400 text-sm">
-                        {new Date(app.submitted_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4">
-                        <Button
-                          data-testid={`view-btn-${app.id}`}
-                          onClick={() => setSelectedApp(app)}
-                          size="sm"
-                          className="bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-sm"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))
+                  filteredApplications.map((app) => {
+                    const voteCounts = getVoteCounts(app.votes);
+                    return (
+                      <tr key={app.id} data-testid={`application-row-${app.id}`} className="hover:bg-slate-900/30 transition-colors">
+                        <td className="px-6 py-4">
+                          <div>
+                            <p className="font-semibold text-slate-200">{app.name}</p>
+                            <p className="text-sm text-slate-500 mono">{app.discord_handle}</p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-slate-300">{app.position}</td>
+                        <td className="px-6 py-4 text-slate-300 mono">{app.server}</td>
+                        <td className="px-6 py-4">
+                          <div className="flex gap-3">
+                            <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                              <ThumbsUp className="h-3 w-3" /> {voteCounts.approve}
+                            </span>
+                            <span className="text-red-400 font-semibold flex items-center gap-1">
+                              <ThumbsDown className="h-3 w-3" /> {voteCounts.reject}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">{getStatusBadge(app.status)}</td>
+                        <td className="px-6 py-4 text-slate-400 text-sm">
+                          {new Date(app.submitted_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4">
+                          <Button
+                            data-testid={`view-btn-${app.id}`}
+                            onClick={() => setSelectedApp(app)}
+                            size="sm"
+                            className="bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-sm"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
