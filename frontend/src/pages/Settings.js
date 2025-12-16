@@ -345,29 +345,124 @@ export default function Settings() {
               </CardContent>
             </Card>
 
-            {/* Moderator List */}
-            <Card className="glass-card border-slate-700">
+            {/* Add Moderator */}
+            <Card className="glass-card border-slate-700 mb-8">
               <CardHeader>
                 <CardTitle className="text-2xl font-bold uppercase tracking-wide text-emerald-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                  <Users className="inline-block mr-2 h-6 w-6" />
-                  Moderator List
+                  <UserPlus className="inline-block mr-2 h-6 w-6" />
+                  Add New Moderator
                 </CardTitle>
                 <CardDescription className="text-slate-400">
-                  All registered moderators
+                  Create a new moderator account
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleAddModerator} className="space-y-4" data-testid="add-moderator-form">
+                  <div className="space-y-2">
+                    <Label htmlFor="add_username" className="text-slate-300">Username</Label>
+                    <Input
+                      id="add_username"
+                      data-testid="add-username-input"
+                      type="text"
+                      value={addModForm.username}
+                      onChange={(e) => setAddModForm(prev => ({ ...prev, username: e.target.value }))}
+                      required
+                      className="bg-slate-900/50 border-slate-700 focus:border-amber-500 text-slate-200 rounded-sm"
+                      placeholder="Enter username"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="add_password" className="text-slate-300">Password</Label>
+                    <Input
+                      id="add_password"
+                      data-testid="add-password-input"
+                      type="password"
+                      value={addModForm.password}
+                      onChange={(e) => setAddModForm(prev => ({ ...prev, password: e.target.value }))}
+                      required
+                      className="bg-slate-900/50 border-slate-700 focus:border-amber-500 text-slate-200 rounded-sm"
+                      placeholder="Enter password"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="add_role" className="text-slate-300">Role</Label>
+                    <Select
+                      value={addModForm.role}
+                      onValueChange={(value) => setAddModForm(prev => ({ ...prev, role: value }))}
+                    >
+                      <SelectTrigger className="bg-slate-900/50 border-slate-700 focus:border-amber-500 text-slate-200 rounded-sm">
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-900 border-slate-700">
+                        <SelectItem value="moderator" className="text-emerald-400">Moderator</SelectItem>
+                        <SelectItem value="senior_moderator" className="text-amber-400">Senior Moderator</SelectItem>
+                        <SelectItem value="admin" className="text-red-400">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    data-testid="add-moderator-btn"
+                    type="submit"
+                    disabled={loading}
+                    className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold uppercase tracking-wide rounded-sm"
+                  >
+                    {loading ? "Adding..." : "Add Moderator"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Manage Moderators */}
+            <Card className="glass-card border-slate-700">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold uppercase tracking-wide text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                  <Users className="inline-block mr-2 h-6 w-6" />
+                  Manage Moderators
+                </CardTitle>
+                <CardDescription className="text-slate-400">
+                  View, enable/disable, or delete moderator accounts
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3" data-testid="moderator-list">
                   {moderators.map((mod) => (
                     <div key={mod.username} className="flex items-center justify-between p-4 bg-slate-900/50 rounded border border-slate-800">
-                      <div>
+                      <div className="flex-1">
                         <p className="font-semibold text-slate-200">{mod.username}</p>
                         <p className="text-sm text-slate-500 mono">
                           Joined: {new Date(mod.created_at).toLocaleDateString()}
                         </p>
                       </div>
-                      <div>
+                      <div className="flex items-center gap-3">
                         {getRoleBadge(mod.role)}
+                        {getStatusBadge(mod.status || "active")}
+                        
+                        {mod.username !== currentUser.username && (
+                          <div className="flex gap-2">
+                            <Button
+                              data-testid={`toggle-status-${mod.username}`}
+                              onClick={() => handleToggleStatus(mod.username, mod.status || "active")}
+                              disabled={loading}
+                              size="sm"
+                              className={`${(mod.status || "active") === "active" ? "bg-amber-500/20 border-amber-500 text-amber-400 hover:bg-amber-500/30" : "bg-emerald-500/20 border-emerald-500 text-emerald-400 hover:bg-emerald-500/30"} border-2 rounded-sm`}
+                            >
+                              {(mod.status || "active") === "active" ? (
+                                <><UserX className="h-4 w-4 mr-1" /> Disable</>
+                              ) : (
+                                <><UserCheck className="h-4 w-4 mr-1" /> Enable</>
+                              )}
+                            </Button>
+                            <Button
+                              data-testid={`delete-${mod.username}`}
+                              onClick={() => handleDeleteModerator(mod.username)}
+                              disabled={loading}
+                              size="sm"
+                              className="bg-red-500 hover:bg-red-600 text-white rounded-sm"
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
