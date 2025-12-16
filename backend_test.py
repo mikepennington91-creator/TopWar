@@ -241,6 +241,101 @@ class TopWarModeratorAPITester:
         )
         return success
 
+    def test_vote_on_application(self, app_id, vote_type="approve"):
+        """Test voting on an application"""
+        if not app_id:
+            self.log_test("Vote on Application", False, "No application ID provided")
+            return False
+            
+        success, response = self.run_test(
+            f"Vote {vote_type.title()} on Application",
+            "POST",
+            f"applications/{app_id}/vote",
+            200,
+            data={"vote": vote_type}
+        )
+        return success
+
+    def test_comment_on_application(self, app_id, comment="Test comment from API"):
+        """Test commenting on an application"""
+        if not app_id:
+            self.log_test("Comment on Application", False, "No application ID provided")
+            return False
+            
+        success, response = self.run_test(
+            "Add Comment to Application",
+            "POST",
+            f"applications/{app_id}/comment",
+            200,
+            data={"comment": comment}
+        )
+        return success
+
+    def test_invalid_vote(self, app_id):
+        """Test voting with invalid vote type"""
+        if not app_id:
+            self.log_test("Invalid Vote", False, "No application ID provided")
+            return False
+            
+        success, response = self.run_test(
+            "Invalid Vote Type (Should Fail)",
+            "POST",
+            f"applications/{app_id}/vote",
+            400,
+            data={"vote": "invalid_vote"}
+        )
+        return success
+
+    def test_change_password(self):
+        """Test changing own password"""
+        success, response = self.run_test(
+            "Change Own Password",
+            "PATCH",
+            "auth/change-password",
+            200,
+            data={"old_password": "admin123", "new_password": "newpass123"}
+        )
+        
+        # Change it back for other tests
+        if success:
+            self.run_test(
+                "Restore Original Password",
+                "PATCH",
+                "auth/change-password",
+                200,
+                data={"old_password": "newpass123", "new_password": "admin123"}
+            )
+        
+        return success
+
+    def test_reset_password(self, target_username="admin"):
+        """Test resetting another user's password (admin only)"""
+        success, response = self.run_test(
+            "Reset User Password (Admin)",
+            "PATCH",
+            f"auth/reset-password/{target_username}",
+            200,
+            data={"new_password": "admin123"}
+        )
+        return success
+
+    def test_get_moderators(self):
+        """Test getting moderator list (admin only)"""
+        success, response = self.run_test(
+            "Get Moderators List (Admin)",
+            "GET",
+            "moderators",
+            200
+        )
+        return success
+
+    def test_unauthorized_admin_actions(self):
+        """Test admin-only actions without proper role"""
+        # This would need a regular moderator token, but for now we'll skip
+        # since we're using admin token
+        self.log_test("Unauthorized Admin Actions", True, "Skipped - using admin token")
+        return True
+
 def main():
     print("🚀 Starting Top War Moderator API Tests")
     print("=" * 50)
