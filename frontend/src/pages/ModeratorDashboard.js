@@ -80,6 +80,60 @@ export default function ModeratorDashboard() {
     }
   };
 
+  const handleVote = async (applicationId, vote) => {
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem('moderator_token');
+      await axios.post(
+        `${API}/applications/${applicationId}/vote`,
+        { vote },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`Vote recorded: ${vote}`);
+      fetchApplications();
+      // Refresh selected app
+      const response = await axios.get(`${API}/applications/${applicationId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSelectedApp(response.data);
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.detail || `Failed to vote`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleComment = async (applicationId) => {
+    if (!newComment.trim()) {
+      toast.error("Comment cannot be empty");
+      return;
+    }
+    
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem('moderator_token');
+      await axios.post(
+        `${API}/applications/${applicationId}/comment`,
+        { comment: newComment },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Comment added!");
+      setNewComment("");
+      fetchApplications();
+      // Refresh selected app
+      const response = await axios.get(`${API}/applications/${applicationId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSelectedApp(response.data);
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.detail || "Failed to add comment");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleStatusUpdate = async (applicationId, status) => {
     setActionLoading(true);
     try {
