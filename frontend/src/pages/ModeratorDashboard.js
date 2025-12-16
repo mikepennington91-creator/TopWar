@@ -155,9 +155,22 @@ export default function ModeratorDashboard() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('moderator_token');
+    localStorage.clear();
     toast.success("Logged out successfully");
     navigate('/');
+  };
+  
+  const getUserVote = (votes) => {
+    if (!votes || votes.length === 0) return null;
+    return votes.find(v => v.moderator === currentUser.username);
+  };
+  
+  const getVoteCounts = (votes) => {
+    if (!votes || votes.length === 0) return { approve: 0, reject: 0 };
+    return {
+      approve: votes.filter(v => v.vote === 'approve').length,
+      reject: votes.filter(v => v.vote === 'reject').length
+    };
   };
 
   const getStatusBadge = (status) => {
