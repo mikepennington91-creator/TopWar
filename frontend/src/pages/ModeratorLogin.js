@@ -30,6 +30,8 @@ export default function ModeratorLogin() {
     try {
       const response = await axios.post(`${API}/auth/login`, credentials);
       localStorage.setItem('moderator_token', response.data.access_token);
+      localStorage.setItem('moderator_role', response.data.role);
+      localStorage.setItem('moderator_username', response.data.username);
       toast.success("Login successful!");
       navigate('/moderator/dashboard');
     } catch (error) {
