@@ -203,15 +203,26 @@ export default function ModeratorDashboard() {
             <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-wider text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
               Moderator Command Center
             </h1>
-            <Button
-              data-testid="logout-btn"
-              onClick={handleLogout}
-              variant="outline"
-              className="border-red-500 text-red-500 hover:bg-red-500/20 uppercase tracking-wide rounded-sm"
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                data-testid="settings-btn"
+                onClick={() => navigate('/moderator/settings')}
+                variant="outline"
+                className="border-amber-500 text-amber-500 hover:bg-amber-500/20 uppercase tracking-wide rounded-sm"
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </Button>
+              <Button
+                data-testid="logout-btn"
+                onClick={handleLogout}
+                variant="outline"
+                className="border-red-500 text-red-500 hover:bg-red-500/20 uppercase tracking-wide rounded-sm"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
       </div>
