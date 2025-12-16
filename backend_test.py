@@ -375,11 +375,25 @@ def main():
     if app_id:
         tester.test_get_single_application(app_id)
         tester.test_invalid_status_update(app_id)
+        
+        # Test NEW voting system features
+        tester.test_vote_on_application(app_id, "approve")
+        tester.test_vote_on_application(app_id, "reject")  # Test vote update
+        tester.test_invalid_vote(app_id)
+        tester.test_comment_on_application(app_id, "This is a test comment from the API")
+        
+        # Test password management
+        tester.test_change_password()
+        tester.test_reset_password("admin")
+        tester.test_get_moderators()
+        
         tester.test_approve_application(app_id)
         
         # Submit another application to test rejection
         app_success2, app_id2 = tester.test_submit_application()
         if app_id2:
+            tester.test_vote_on_application(app_id2, "reject")
+            tester.test_comment_on_application(app_id2, "Rejecting this application")
             tester.test_reject_application(app_id2)
     
     # Print final results
