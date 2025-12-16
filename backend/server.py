@@ -222,6 +222,10 @@ async def login_moderator(credentials: ModeratorLogin):
     if not moderator:
         raise HTTPException(status_code=401, detail="Invalid username or password")
     
+    # Check if account is disabled
+    if moderator.get("status", "active") == "disabled":
+        raise HTTPException(status_code=403, detail="Account has been disabled. Contact administrator.")
+    
     # Verify password
     if not pwd_context.verify(credentials.password, moderator["hashed_password"]):
         raise HTTPException(status_code=401, detail="Invalid username or password")
