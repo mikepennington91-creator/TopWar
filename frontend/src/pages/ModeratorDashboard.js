@@ -4,6 +4,7 @@ import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Search, LogOut, CheckCircle, XCircle, Eye } from "lucide-react";
+import { Search, LogOut, CheckCircle, XCircle, Eye, ThumbsUp, ThumbsDown, MessageSquare, Settings } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -25,13 +26,20 @@ export default function ModeratorDashboard() {
   const [selectedApp, setSelectedApp] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState({ username: "", role: "moderator" });
+  const [newComment, setNewComment] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem('moderator_token');
+    const role = localStorage.getItem('moderator_role');
+    const username = localStorage.getItem('moderator_username');
+    
     if (!token) {
       navigate('/moderator/login');
       return;
     }
+    
+    setCurrentUser({ username, role });
     fetchApplications();
   }, [navigate]);
 
