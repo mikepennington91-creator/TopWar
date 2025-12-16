@@ -25,6 +25,11 @@ export default function Settings() {
     username: "",
     new_password: ""
   });
+  const [addModForm, setAddModForm] = useState({
+    username: "",
+    password: "",
+    role: "moderator"
+  });
 
   useEffect(() => {
     const token = localStorage.getItem('moderator_token');
