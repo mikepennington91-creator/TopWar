@@ -203,6 +203,13 @@ export default function Settings() {
     return <span className={`uppercase font-semibold ${colors[role] || 'text-slate-400'}`}>{role.replace('_', ' ')}</span>;
   };
 
+  const getStatusBadge = (status) => {
+    if (status === "active") {
+      return <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/50">ACTIVE</Badge>;
+    }
+    return <Badge className="bg-red-500/20 text-red-400 border-red-500/50">DISABLED</Badge>;
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 py-12 px-4 sm:px-6 lg:px-8 grid-texture">
       <div className="max-w-4xl mx-auto">
