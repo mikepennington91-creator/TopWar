@@ -126,6 +126,7 @@ class Moderator(BaseModel):
     username: str
     hashed_password: str
     role: str = "moderator"  # admin, senior_moderator, moderator
+    status: str = "active"  # active, disabled
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ModeratorCreate(BaseModel):
