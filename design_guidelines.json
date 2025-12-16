@@ -1,0 +1,182 @@
+{
+  "identity": {
+    "persona": "E1: The Anti-AI Designer",
+    "mission": "Create a 'Tactical Command' interface that feels like a military HUD but functions like a top-tier SaaS product. Avoid generic 'gamer' tropes; aim for 'professional strategist'.",
+    "principles": [
+      "Fusion: Military Precision x Modern SaaS Utility",
+      "Emotion: Authority, Focus, Duty",
+      "Content is King: Data density with breathing room",
+      "Zoom In: Focus on the applicant's details",
+      "Negative Space: Use dark voids to frame content"
+    ]
+  },
+  "theme": {
+    "mode": "dark",
+    "name": "Tactical Command",
+    "description": "A high-contrast, dark-mode interface inspired by military strategy games and command centers. Uses deep slate backgrounds with sharp amber and emerald accents."
+  },
+  "typography": {
+    "headings": {
+      "font_family": "Rajdhani, sans-serif",
+      "weights": ["600", "700"],
+      "usage": "All section titles, page headers, and key metrics. If Rajdhani is unavailable, use 'Chakra Petch' or 'JetBrains Mono'.",
+      "style": "uppercase tracking-wider"
+    },
+    "body": {
+      "font_family": "Inter, sans-serif",
+      "weights": ["400", "500"],
+      "usage": "General text, form labels, table data.",
+      "style": "leading-relaxed"
+    },
+    "mono": {
+      "font_family": "JetBrains Mono, monospace",
+      "usage": "IDs, timestamps, code snippets, status codes."
+    }
+  },
+  "colors": {
+    "palette": {
+      "background": {
+        "default": "#020617",
+        "paper": "#0f172a",
+        "surface": "#1e293b"
+      },
+      "primary": {
+        "main": "#f59e0b",
+        "hover": "#d97706",
+        "text": "#ffffff",
+        "description": "Tactical Amber - Used for primary actions (Apply, Login, Submit)."
+      },
+      "secondary": {
+        "main": "#10b981",
+        "hover": "#059669",
+        "text": "#ffffff",
+        "description": "Radar Green - Used for success states, 'Approved' status, and safe actions."
+      },
+      "destructive": {
+        "main": "#ef4444",
+        "hover": "#dc2626",
+        "text": "#ffffff",
+        "description": "Alert Red - Used for 'Reject', 'Ban', and critical errors."
+      },
+      "neutral": {
+        "100": "#f1f5f9",
+        "200": "#e2e8f0",
+        "500": "#64748b",
+        "800": "#1e293b",
+        "900": "#0f172a"
+      }
+    },
+    "gradients": {
+      "hero": "linear-gradient(to bottom right, #020617, #1e293b)",
+      "glass": "linear-gradient(145deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.4))"
+    }
+  },
+  "visual_enhancers": {
+    "borders": {
+      "default": "1px solid rgba(148, 163, 184, 0.1)",
+      "active": "1px solid #f59e0b",
+      "radius": "rounded-sm"
+    },
+    "shadows": {
+      "card": "0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3)",
+      "glow": "0 0 15px rgba(245, 158, 11, 0.3)"
+    },
+    "textures": {
+      "grid": "radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px) 0 0 / 20px 20px",
+      "scanline": "linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2))"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-primary text-primary-foreground hover:bg-primary/90 rounded-sm font-bold uppercase tracking-wide shadow-[0_0_10px_rgba(245,158,11,0.2)] transition-all hover:shadow-[0_0_20px_rgba(245,158,11,0.4)]",
+      "secondary": "bg-secondary/20 text-secondary hover:bg-secondary/30 border border-secondary/50 rounded-sm uppercase tracking-wide",
+      "ghost": "hover:bg-accent hover:text-accent-foreground rounded-sm"
+    },
+    "cards": {
+      "base": "bg-card/50 backdrop-blur-md border border-border/50 rounded-lg shadow-xl",
+      "interactive": "hover:border-primary/50 transition-colors duration-300 cursor-pointer"
+    },
+    "inputs": {
+      "base": "bg-background/50 border-input focus:border-primary focus:ring-1 focus:ring-primary rounded-sm placeholder:text-muted-foreground/50"
+    },
+    "badges": {
+      "base": "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+      "variants": {
+        "default": "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+        "secondary": "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        "destructive": "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+        "outline": "text-foreground"
+      }
+    }
+  },
+  "layout_strategies": {
+    "landing_page": {
+      "structure": "Hero Section (Full Height) -> Mission Brief (About) -> Call to Action",
+      "grid": "grid-cols-1 md:grid-cols-12 gap-8",
+      "spacing": "p-8 md:p-16 lg:p-24"
+    },
+    "application_form": {
+      "structure": "Progress Bar (Top) -> Question Card (Center) -> Navigation (Bottom)",
+      "style": "Single column, focused, distraction-free. 'Dossier' aesthetic.",
+      "animation": "Slide-in from right for new questions."
+    },
+    "dashboard": {
+      "structure": "Sidebar (Nav) -> Top Bar (Search/Filter) -> Main Content (Data Grid)",
+      "grid": "grid-cols-1 md:grid-cols-4 gap-6",
+      "density": "High density for data, but with p-6 padding inside containers."
+    }
+  },
+  "image_urls": {
+    "hero_background": {
+      "url": "https://images.unsplash.com/photo-1704229266209-47d8d6ad0c46?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "description": "Aerial city view at night - use with heavy CSS overlay (opacity 0.2, grayscale) to create a tactical map background.",
+      "category": "background"
+    },
+    "tactical_map": {
+      "url": "https://images.unsplash.com/photo-1761274441884-357dad8f28ab?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "description": "Miniature soldiers/map - use for 'About' or 'Mission' section visuals.",
+      "category": "content"
+    },
+    "tech_overlay": {
+      "url": "https://images.unsplash.com/photo-1675657347864-96142cbbd39c?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "description": "Abstract metal structure - use for card backgrounds or section dividers.",
+      "category": "texture"
+    }
+  },
+  "motion": {
+    "transitions": "transition-all duration-200 ease-out",
+    "hover_effects": "transform hover:-translate-y-1 hover:shadow-lg",
+    "page_load": "animate-in fade-in slide-in-from-bottom-4 duration-500"
+  },
+  "accessibility": {
+    "contrast": "Ensure all text meets WCAG AA. Use 'text-slate-200' on dark backgrounds, not 'text-gray-500'.",
+    "focus": "Visible focus rings (Amber-500) on all interactive elements.",
+    "labels": "All inputs must have visible labels or aria-labels."
+  },
+  "instructions_to_main_agent": {
+    "general": "You are building a 'Tactical Command' interface. It should feel like a tool used by elite moderators. Keep it dark, sharp, and responsive.",
+    "setup": "Install 'lucide-react' for icons. Use 'clsx' and 'tailwind-merge' for class management.",
+    "critical": "Do NOT use gradients for text. Do NOT use rounded-xl or rounded-2xl (keep it sharp/rounded-sm or rounded-md). Do NOT use 'blue' as the primary color (use Amber).",
+    "files": "Create components in /app/frontend/src/components/ui. Create pages in /app/frontend/src/pages."
+  },
+  "universal_guidelines": [
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy",
+    "Use glass-morphism effects with backdrop filters (12-24px blur)",
+    "You MUST NOT apply universal transition. Eg: transition: all. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms",
+    "You MUST NOT center align the app container, ie do not add .App { text-align: center; } in the css file. This disrupts the human natural reading flow of text",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style",
+    "NEVER: use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons.",
+    "Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.",
+    "Main agent relies on these image URLs. Missing categories (especially sponsor logos) = main agent will use placeholder text which is FORBIDDEN",
+    "Prioritize using pre-existing components from src/components/ui when applicable",
+    "Create new components that match the style and conventions of existing components when needed",
+    "Examine existing components to understand the project's component patterns before creating new ones",
+    "Components MUST use named exports (export const ComponentName = ...)",
+    "Pages MUST use default exports (export default function PageName() {...})",
+    "Use 'sonner' for toasts"
+  ]
+}
