@@ -409,26 +409,135 @@ export default function ModeratorDashboard() {
                   </div>
                 </div>
 
-                {selectedApp.status === 'pending' && (
-                  <div className="border-t border-slate-700 pt-4 flex gap-4">
+                {/* Voting Section */}
+                <div className="border-t border-slate-700 pt-4">
+                  <h3 className="text-lg font-semibold uppercase tracking-wide text-amber-500 mb-4" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                    Moderator Votes
+                  </h3>
+                  
+                  {selectedApp.votes && selectedApp.votes.length > 0 ? (
+                    <div className="space-y-2 mb-4">
+                      {selectedApp.votes.map((vote, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-slate-800/50 rounded">
+                          <span className="text-slate-200 font-medium">{vote.moderator}</span>
+                          <div className="flex items-center gap-2">
+                            {vote.vote === 'approve' ? (
+                              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/50">
+                                <ThumbsUp className="h-3 w-3 mr-1" /> APPROVE
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-red-500/20 text-red-400 border-red-500/50">
+                                <ThumbsDown className="h-3 w-3 mr-1" /> REJECT
+                              </Badge>
+                            )}
+                            <span className="text-xs text-slate-500 mono">
+                              {new Date(vote.timestamp).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-slate-400 mb-4">No votes yet</p>
+                  )}
+                  
+                  {/* Vote Buttons */}
+                  {selectedApp.status === 'pending' && (
+                    <div className="flex gap-4">
+                      <Button
+                        data-testid="vote-approve-btn"
+                        onClick={() => handleVote(selectedApp.id, 'approve')}
+                        disabled={actionLoading}
+                        className="flex-1 bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400 hover:bg-emerald-500/30 font-bold uppercase tracking-wide py-3 rounded-sm"
+                      >
+                        <ThumbsUp className="mr-2 h-4 w-4" />
+                        Vote Approve
+                      </Button>
+                      <Button
+                        data-testid="vote-reject-btn"
+                        onClick={() => handleVote(selectedApp.id, 'reject')}
+                        disabled={actionLoading}
+                        className="flex-1 bg-red-500/20 border-2 border-red-500 text-red-400 hover:bg-red-500/30 font-bold uppercase tracking-wide py-3 rounded-sm"
+                      >
+                        <ThumbsDown className="mr-2 h-4 w-4" />
+                        Vote Reject
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Comments Section */}
+                <div className="border-t border-slate-700 pt-4">
+                  <h3 className="text-lg font-semibold uppercase tracking-wide text-amber-500 mb-4 flex items-center gap-2" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                    <MessageSquare className="h-5 w-5" />
+                    Moderator Comments
+                  </h3>
+                  
+                  {selectedApp.comments && selectedApp.comments.length > 0 ? (
+                    <div className="space-y-3 mb-4">
+                      {selectedApp.comments.map((comment, index) => (
+                        <div key={index} className="p-4 bg-slate-800/50 rounded border-l-4 border-amber-500">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-amber-400 font-semibold">{comment.moderator}</span>
+                            <span className="text-xs text-slate-500 mono">
+                              {new Date(comment.timestamp).toLocaleString()}
+                            </span>
+                          </div>
+                          <p className="text-slate-200">{comment.comment}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-slate-400 mb-4">No comments yet</p>
+                  )}
+                  
+                  {/* Add Comment */}
+                  <div className="space-y-2">
+                    <Textarea
+                      data-testid="comment-input"
+                      placeholder="Add your comment..."
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      className="bg-slate-900/50 border-slate-700 focus:border-amber-500 text-slate-200 rounded-sm min-h-[100px]"
+                    />
                     <Button
-                      data-testid="approve-btn"
-                      onClick={() => handleStatusUpdate(selectedApp.id, 'approved')}
-                      disabled={actionLoading}
-                      className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold uppercase tracking-wide py-3 rounded-sm"
+                      data-testid="add-comment-btn"
+                      onClick={() => handleComment(selectedApp.id)}
+                      disabled={actionLoading || !newComment.trim()}
+                      className="bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide rounded-sm btn-glow"
                     >
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      Approve
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      Add Comment
                     </Button>
-                    <Button
-                      data-testid="reject-btn"
-                      onClick={() => handleStatusUpdate(selectedApp.id, 'rejected')}
-                      disabled={actionLoading}
-                      className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold uppercase tracking-wide py-3 rounded-sm"
-                    >
-                      <XCircle className="mr-2 h-4 w-4" />
-                      Reject
-                    </Button>
+                  </div>
+                </div>
+
+                {/* Final Decision - Admin/Senior Moderator Only */}
+                {selectedApp.status === 'pending' && (currentUser.role === 'admin' || currentUser.role === 'senior_moderator') && (
+                  <div className="border-t border-slate-700 pt-4">
+                    <h3 className="text-lg font-semibold uppercase tracking-wide text-red-500 mb-4" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                      Final Decision (Admin Only)
+                    </h3>
+                    <div className="flex gap-4">
+                      <Button
+                        data-testid="approve-btn"
+                        onClick={() => handleStatusUpdate(selectedApp.id, 'approved')}
+                        disabled={actionLoading}
+                        className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold uppercase tracking-wide py-3 rounded-sm"
+                      >
+                        <CheckCircle className="mr-2 h-4 w-4" />
+                        Approve Application
+                      </Button>
+                      <Button
+                        data-testid="reject-btn"
+                        onClick={() => handleStatusUpdate(selectedApp.id, 'rejected')}
+                        disabled={actionLoading}
+                        className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold uppercase tracking-wide py-3 rounded-sm"
+                      >
+                        <XCircle className="mr-2 h-4 w-4" />
+                        Reject Application
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
