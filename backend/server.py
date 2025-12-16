@@ -285,6 +285,48 @@ async def get_moderators(current_user: dict = Depends(require_admin)):
     
     return moderators
 
+@api_router.patch("/moderators/{username}/status")
+async def update_moderator_status(username: str, status_update: ModeratorStatusUpdate, current_user: dict = Depends(require_admin)):
+    if status_update.status not in ["active", "disabled"]:
+        raise HTTPException(status_code=400, detail="Status must be 'active' or 'disabled'")
+    
+    # Prevent admin from disabling themselves
+    if username == current_user["username"]:
+        raise HTTPException(status_code=400, detail="You cannot disable your own account")
+    
+    # Check if user exists
+    moderator = await db.moderators.find_one({"username": username}, {"_id": 0})
+    if not moderator:
+        raise HTTPException(status_code=404, detail="Moderator not found")
+    
+    # Update status
+    await db.moderators.update_one(
+        {"username": username},
+        {"$set": {"status": status_update.status}}
+    )
+    
+    action = "enabled" if status_update.status == "active" else "disabled"
+    return {"message": f"Moderator {username} has been {action}"}
+
+@api_router.delete("/moderators/{username}")
+async def delete_moderator(username: str, current_user: dict = Depends(require_admin)):
+    # Prevent admin from deleting themselves
+    if username == current_user["username"]:
+        raise HTTPException(status_code=400, detail="You cannot delete your own account")
+    
+    # Check if user exists
+    moderator = await db.moderators.find_one({"username": username}, {"_id": 0})
+    if not moderator:
+        raise HTTPException(status_code=404, detail="Moderator not found")
+    
+    # Delete moderator
+    result = await db.moderators.delete_one({"username": username})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Moderator not found")
+    
+    return {"message": f"Moderator {username} has been deleted successfully"}
+
 # Application Routes
 @api_router.post("/applications", response_model=Application)
 async def submit_application(app_data: ApplicationCreate):
