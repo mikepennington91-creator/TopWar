@@ -7,7 +7,7 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
-from typing import List, Optional
+from typing import List, Optional, Dict
 import uuid
 from datetime import datetime, timezone, timedelta
 from passlib.context import CryptContext
@@ -41,6 +41,16 @@ api_router = APIRouter(prefix="/api")
 
 # ============= Models =============
 
+class Vote(BaseModel):
+    moderator: str
+    vote: str  # "approve" or "reject"
+    timestamp: datetime
+
+class Comment(BaseModel):
+    moderator: str
+    comment: str
+    timestamp: datetime
+
 class Application(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
@@ -69,6 +79,8 @@ class Application(BaseModel):
     racist_r4: str
     moderator_swearing: str
     status: str = "pending"  # pending, approved, rejected
+    votes: List[Dict] = Field(default_factory=list)
+    comments: List[Dict] = Field(default_factory=list)
     submitted_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     reviewed_at: Optional[datetime] = None
     reviewed_by: Optional[str] = None
@@ -101,25 +113,47 @@ class ApplicationCreate(BaseModel):
 class ApplicationUpdate(BaseModel):
     status: str  # approved or rejected
 
+class VoteCreate(BaseModel):
+    vote: str  # "approve" or "reject"
+
+class CommentCreate(BaseModel):
+    comment: str
+
 class Moderator(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     username: str
     hashed_password: str
+    role: str = "moderator"  # admin, senior_moderator, moderator
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ModeratorCreate(BaseModel):
     username: str
     password: str
+    role: str = "moderator"
 
 class ModeratorLogin(BaseModel):
     username: str
     password: str
 
+class PasswordChange(BaseModel):
+    old_password: str
+    new_password: str
+
+class PasswordReset(BaseModel):
+    new_password: str
+
 class Token(BaseModel):
     access_token: str
     token_type: str
+    role: str
+    username: str
+
+class ModeratorInfo(BaseModel):
+    username: str
+    role: str
+    created_at: datetime
 
 
 # ============= Auth Helpers =============
@@ -136,13 +170,19 @@ async def get_current_moderator(credentials: HTTPAuthorizationCredentials = Depe
         token = credentials.credentials
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
+        role: str = payload.get("role", "moderator")
         if username is None:
             raise HTTPException(status_code=401, detail="Invalid authentication credentials")
-        return username
+        return {"username": username, "role": role}
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token has expired")
     except jwt.JWTError:
         raise HTTPException(status_code=401, detail="Could not validate credentials")
+
+async def require_admin(current_user: dict = Depends(get_current_moderator)):
+    if current_user["role"] not in ["admin", "senior_moderator"]:
+        raise HTTPException(status_code=403, detail="Admin or Senior Moderator access required")
+    return current_user
 
 
 # ============= Routes =============
@@ -163,12 +203,12 @@ async def register_moderator(moderator: ModeratorCreate):
     hashed_password = pwd_context.hash(moderator.password)
     
     # Create moderator
-    mod_obj = Moderator(username=moderator.username, hashed_password=hashed_password)
+    mod_obj = Moderator(username=moderator.username, hashed_password=hashed_password, role=moderator.role)
     doc = mod_obj.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
     
     await db.moderators.insert_one(doc)
-    return {"message": "Moderator registered successfully", "username": moderator.username}
+    return {"message": "Moderator registered successfully", "username": moderator.username, "role": moderator.role}
 
 @api_router.post("/auth/login", response_model=Token)
 async def login_moderator(credentials: ModeratorLogin):
@@ -182,8 +222,59 @@ async def login_moderator(credentials: ModeratorLogin):
         raise HTTPException(status_code=401, detail="Invalid username or password")
     
     # Create token
-    access_token = create_access_token(data={"sub": credentials.username})
-    return {"access_token": access_token, "token_type": "bearer"}
+    access_token = create_access_token(data={"sub": credentials.username, "role": moderator.get("role", "moderator")})
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "role": moderator.get("role", "moderator"),
+        "username": credentials.username
+    }
+
+@api_router.patch("/auth/change-password")
+async def change_password(password_data: PasswordChange, current_user: dict = Depends(get_current_moderator)):
+    # Get current moderator
+    moderator = await db.moderators.find_one({"username": current_user["username"]}, {"_id": 0})
+    if not moderator:
+        raise HTTPException(status_code=404, detail="Moderator not found")
+    
+    # Verify old password
+    if not pwd_context.verify(password_data.old_password, moderator["hashed_password"]):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    
+    # Update password
+    new_hashed = pwd_context.hash(password_data.new_password)
+    await db.moderators.update_one(
+        {"username": current_user["username"]},
+        {"$set": {"hashed_password": new_hashed}}
+    )
+    
+    return {"message": "Password changed successfully"}
+
+@api_router.patch("/auth/reset-password/{username}")
+async def reset_password(username: str, password_data: PasswordReset, current_user: dict = Depends(require_admin)):
+    # Check if target user exists
+    moderator = await db.moderators.find_one({"username": username}, {"_id": 0})
+    if not moderator:
+        raise HTTPException(status_code=404, detail="Moderator not found")
+    
+    # Update password
+    new_hashed = pwd_context.hash(password_data.new_password)
+    await db.moderators.update_one(
+        {"username": username},
+        {"$set": {"hashed_password": new_hashed}}
+    )
+    
+    return {"message": f"Password reset successfully for {username}"}
+
+@api_router.get("/moderators", response_model=List[ModeratorInfo])
+async def get_moderators(current_user: dict = Depends(require_admin)):
+    moderators = await db.moderators.find({}, {"_id": 0, "hashed_password": 0}).to_list(1000)
+    
+    for mod in moderators:
+        if isinstance(mod.get('created_at'), str):
+            mod['created_at'] = datetime.fromisoformat(mod['created_at'])
+    
+    return moderators
 
 # Application Routes
 @api_router.post("/applications", response_model=Application)
@@ -196,7 +287,7 @@ async def submit_application(app_data: ApplicationCreate):
     return app_obj
 
 @api_router.get("/applications", response_model=List[Application])
-async def get_applications(search: Optional[str] = None, current_user: str = Depends(get_current_moderator)):
+async def get_applications(search: Optional[str] = None, current_user: dict = Depends(get_current_moderator)):
     query = {}
     if search:
         # Search in name, discord_handle, ingame_name, server
@@ -217,11 +308,18 @@ async def get_applications(search: Optional[str] = None, current_user: str = Dep
             app['submitted_at'] = datetime.fromisoformat(app['submitted_at'])
         if app.get('reviewed_at') and isinstance(app['reviewed_at'], str):
             app['reviewed_at'] = datetime.fromisoformat(app['reviewed_at'])
+        # Convert vote and comment timestamps
+        for vote in app.get('votes', []):
+            if isinstance(vote.get('timestamp'), str):
+                vote['timestamp'] = datetime.fromisoformat(vote['timestamp'])
+        for comment in app.get('comments', []):
+            if isinstance(comment.get('timestamp'), str):
+                comment['timestamp'] = datetime.fromisoformat(comment['timestamp'])
     
     return applications
 
 @api_router.get("/applications/{application_id}", response_model=Application)
-async def get_application(application_id: str, current_user: str = Depends(get_current_moderator)):
+async def get_application(application_id: str, current_user: dict = Depends(get_current_moderator)):
     application = await db.applications.find_one({"id": application_id}, {"_id": 0})
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
@@ -231,11 +329,75 @@ async def get_application(application_id: str, current_user: str = Depends(get_c
         application['submitted_at'] = datetime.fromisoformat(application['submitted_at'])
     if application.get('reviewed_at') and isinstance(application['reviewed_at'], str):
         application['reviewed_at'] = datetime.fromisoformat(application['reviewed_at'])
+    # Convert vote and comment timestamps
+    for vote in application.get('votes', []):
+        if isinstance(vote.get('timestamp'), str):
+            vote['timestamp'] = datetime.fromisoformat(vote['timestamp'])
+    for comment in application.get('comments', []):
+        if isinstance(comment.get('timestamp'), str):
+            comment['timestamp'] = datetime.fromisoformat(comment['timestamp'])
     
     return application
 
+@api_router.post("/applications/{application_id}/vote")
+async def vote_on_application(application_id: str, vote_data: VoteCreate, current_user: dict = Depends(get_current_moderator)):
+    if vote_data.vote not in ["approve", "reject"]:
+        raise HTTPException(status_code=400, detail="Vote must be 'approve' or 'reject'")
+    
+    # Check if application exists
+    application = await db.applications.find_one({"id": application_id}, {"_id": 0})
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    # Check if user already voted
+    votes = application.get('votes', [])
+    existing_vote = next((v for v in votes if v['moderator'] == current_user['username']), None)
+    
+    if existing_vote:
+        # Update existing vote
+        await db.applications.update_one(
+            {"id": application_id, "votes.moderator": current_user['username']},
+            {"$set": {
+                "votes.$.vote": vote_data.vote,
+                "votes.$.timestamp": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+    else:
+        # Add new vote
+        vote = {
+            "moderator": current_user['username'],
+            "vote": vote_data.vote,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        await db.applications.update_one(
+            {"id": application_id},
+            {"$push": {"votes": vote}}
+        )
+    
+    return {"message": "Vote recorded successfully"}
+
+@api_router.post("/applications/{application_id}/comment")
+async def comment_on_application(application_id: str, comment_data: CommentCreate, current_user: dict = Depends(get_current_moderator)):
+    # Check if application exists
+    application = await db.applications.find_one({"id": application_id}, {"_id": 0})
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    # Add comment
+    comment = {
+        "moderator": current_user['username'],
+        "comment": comment_data.comment,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    await db.applications.update_one(
+        {"id": application_id},
+        {"$push": {"comments": comment}}
+    )
+    
+    return {"message": "Comment added successfully", "comment": comment}
+
 @api_router.patch("/applications/{application_id}", response_model=Application)
-async def update_application_status(application_id: str, update: ApplicationUpdate, current_user: str = Depends(get_current_moderator)):
+async def update_application_status(application_id: str, update: ApplicationUpdate, current_user: dict = Depends(require_admin)):
     if update.status not in ["approved", "rejected"]:
         raise HTTPException(status_code=400, detail="Status must be 'approved' or 'rejected'")
     
@@ -246,7 +408,7 @@ async def update_application_status(application_id: str, update: ApplicationUpda
             "$set": {
                 "status": update.status,
                 "reviewed_at": datetime.now(timezone.utc).isoformat(),
-                "reviewed_by": current_user
+                "reviewed_by": current_user['username']
             }
         }
     )
@@ -262,6 +424,13 @@ async def update_application_status(application_id: str, update: ApplicationUpda
         application['submitted_at'] = datetime.fromisoformat(application['submitted_at'])
     if application.get('reviewed_at') and isinstance(application['reviewed_at'], str):
         application['reviewed_at'] = datetime.fromisoformat(application['reviewed_at'])
+    # Convert vote and comment timestamps
+    for vote in application.get('votes', []):
+        if isinstance(vote.get('timestamp'), str):
+            vote['timestamp'] = datetime.fromisoformat(vote['timestamp'])
+    for comment in application.get('comments', []):
+        if isinstance(comment.get('timestamp'), str):
+            comment['timestamp'] = datetime.fromisoformat(comment['timestamp'])
     
     return application
 
