@@ -154,7 +154,11 @@ class Token(BaseModel):
 class ModeratorInfo(BaseModel):
     username: str
     role: str
+    status: str
     created_at: datetime
+
+class ModeratorStatusUpdate(BaseModel):
+    status: str  # active or disabled
 
 
 # ============= Auth Helpers =============
