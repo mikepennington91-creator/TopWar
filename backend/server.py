@@ -154,7 +154,7 @@ class ServerAssignment(BaseModel):
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     server: int
-    tag: int
+    tag: str  # "Tag 2", "Tag 5", or "Tag 8"
     start_date: str  # UK format DD/MM/YYYY
     end_date: Optional[str] = None  # UK format DD/MM/YYYY
     reason: str
