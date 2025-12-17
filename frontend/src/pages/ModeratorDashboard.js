@@ -366,35 +366,123 @@ export default function ModeratorDashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Search Bar */}
-        <div className="mb-8">
+        <div className="mb-4 sm:mb-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 h-5 w-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 h-4 w-4 sm:h-5 sm:w-5" />
             <Input
               data-testid="search-input"
               type="text"
               placeholder="Search by name, Discord, in-game name, or server..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-slate-900/50 border-slate-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-slate-200 rounded-sm py-6"
+              className="pl-9 sm:pl-10 bg-slate-900/50 border-slate-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-slate-200 rounded-sm py-4 sm:py-6 text-sm sm:text-base"
             />
           </div>
         </div>
 
+        {/* Filters Row */}
+        <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row gap-3">
+          {/* Date Sort Filter */}
+          <div className="flex items-center gap-2">
+            <ArrowUpDown className="h-4 w-4 text-slate-400 hidden sm:block" />
+            <Select value={sortOrder} onValueChange={setSortOrder}>
+              <SelectTrigger 
+                data-testid="sort-order-select"
+                className="w-full sm:w-[180px] bg-slate-900/50 border-slate-700 text-slate-200 text-sm"
+              >
+                <ArrowUpDown className="h-4 w-4 mr-2 sm:hidden" />
+                <SelectValue placeholder="Sort by date" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 border-slate-700">
+                <SelectItem value="newest" className="text-slate-200">Newest First</SelectItem>
+                <SelectItem value="oldest" className="text-slate-200">Oldest First</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Status Multi-Filter */}
+          <div className="flex items-center gap-2 flex-1">
+            <Filter className="h-4 w-4 text-slate-400 hidden sm:block" />
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
+              <Button
+                size="sm"
+                variant={statusFilter.includes("all") ? "default" : "outline"}
+                onClick={() => toggleStatusFilter("all")}
+                className={`text-xs px-2 sm:px-3 py-1 h-auto rounded-sm ${
+                  statusFilter.includes("all") 
+                    ? "bg-amber-500 text-white" 
+                    : "border-slate-600 text-slate-400 hover:bg-slate-800"
+                }`}
+              >
+                All
+              </Button>
+              <Button
+                size="sm"
+                variant={statusFilter.includes("awaiting_review") ? "default" : "outline"}
+                onClick={() => toggleStatusFilter("awaiting_review")}
+                className={`text-xs px-2 sm:px-3 py-1 h-auto rounded-sm ${
+                  statusFilter.includes("awaiting_review") 
+                    ? "bg-slate-500 text-white" 
+                    : "border-slate-600 text-slate-400 hover:bg-slate-800"
+                }`}
+              >
+                Awaiting
+              </Button>
+              <Button
+                size="sm"
+                variant={statusFilter.includes("pending") ? "default" : "outline"}
+                onClick={() => toggleStatusFilter("pending")}
+                className={`text-xs px-2 sm:px-3 py-1 h-auto rounded-sm ${
+                  statusFilter.includes("pending") 
+                    ? "bg-blue-500 text-white" 
+                    : "border-slate-600 text-slate-400 hover:bg-slate-800"
+                }`}
+              >
+                Pending
+              </Button>
+              <Button
+                size="sm"
+                variant={statusFilter.includes("approved") ? "default" : "outline"}
+                onClick={() => toggleStatusFilter("approved")}
+                className={`text-xs px-2 sm:px-3 py-1 h-auto rounded-sm ${
+                  statusFilter.includes("approved") 
+                    ? "bg-emerald-500 text-white" 
+                    : "border-slate-600 text-slate-400 hover:bg-slate-800"
+                }`}
+              >
+                Approved
+              </Button>
+              <Button
+                size="sm"
+                variant={statusFilter.includes("rejected") ? "default" : "outline"}
+                onClick={() => toggleStatusFilter("rejected")}
+                className={`text-xs px-2 sm:px-3 py-1 h-auto rounded-sm ${
+                  statusFilter.includes("rejected") 
+                    ? "bg-red-500 text-white" 
+                    : "border-slate-600 text-slate-400 hover:bg-slate-800"
+                }`}
+              >
+                Rejected
+              </Button>
+            </div>
+          </div>
+        </div>
+
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="glass-card p-6 rounded-lg">
-            <p className="text-slate-400 text-sm uppercase tracking-wide" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Total Applications</p>
-            <p className="text-4xl font-bold text-amber-500 mt-2" style={{ fontFamily: 'Rajdhani, sans-serif' }}>{applications.length}</p>
+        <div className="grid grid-cols-3 gap-2 sm:gap-6 mb-4 sm:mb-8">
+          <div className="glass-card p-3 sm:p-6 rounded-lg">
+            <p className="text-slate-400 text-xs sm:text-sm uppercase tracking-wide" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Total</p>
+            <p className="text-2xl sm:text-4xl font-bold text-amber-500 mt-1 sm:mt-2" style={{ fontFamily: 'Rajdhani, sans-serif' }}>{applications.length}</p>
           </div>
-          <div className="glass-card p-6 rounded-lg">
-            <p className="text-slate-400 text-sm uppercase tracking-wide" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Pending Review</p>
-            <p className="text-4xl font-bold text-slate-200 mt-2" style={{ fontFamily: 'Rajdhani, sans-serif' }}>{applications.filter(a => a.status === 'pending').length}</p>
+          <div className="glass-card p-3 sm:p-6 rounded-lg">
+            <p className="text-slate-400 text-xs sm:text-sm uppercase tracking-wide" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Pending</p>
+            <p className="text-2xl sm:text-4xl font-bold text-slate-200 mt-1 sm:mt-2" style={{ fontFamily: 'Rajdhani, sans-serif' }}>{applications.filter(a => a.status === 'pending').length}</p>
           </div>
-          <div className="glass-card p-6 rounded-lg">
-            <p className="text-slate-400 text-sm uppercase tracking-wide" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Approved</p>
-            <p className="text-4xl font-bold text-emerald-500 mt-2" style={{ fontFamily: 'Rajdhani, sans-serif' }}>{applications.filter(a => a.status === 'approved').length}</p>
+          <div className="glass-card p-3 sm:p-6 rounded-lg">
+            <p className="text-slate-400 text-xs sm:text-sm uppercase tracking-wide" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Approved</p>
+            <p className="text-2xl sm:text-4xl font-bold text-emerald-500 mt-1 sm:mt-2" style={{ fontFamily: 'Rajdhani, sans-serif' }}>{applications.filter(a => a.status === 'approved').length}</p>
           </div>
         </div>
 
