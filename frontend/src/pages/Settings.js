@@ -403,6 +403,24 @@ export default function Settings() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Password Requirements */}
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded p-4 mb-4">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-blue-400 mb-1">Password Requirements:</p>
+                  <ul className="text-xs text-slate-300 space-y-1">
+                    <li>• At least 8 characters long</li>
+                    <li>• At least one uppercase letter (A-Z)</li>
+                    <li>• At least one lowercase letter (a-z)</li>
+                    <li>• At least one number (0-9)</li>
+                    <li>• At least one special character (!@#$%^&*)</li>
+                    <li>• Cannot reuse your last 10 passwords</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            
             <form onSubmit={handlePasswordChange} className="space-y-4" data-testid="change-password-form">
               <div className="space-y-2">
                 <Label htmlFor="old_password" className="text-slate-300">Current Password</Label>
