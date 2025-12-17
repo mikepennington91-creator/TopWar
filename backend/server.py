@@ -493,7 +493,7 @@ async def delete_moderator(username: str, current_user: dict = Depends(require_a
 
 @api_router.patch("/moderators/{username}/role")
 async def update_moderator_role(username: str, role_update: ModeratorRoleUpdate, current_user: dict = Depends(require_admin)):
-    if role_update.role not in ["admin", "mmod", "moderator", "lmod", "smod"]:
+    if role_update.role not in ["admin", "mmod", "moderator", "lmod", "smod", "developer"]:
         raise HTTPException(status_code=400, detail="Role must be 'admin', 'mmod', 'moderator', 'lmod', or 'smod'")
     
     # Check if user exists
