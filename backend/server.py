@@ -227,7 +227,7 @@ class ModeratorApplicationViewerUpdate(BaseModel):
 
 class ServerAssignmentCreate(BaseModel):
     server: int
-    tag: int
+    tag: str  # "Tag 2", "Tag 5", or "Tag 8"
     start_date: str
     end_date: Optional[str] = None
     reason: str
