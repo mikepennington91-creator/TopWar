@@ -532,15 +532,15 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* User Management - Available to roles in hierarchy */}
-        {currentUser && ['admin', 'developer', 'mmod', 'smod', 'lmod'].includes(currentUser.role) && (
+        {/* Admin Only Sections */}
+        {currentUser && currentUser.role === 'admin' && (
           <>
-            {/* Reset Password */}
+            {/* Reset Password - Admin Only */}
             <Card className="glass-card border-slate-700 mb-8">
               <CardHeader>
                 <CardTitle className="text-2xl font-bold uppercase tracking-wide text-red-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
                   <Lock className="inline-block mr-2 h-6 w-6" />
-                  Reset User Password (Admin Only)
+                  Reset User Password
                 </CardTitle>
                 <CardDescription className="text-slate-400">
                   Reset password for any moderator
@@ -586,7 +586,7 @@ export default function Settings() {
               </CardContent>
             </Card>
 
-            {/* Change Username */}
+            {/* Change Username - Admin Only */}
             <Card className="glass-card border-slate-700 mb-8">
               <CardHeader>
                 <CardTitle className="text-2xl font-bold uppercase tracking-wide text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
@@ -637,7 +637,7 @@ export default function Settings() {
               </CardContent>
             </Card>
 
-            {/* Add Moderator */}
+            {/* Add Moderator - Admin Only */}
             <Card className="glass-card border-slate-700 mb-8">
               <CardHeader>
                 <CardTitle className="text-2xl font-bold uppercase tracking-wide text-emerald-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
