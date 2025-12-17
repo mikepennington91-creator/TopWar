@@ -175,8 +175,10 @@ export default function ModeratorDashboard() {
 
   const getStatusBadge = (status) => {
     switch (status) {
+      case "awaiting_review":
+        return <Badge data-testid={`badge-awaiting-review`} variant="outline" className="uppercase border-slate-600 text-slate-400 font-semibold">Awaiting Review</Badge>;
       case "pending":
-        return <Badge data-testid={`badge-pending`} variant="outline" className="uppercase border-slate-600 text-slate-400 font-semibold">Pending</Badge>;
+        return <Badge data-testid={`badge-pending`} className="uppercase bg-blue-500/20 text-blue-400 border-blue-500/50 font-semibold">Pending</Badge>;
       case "approved":
         return <Badge data-testid={`badge-approved`} className="uppercase bg-emerald-500/20 text-emerald-400 border-emerald-500/50 font-semibold">Approved</Badge>;
       case "rejected":
