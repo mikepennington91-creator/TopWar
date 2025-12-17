@@ -740,109 +740,139 @@ export default function Settings() {
                         </div>
                       </div>
                       
-                      {mod.username !== currentUser.username && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {/* Role Selection */}
-                          <div className="space-y-2">
-                            <Label className="text-slate-400 text-xs uppercase">Role</Label>
-                            <Select
-                              value={mod.role}
-                              onValueChange={(value) => handleChangeRole(mod.username, value)}
-                              disabled={loading}
-                            >
-                              <SelectTrigger className="bg-slate-900/50 border-slate-700 text-slate-200 rounded-sm">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-slate-900 border-slate-700">
-                                <SelectItem value="admin" className="text-red-400">Admin</SelectItem>
-                                <SelectItem value="mmod" className="text-red-500">MMOD</SelectItem>
-                                <SelectItem value="moderator" className="text-blue-400">Moderator</SelectItem>
-                                <SelectItem value="lmod" className="text-purple-400">LMOD</SelectItem>
-                                <SelectItem value="smod" className="text-pink-400">SMOD</SelectItem>
-                                <SelectItem value="developer" className="text-yellow-400">Developer</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          
-                          {/* Permissions Toggles */}
-                          <div className="space-y-3 md:col-span-2">
-                            <Label className="text-slate-400 text-xs uppercase">Permissions</Label>
-                            
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="checkbox"
-                                data-testid={`training-manager-${mod.username}`}
-                                checked={mod.is_training_manager || false}
-                                onChange={() => handleToggleTrainingManager(mod.username, mod.is_training_manager || false)}
-                                disabled={loading}
-                                className="w-5 h-5 rounded bg-slate-900 border-slate-700 text-blue-500 focus:ring-blue-500"
-                              />
-                              <span className="text-slate-300">Enable Training Manager</span>
-                            </div>
-                            
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="checkbox"
-                                data-testid={`admin-${mod.username}`}
-                                checked={mod.is_admin || false}
-                                onChange={() => handleToggleAdmin(mod.username, mod.is_admin || false)}
-                                disabled={loading}
-                                className="w-5 h-5 rounded bg-slate-900 border-slate-700 text-red-500 focus:ring-red-500"
-                              />
-                              <span className="text-slate-300">Enable Admin</span>
-                            </div>
-                            
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="checkbox"
-                                data-testid={`application-viewer-${mod.username}`}
-                                checked={mod.can_view_applications !== false}
-                                onChange={() => handleToggleApplicationViewer(mod.username, mod.can_view_applications !== false)}
-                                disabled={loading}
-                                className="w-5 h-5 rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-emerald-500"
-                              />
-                              <span className="text-slate-300">Application Viewer</span>
-                            </div>
-                          </div>
-                          
-                          {/* Action Buttons */}
-                          <div className="md:col-span-2 flex gap-2 flex-wrap">
-                            {mod.locked_at && (
-                              <Button
-                                data-testid={`unlock-${mod.username}`}
-                                onClick={() => handleUnlockAccount(mod.username)}
-                                disabled={loading}
-                                size="sm"
-                                className="bg-orange-500 hover:bg-orange-600 text-white rounded-sm"
-                              >
-                                <UserCheck className="h-4 w-4 mr-1" /> Unlock Account
-                              </Button>
+                      {/* Show controls based on hierarchy */}
+                      {(() => {
+                        const isSelf = mod.username === currentUser.username;
+                        const canChangeRole = canModifyRole(currentUser.role, mod.role, isSelf);
+                        const canChangePerms = canModifyPermissions(currentUser.role);
+                        const assignableRoles = getAssignableRoles(currentUser.role, mod.role);
+                        
+                        // Admin can edit self, others can only edit lower ranks
+                        if (!canChangeRole && !isSelf) return null;
+                        if (isSelf && currentUser.role !== 'admin') return null;
+                        
+                        return (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Role Selection */}
+                            {canChangeRole && assignableRoles.length > 0 && (
+                              <div className="space-y-2">
+                                <Label className="text-slate-400 text-xs uppercase">Role</Label>
+                                <Select
+                                  value={mod.role}
+                                  onValueChange={(value) => handleChangeRole(mod.username, value)}
+                                  disabled={loading}
+                                >
+                                  <SelectTrigger className="bg-slate-900/50 border-slate-700 text-slate-200 rounded-sm">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-slate-900 border-slate-700">
+                                    {assignableRoles.includes('admin') && (
+                                      <SelectItem value="admin" className="text-red-400">Admin</SelectItem>
+                                    )}
+                                    {assignableRoles.includes('developer') && (
+                                      <SelectItem value="developer" className="text-yellow-400">Developer</SelectItem>
+                                    )}
+                                    {assignableRoles.includes('mmod') && (
+                                      <SelectItem value="mmod" className="text-red-500">MMOD</SelectItem>
+                                    )}
+                                    {assignableRoles.includes('smod') && (
+                                      <SelectItem value="smod" className="text-pink-400">SMOD</SelectItem>
+                                    )}
+                                    {assignableRoles.includes('lmod') && (
+                                      <SelectItem value="lmod" className="text-purple-400">LMOD</SelectItem>
+                                    )}
+                                    {assignableRoles.includes('moderator') && (
+                                      <SelectItem value="moderator" className="text-blue-400">Moderator</SelectItem>
+                                    )}
+                                  </SelectContent>
+                                </Select>
+                              </div>
                             )}
-                            <Button
-                              data-testid={`toggle-status-${mod.username}`}
-                              onClick={() => handleToggleStatus(mod.username, mod.status || "active")}
-                              disabled={loading}
-                              size="sm"
-                              className={`${(mod.status || "active") === "active" ? "bg-amber-500/20 border-amber-500 text-amber-400 hover:bg-amber-500/30" : "bg-emerald-500/20 border-emerald-500 text-emerald-400 hover:bg-emerald-500/30"} border-2 rounded-sm`}
-                            >
-                              {(mod.status || "active") === "active" ? (
-                                <><UserX className="h-4 w-4 mr-1" /> Disable Account</>
-                              ) : (
-                                <><UserCheck className="h-4 w-4 mr-1" /> Enable Account</>
-                              )}
-                            </Button>
-                            <Button
-                              data-testid={`delete-${mod.username}`}
-                              onClick={() => handleDeleteModerator(mod.username)}
-                              disabled={loading}
-                              size="sm"
-                              className="bg-red-500 hover:bg-red-600 text-white rounded-sm"
-                            >
-                              Delete Permanently
-                            </Button>
+                            
+                            {/* Permissions Toggles - Admin Only */}
+                            {canChangePerms && !isSelf && (
+                              <div className="space-y-3 md:col-span-2">
+                                <Label className="text-slate-400 text-xs uppercase">Permissions (Admin Only)</Label>
+                                
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    data-testid={`training-manager-${mod.username}`}
+                                    checked={mod.is_training_manager || false}
+                                    onChange={() => handleToggleTrainingManager(mod.username, mod.is_training_manager || false)}
+                                    disabled={loading}
+                                    className="w-5 h-5 rounded bg-slate-900 border-slate-700 text-blue-500 focus:ring-blue-500"
+                                  />
+                                  <span className="text-slate-300">Enable Training Manager</span>
+                                </div>
+                                
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    data-testid={`admin-${mod.username}`}
+                                    checked={mod.is_admin || false}
+                                    onChange={() => handleToggleAdmin(mod.username, mod.is_admin || false)}
+                                    disabled={loading}
+                                    className="w-5 h-5 rounded bg-slate-900 border-slate-700 text-red-500 focus:ring-red-500"
+                                  />
+                                  <span className="text-slate-300">Enable Admin</span>
+                                </div>
+                                
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    data-testid={`application-viewer-${mod.username}`}
+                                    checked={mod.can_view_applications !== false}
+                                    onChange={() => handleToggleApplicationViewer(mod.username, mod.can_view_applications !== false)}
+                                    disabled={loading}
+                                    className="w-5 h-5 rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-emerald-500"
+                                  />
+                                  <span className="text-slate-300">Application Viewer</span>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Action Buttons - Admin Only */}
+                            {canChangePerms && !isSelf && (
+                              <div className="md:col-span-2 flex gap-2 flex-wrap">
+                                {mod.locked_at && (
+                                  <Button
+                                    data-testid={`unlock-${mod.username}`}
+                                    onClick={() => handleUnlockAccount(mod.username)}
+                                    disabled={loading}
+                                    size="sm"
+                                    className="bg-orange-500 hover:bg-orange-600 text-white rounded-sm"
+                                  >
+                                    <UserCheck className="h-4 w-4 mr-1" /> Unlock Account
+                                  </Button>
+                                )}
+                                <Button
+                                  data-testid={`toggle-status-${mod.username}`}
+                                  onClick={() => handleToggleStatus(mod.username, mod.status || "active")}
+                                  disabled={loading}
+                                  size="sm"
+                                  className={`${(mod.status || "active") === "active" ? "bg-amber-500/20 border-amber-500 text-amber-400 hover:bg-amber-500/30" : "bg-emerald-500/20 border-emerald-500 text-emerald-400 hover:bg-emerald-500/30"} border-2 rounded-sm`}
+                                >
+                                  {(mod.status || "active") === "active" ? (
+                                    <><UserX className="h-4 w-4 mr-1" /> Disable Account</>
+                                  ) : (
+                                    <><UserCheck className="h-4 w-4 mr-1" /> Enable Account</>
+                                  )}
+                                </Button>
+                                <Button
+                                  data-testid={`delete-${mod.username}`}
+                                  onClick={() => handleDeleteModerator(mod.username)}
+                                  disabled={loading}
+                                  size="sm"
+                                  className="bg-red-500 hover:bg-red-600 text-white rounded-sm"
+                                >
+                                  Delete Permanently
+                                </Button>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      )}
+                        );
+                      })()}
                     </div>
                   ))}
                 </div>
