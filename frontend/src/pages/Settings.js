@@ -49,7 +49,7 @@ export default function Settings() {
     
     setCurrentUser({ role, username });
     
-    if (role === 'admin' || role === 'senior_moderator') {
+    if (role === 'admin' || role === 'mmod') {
       fetchModerators();
     }
   }, [navigate]);
