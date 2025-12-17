@@ -28,7 +28,11 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # JWT settings
 SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'topwar-moderator-secret-key-change-in-production')
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours
+ACCESS_TOKEN_EXPIRE_MINUTES = 60  # 1 hour
+
+# Security settings
+MAX_LOGIN_ATTEMPTS = 3
+PASSWORD_HISTORY_COUNT = 10
 
 security = HTTPBearer()
 
