@@ -357,11 +357,30 @@ async def change_password(password_data: PasswordChange, current_user: dict = De
     if not pwd_context.verify(password_data.old_password, moderator["hashed_password"]):
         raise HTTPException(status_code=400, detail="Current password is incorrect")
     
-    # Update password
+    # Validate password strength
+    is_valid, message = validate_password_strength(password_data.new_password)
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=message)
+    
+    # Check password history
+    password_history = moderator.get("password_history", [])
+    if not check_password_history(password_data.new_password, password_history):
+        raise HTTPException(status_code=400, detail="Password has been used recently. Please choose a different password.")
+    
+    # Hash new password
     new_hashed = pwd_context.hash(password_data.new_password)
+    
+    # Update password history (keep last 10)
+    new_history = [moderator["hashed_password"]] + password_history
+    new_history = new_history[:PASSWORD_HISTORY_COUNT]
+    
+    # Update password
     await db.moderators.update_one(
         {"username": current_user["username"]},
-        {"$set": {"hashed_password": new_hashed}}
+        {"$set": {
+            "hashed_password": new_hashed,
+            "password_history": new_history
+        }}
     )
     
     return {"message": "Password changed successfully"}
