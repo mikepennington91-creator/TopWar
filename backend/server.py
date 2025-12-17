@@ -550,6 +550,24 @@ async def update_admin(username: str, admin_update: ModeratorAdminUpdate, curren
     status = "enabled" if admin_update.is_admin else "disabled"
     return {"message": f"Admin status {status} for {username}"}
 
+@api_router.patch("/moderators/{username}/unlock")
+async def unlock_account(username: str, current_user: dict = Depends(require_admin)):
+    # Check if user exists
+    moderator = await db.moderators.find_one({"username": username}, {"_id": 0})
+    if not moderator:
+        raise HTTPException(status_code=404, detail="Moderator not found")
+    
+    # Unlock account
+    await db.moderators.update_one(
+        {"username": username},
+        {"$set": {
+            "locked_at": None,
+            "failed_login_attempts": 0
+        }}
+    )
+    
+    return {"message": f"Account unlocked for {username}"}
+
 @api_router.patch("/moderators/{username}/application-viewer")
 async def update_application_viewer(username: str, viewer_update: ModeratorApplicationViewerUpdate, current_user: dict = Depends(require_admin)):
     # Check if user exists
