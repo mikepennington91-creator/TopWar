@@ -426,6 +426,82 @@ async def update_training_manager(username: str, tm_update: ModeratorTrainingMan
     status = "enabled" if tm_update.is_training_manager else "disabled"
     return {"message": f"Training Manager status {status} for {username}"}
 
+@api_router.patch("/moderators/{username}/admin")
+async def update_admin(username: str, admin_update: ModeratorAdminUpdate, current_user: dict = Depends(require_admin)):
+    # Check if user exists
+    moderator = await db.moderators.find_one({"username": username}, {"_id": 0})
+    if not moderator:
+        raise HTTPException(status_code=404, detail="Moderator not found")
+    
+    # Update admin status
+    await db.moderators.update_one(
+        {"username": username},
+        {"$set": {"is_admin": admin_update.is_admin}}
+    )
+    
+    status = "enabled" if admin_update.is_admin else "disabled"
+    return {"message": f"Admin status {status} for {username}"}
+
+@api_router.patch("/moderators/{username}/application-viewer")
+async def update_application_viewer(username: str, viewer_update: ModeratorApplicationViewerUpdate, current_user: dict = Depends(require_admin)):
+    # Check if user exists
+    moderator = await db.moderators.find_one({"username": username}, {"_id": 0})
+    if not moderator:
+        raise HTTPException(status_code=404, detail="Moderator not found")
+    
+    # Update application viewer status
+    await db.moderators.update_one(
+        {"username": username},
+        {"$set": {"can_view_applications": viewer_update.can_view_applications}}
+    )
+    
+    status = "enabled" if viewer_update.can_view_applications else "disabled"
+    return {"message": f"Application Viewer status {status} for {username}"}
+
+# Server Assignments Routes
+@api_router.post("/server-assignments", response_model=ServerAssignment)
+async def create_server_assignment(assignment: ServerAssignmentCreate, current_user: dict = Depends(get_current_moderator)):
+    assignment_obj = ServerAssignment(**assignment.model_dump(), created_by=current_user['username'])
+    doc = assignment_obj.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.server_assignments.insert_one(doc)
+    return assignment_obj
+
+@api_router.get("/server-assignments", response_model=List[ServerAssignment])
+async def get_server_assignments(current_user: dict = Depends(get_current_moderator)):
+    assignments = await db.server_assignments.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    
+    for assignment in assignments:
+        if isinstance(assignment.get('created_at'), str):
+            assignment['created_at'] = datetime.fromisoformat(assignment['created_at'])
+    
+    return assignments
+
+@api_router.patch("/server-assignments/{assignment_id}")
+async def update_server_assignment(assignment_id: str, update: ServerAssignmentUpdate, current_user: dict = Depends(get_current_moderator)):
+    # Check if assignment exists
+    assignment = await db.server_assignments.find_one({"id": assignment_id}, {"_id": 0})
+    if not assignment:
+        raise HTTPException(status_code=404, detail="Server assignment not found")
+    
+    # Update end date
+    await db.server_assignments.update_one(
+        {"id": assignment_id},
+        {"$set": {"end_date": update.end_date}}
+    )
+    
+    return {"message": "End date updated successfully"}
+
+@api_router.delete("/server-assignments/{assignment_id}")
+async def delete_server_assignment(assignment_id: str, current_user: dict = Depends(require_admin)):
+    result = await db.server_assignments.delete_one({"id": assignment_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Server assignment not found")
+    
+    return {"message": "Server assignment deleted successfully"}
+
 # Application Routes
 @api_router.post("/applications", response_model=Application)
 async def submit_application(app_data: ApplicationCreate):
