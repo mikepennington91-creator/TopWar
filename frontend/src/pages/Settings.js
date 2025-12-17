@@ -580,9 +580,11 @@ export default function Settings() {
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-900 border-slate-700">
-                        <SelectItem value="moderator" className="text-emerald-400">Moderator</SelectItem>
-                        <SelectItem value="senior_moderator" className="text-amber-400">Senior Moderator</SelectItem>
                         <SelectItem value="admin" className="text-red-400">Admin</SelectItem>
+                        <SelectItem value="mmod" className="text-red-500">MMOD</SelectItem>
+                        <SelectItem value="moderator" className="text-blue-400">Moderator</SelectItem>
+                        <SelectItem value="lmod" className="text-purple-400">LMOD</SelectItem>
+                        <SelectItem value="smod" className="text-pink-400">SMOD</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
