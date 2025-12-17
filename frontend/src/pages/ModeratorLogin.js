@@ -33,7 +33,7 @@ export default function ModeratorLogin() {
       localStorage.setItem('moderator_role', response.data.role);
       localStorage.setItem('moderator_username', response.data.username);
       toast.success("Login successful!");
-      navigate('/');
+      navigate('/moderator/portal');
     } catch (error) {
       console.error(error);
       toast.error(error.response?.data?.detail || "Invalid credentials");
