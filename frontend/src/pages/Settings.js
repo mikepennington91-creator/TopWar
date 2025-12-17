@@ -701,22 +701,22 @@ export default function Settings() {
               <CardContent>
                 <div className="space-y-3" data-testid="moderator-list">
                   {moderators.map((mod) => (
-                    <div key={mod.username} className="p-4 bg-slate-900/50 rounded border border-slate-800">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex-1">
-                          <p className="font-semibold text-slate-200 text-lg">{mod.username}</p>
-                          <p className="text-sm text-slate-500 mono">
+                    <div key={mod.username} className="p-3 sm:p-4 bg-slate-900/50 rounded border border-slate-800">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 mb-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-slate-200 text-base sm:text-lg truncate">{mod.username}</p>
+                          <p className="text-xs sm:text-sm text-slate-500 mono">
                             Joined: {new Date(mod.created_at).toLocaleDateString()}
                           </p>
                           <p className="text-sm mt-1">{getRoleBadge(mod.role)}</p>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-2">
                           {getStatusBadge(mod.status || "active")}
                           {mod.is_training_manager && (
-                            <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/50">TRAINING MGR</Badge>
+                            <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/50 text-xs">TRAINING MGR</Badge>
                           )}
                           {mod.is_admin && (
-                            <Badge className="bg-red-500/20 text-red-400 border-red-500/50">ADMIN ACCESS</Badge>
+                            <Badge className="bg-red-500/20 text-red-400 border-red-500/50 text-xs">ADMIN ACCESS</Badge>
                           )}
                         </div>
                       </div>
