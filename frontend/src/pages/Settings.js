@@ -425,6 +425,57 @@ export default function Settings() {
               </CardContent>
             </Card>
 
+            {/* Change Username */}
+            <Card className="glass-card border-slate-700 mb-8">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold uppercase tracking-wide text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                  <UserPlus className="inline-block mr-2 h-6 w-6" />
+                  Change Moderator Username
+                </CardTitle>
+                <CardDescription className="text-slate-400">
+                  Change any moderator's username
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleChangeUsername} className="space-y-4" data-testid="change-username-form">
+                  <div className="space-y-2">
+                    <Label htmlFor="old_username" className="text-slate-300">Current Username</Label>
+                    <Input
+                      id="old_username"
+                      data-testid="old-username-input"
+                      type="text"
+                      value={changeUsernameForm.old_username}
+                      onChange={(e) => setChangeUsernameForm(prev => ({ ...prev, old_username: e.target.value }))}
+                      required
+                      className="bg-slate-900/50 border-slate-700 focus:border-amber-500 text-slate-200 rounded-sm"
+                      placeholder="Enter current username"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new_username_change" className="text-slate-300">New Username</Label>
+                    <Input
+                      id="new_username_change"
+                      data-testid="new-username-input"
+                      type="text"
+                      value={changeUsernameForm.new_username}
+                      onChange={(e) => setChangeUsernameForm(prev => ({ ...prev, new_username: e.target.value }))}
+                      required
+                      className="bg-slate-900/50 border-slate-700 focus:border-amber-500 text-slate-200 rounded-sm"
+                      placeholder="Enter new username"
+                    />
+                  </div>
+                  <Button
+                    data-testid="change-username-btn"
+                    type="submit"
+                    disabled={loading}
+                    className="bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide rounded-sm"
+                  >
+                    {loading ? "Changing..." : "Change Username"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
             {/* Add Moderator */}
             <Card className="glass-card border-slate-700 mb-8">
               <CardHeader>
