@@ -140,7 +140,7 @@ class Moderator(BaseModel):
     username: str
     hashed_password: str
     password_history: List[str] = Field(default_factory=list)  # Store last 10 hashed passwords
-    role: str = "moderator"  # admin, mmod, moderator, lmod, smod
+    role: str = "moderator"  # admin, mmod, moderator, lmod, smod, developer
     status: str = "active"  # active, disabled
     is_training_manager: bool = False
     is_admin: bool = False
