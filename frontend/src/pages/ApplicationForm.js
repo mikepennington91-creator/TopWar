@@ -238,19 +238,27 @@ export default function ApplicationForm() {
                   (question.name === "hero_development" || question.name === "racist_r4" || question.name === "moderator_swearing")) {
                 return null;
               }
+
+              // Hide Discord-specific questions if position is "In-Game"
+              if (question.discordOnly && formData.position === "In-Game") {
+                return null;
+              }
+
+              // Hide Discord-specific questions if position is not selected yet
+              if (question.discordOnly && !formData.position) {
+                return null;
+              }
               
               // Calculate visible question number
-              let visibleQuestionNumber = index + 1;
-              if (formData.position === "In-Game") {
-                // Adjust numbering if discord_tools_comfort (originally index 15) is hidden
-                if (index > 15) visibleQuestionNumber -= 1;
-              } else if (formData.position === "Discord") {
-                // Adjust numbering if hero_development, racist_r4, moderator_swearing are hidden
-                const hiddenQuestions = questions.slice(0, index).filter(q => 
-                  q.name === "hero_development" || q.name === "racist_r4" || q.name === "moderator_swearing"
-                ).length;
-                visibleQuestionNumber -= hiddenQuestions;
-              }
+              const visibleQuestions = questions.filter((q, i) => {
+                if (i >= index) return false;
+                if (q.name === "discord_tools_comfort" && formData.position === "In-Game") return false;
+                if (formData.position === "Discord" && (q.name === "hero_development" || q.name === "racist_r4" || q.name === "moderator_swearing")) return false;
+                if (q.discordOnly && formData.position === "In-Game") return false;
+                if (q.discordOnly && !formData.position) return false;
+                return true;
+              });
+              const visibleQuestionNumber = visibleQuestions.length + 1;
               
               return (
                 <div key={question.name} className="space-y-2">
