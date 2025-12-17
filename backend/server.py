@@ -125,7 +125,8 @@ class ApplicationCreate(BaseModel):
     discord_voice_channel_management: str = "N/A"
 
 class ApplicationUpdate(BaseModel):
-    status: str  # approved or rejected
+    status: str  # approved, rejected, pending, awaiting_review
+    comment: str  # Required comment explaining the status change
 
 class VoteCreate(BaseModel):
     vote: str  # "approve" or "reject"
@@ -176,6 +177,19 @@ class Announcement(BaseModel):
 class AnnouncementCreate(BaseModel):
     title: str
     message: str
+
+class AuditLog(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    action: str  # approved, rejected, deleted, status_changed
+    application_id: str
+    application_name: str
+    performed_by: str
+    comment: str
+    old_status: Optional[str] = None
+    new_status: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ModeratorCreate(BaseModel):
     username: str
