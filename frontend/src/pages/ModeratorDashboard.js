@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Search, LogOut, CheckCircle, XCircle, Eye, ThumbsUp, ThumbsDown, MessageSquare, Settings, Server } from "lucide-react";
+import { Search, LogOut, CheckCircle, XCircle, Eye, ThumbsUp, ThumbsDown, MessageSquare, Settings, Server, ArrowUpDown, Filter, Menu, X } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
