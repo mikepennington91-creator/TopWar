@@ -113,62 +113,60 @@ export default function ApplicationForm() {
             🌟 TOP WAR MODERATOR RECRUITMENT! 🌟
           </h1>
           
-          <div className="text-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-wide mb-4 text-emerald-400" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+          <div className="mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-wide mb-6 text-emerald-400 text-center" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
               🛡️ In-Game & Discord Moderators Needed!
             </h2>
-            <p className="text-lg text-slate-300 leading-relaxed max-w-4xl mx-auto">
-              Are you passionate about Top War and want to help shape the community? We're looking for motivated, knowledgeable players to join our moderation team and support both the in-game environment and the official Discord server. If you love the game and enjoy helping others, this could be the perfect role for you! 💥
-            </p>
-          </div>
+            
+            <div className="space-y-6 text-slate-300 leading-relaxed max-w-5xl mx-auto">
+              <p className="text-lg">
+                Are you passionate about Top War and want to help shape the community? We're looking for motivated, knowledgeable players to join our moderation team and support both the in-game environment and the official Discord server. If you love the game and enjoy helping others, this could be the perfect role for you! 💥
+              </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-            {/* Requirements */}
-            <div className="bg-slate-900/50 p-6 rounded-lg border border-slate-700">
-              <h3 className="text-2xl font-bold uppercase tracking-wide mb-4 text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                🎯 Requirements
-              </h3>
-              <p className="text-slate-400 mb-4">To apply, you must meet all of the following:</p>
-              <ul className="space-y-2 text-slate-300">
-                <li>🎂 Aged 21+</li>
-                <li>🔥 At least one Level 100 Top War account</li>
-                <li>🎮 Strong knowledge of gameplay, features, mechanics & events</li>
-                <li>🗨️ Active Discord account</li>
-                <li>🏛️ Must already be a member of the official Top War Discord server</li>
-                <li>🤝 Friendly, fair, consistent, and able to stay calm in tough situations</li>
-              </ul>
-            </div>
+              <div>
+                <h3 className="text-xl font-bold uppercase tracking-wide mb-3 text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                  🎯 Requirements
+                </h3>
+                <p className="mb-3">To apply, you must meet all of the following:</p>
+                <div className="space-y-2 pl-4">
+                  <p>🎂 Aged 21+</p>
+                  <p>🔥 At least one Level 100 Top War account</p>
+                  <p>🎮 Strong knowledge of gameplay, features, mechanics & events</p>
+                  <p>🗨️ Active Discord account</p>
+                  <p>🏛️ Must already be a member of the official Top War Discord server</p>
+                  <p>🤝 Friendly, fair, consistent, and able to stay calm in tough situations</p>
+                </div>
+              </div>
 
-            {/* Why Become a Moderator */}
-            <div className="bg-slate-900/50 p-6 rounded-lg border border-slate-700">
-              <h3 className="text-2xl font-bold uppercase tracking-wide mb-4 text-emerald-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                ✨ Why Become a Moderator?
-              </h3>
-              <p className="text-slate-400 mb-4">Being a moderator isn't just a role, it's a chance to make a real impact. Here's what you can gain:</p>
-              <ul className="space-y-2 text-slate-300 text-sm">
-                <li>🌍 Help shape the community by keeping it safe, active, and welcoming</li>
-                <li>🤝 Support fellow players, answer questions, and guide new commanders</li>
-                <li>🧠 Develop problem-solving & communication skills</li>
-                <li>🏆 Be part of an official moderation team recognised for its contributions</li>
-                <li>🚀 Early access to information and insight into community trends</li>
-                <li>💬 A chance to work closely with other passionate players and staff</li>
-                <li>⭐ Make Top War a better place for thousands of players</li>
-              </ul>
-            </div>
+              <div>
+                <h3 className="text-xl font-bold uppercase tracking-wide mb-3 text-emerald-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                  ✨ Why Become a Moderator?
+                </h3>
+                <p className="mb-3">Being a moderator isn't just a role, it's a chance to make a real impact. Here's what you can gain:</p>
+                <div className="space-y-2 pl-4">
+                  <p>🌍 Help shape the community by keeping it safe, active, and welcoming</p>
+                  <p>🤝 Support fellow players, answer questions, and guide new commanders</p>
+                  <p>🧠 Develop problem-solving & communication skills</p>
+                  <p>🏆 Be part of an official moderation team recognised for its contributions</p>
+                  <p>🚀 Early access to information and insight into community trends</p>
+                  <p>💬 A chance to work closely with other passionate players and staff</p>
+                  <p>⭐ Make Top War a better place for thousands of players</p>
+                </div>
+              </div>
 
-            {/* What You'll Be Doing */}
-            <div className="bg-slate-900/50 p-6 rounded-lg border border-slate-700">
-              <h3 className="text-2xl font-bold uppercase tracking-wide mb-4 text-blue-400" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                🛠️ What You'll Be Doing
-              </h3>
-              <ul className="space-y-2 text-slate-300">
-                <li>🔎 Monitoring chat and community spaces</li>
-                <li>❗ Handling player reports & escalating issues</li>
-                <li>📝 Ensuring rules are followed consistently</li>
-                <li>🙋 Assisting players with questions or gameplay issues</li>
-                <li>🧹 Helping keep discussions positive and organised</li>
-                <li>📣 Supporting events, announcements, and community initiatives</li>
-              </ul>
+              <div>
+                <h3 className="text-xl font-bold uppercase tracking-wide mb-3 text-blue-400" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                  🛠️ What You'll Be Doing
+                </h3>
+                <div className="space-y-2 pl-4">
+                  <p>🔎 Monitoring chat and community spaces</p>
+                  <p>❗ Handling player reports & escalating issues</p>
+                  <p>📝 Ensuring rules are followed consistently</p>
+                  <p>🙋 Assisting players with questions or gameplay issues</p>
+                  <p>🧹 Helping keep discussions positive and organised</p>
+                  <p>📣 Supporting events, announcements, and community initiatives</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
