@@ -532,8 +532,8 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Admin/MMOD: User Management */}
-        {currentUser && (currentUser.role === 'admin' || currentUser.role === 'mmod') && (
+        {/* User Management - Available to roles in hierarchy */}
+        {currentUser && ['admin', 'developer', 'mmod', 'smod', 'lmod'].includes(currentUser.role) && (
           <>
             {/* Reset Password */}
             <Card className="glass-card border-slate-700 mb-8">
