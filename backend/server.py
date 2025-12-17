@@ -392,11 +392,26 @@ async def reset_password(username: str, password_data: PasswordReset, current_us
     if not moderator:
         raise HTTPException(status_code=404, detail="Moderator not found")
     
-    # Update password
+    # Validate password strength
+    is_valid, message = validate_password_strength(password_data.new_password)
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=message)
+    
+    # Hash new password
     new_hashed = pwd_context.hash(password_data.new_password)
+    
+    # Update password history (keep last 10)
+    password_history = moderator.get("password_history", [])
+    new_history = [moderator["hashed_password"]] + password_history
+    new_history = new_history[:PASSWORD_HISTORY_COUNT]
+    
+    # Update password
     await db.moderators.update_one(
         {"username": username},
-        {"$set": {"hashed_password": new_hashed}}
+        {"$set": {
+            "hashed_password": new_hashed,
+            "password_history": new_history
+        }}
     )
     
     return {"message": f"Password reset successfully for {username}"}
