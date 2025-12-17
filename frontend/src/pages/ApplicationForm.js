@@ -46,7 +46,13 @@ export default function ApplicationForm() {
     unknown_question: "",
     hero_development: "",
     racist_r4: "",
-    moderator_swearing: ""
+    moderator_swearing: "",
+    // Discord-specific questions
+    discord_moderation_tools: "",
+    discord_spam_handling: "",
+    discord_bots_experience: "",
+    discord_harassment_handling: "",
+    discord_voice_channel_management: ""
   });
 
   const handleChange = (e) => {
