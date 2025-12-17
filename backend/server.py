@@ -188,6 +188,23 @@ class ModeratorUsernameUpdate(BaseModel):
 class ModeratorTrainingManagerUpdate(BaseModel):
     is_training_manager: bool
 
+class ModeratorAdminUpdate(BaseModel):
+    is_admin: bool
+
+class ModeratorApplicationViewerUpdate(BaseModel):
+    can_view_applications: bool
+
+class ServerAssignmentCreate(BaseModel):
+    server: int
+    tag: int
+    start_date: str
+    end_date: Optional[str] = None
+    reason: str
+    comments: str = ""
+
+class ServerAssignmentUpdate(BaseModel):
+    end_date: str
+
 
 # ============= Auth Helpers =============
 
