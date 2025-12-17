@@ -14,7 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Search, LogOut, CheckCircle, XCircle, Eye, ThumbsUp, ThumbsDown, MessageSquare, Settings, Server, ArrowUpDown, Filter, Menu, X } from "lucide-react";
+import { Search, LogOut, CheckCircle, XCircle, Eye, ThumbsUp, ThumbsDown, MessageSquare, Settings, Server, ArrowUpDown, Filter, Menu, X, Trash2, Edit, ClipboardList } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -32,6 +32,10 @@ export default function ModeratorDashboard() {
   const [sortOrder, setSortOrder] = useState("newest"); // newest or oldest
   const [statusFilter, setStatusFilter] = useState(["all"]); // all, awaiting_review, pending, approved, rejected
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showStatusChangeDialog, setShowStatusChangeDialog] = useState(false);
+  const [statusChangeData, setStatusChangeData] = useState({ status: "", comment: "" });
+  const [showAuditLog, setShowAuditLog] = useState(false);
+  const [auditLogs, setAuditLogs] = useState([]);
 
   useEffect(() => {
     const token = localStorage.getItem('moderator_token');
@@ -196,23 +200,66 @@ export default function ModeratorDashboard() {
     }
   };
 
-  const handleStatusUpdate = async (applicationId, status) => {
+  const handleStatusUpdate = async (applicationId, status, comment) => {
+    if (!comment || !comment.trim()) {
+      toast.error("A comment is required when changing status");
+      return;
+    }
+    
     setActionLoading(true);
     try {
       const token = localStorage.getItem('moderator_token');
       await axios.patch(
         `${API}/applications/${applicationId}`,
-        { status },
+        { status, comment },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success(`Application ${status} successfully!`);
+      toast.success(`Application status changed to ${status}!`);
+      setSelectedApp(null);
+      setShowStatusChangeDialog(false);
+      setStatusChangeData({ status: "", comment: "" });
+      fetchApplications();
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.detail || `Failed to update application`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteApplication = async (applicationId, appName) => {
+    if (!window.confirm(`Are you sure you want to DELETE the application from "${appName}"? This action cannot be undone!`)) {
+      return;
+    }
+    
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem('moderator_token');
+      await axios.delete(`${API}/applications/${applicationId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(`Application from ${appName} deleted`);
       setSelectedApp(null);
       fetchApplications();
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.detail || `Failed to ${status} application`);
+      toast.error(error.response?.data?.detail || "Failed to delete application");
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const fetchAuditLogs = async () => {
+    try {
+      const token = localStorage.getItem('moderator_token');
+      const response = await axios.get(`${API}/audit-logs`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setAuditLogs(response.data);
+      setShowAuditLog(true);
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.detail || "Failed to fetch audit logs");
     }
   };
 
