@@ -117,6 +117,12 @@ class ApplicationCreate(BaseModel):
     hero_development: str
     racist_r4: str
     moderator_swearing: str
+    # Discord-specific questions (optional, defaults to N/A for In-Game only applicants)
+    discord_moderation_tools: str = "N/A"
+    discord_spam_handling: str = "N/A"
+    discord_bots_experience: str = "N/A"
+    discord_harassment_handling: str = "N/A"
+    discord_voice_channel_management: str = "N/A"
 
 class ApplicationUpdate(BaseModel):
     status: str  # approved or rejected
