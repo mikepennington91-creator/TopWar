@@ -56,6 +56,12 @@ export default function ApplicationForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Show confirmation dialog instead of submitting immediately
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmedSubmit = async () => {
+    setShowConfirmation(false);
     setLoading(true);
 
     try {
