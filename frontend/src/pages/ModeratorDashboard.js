@@ -53,7 +53,7 @@ export default function ModeratorDashboard() {
 
   const fetchCurrentUser = async (token, username, role) => {
     try {
-      // Fetch moderator list to check training manager status
+      // Fetch moderator list to check training manager and admin status
       const response = await axios.get(`${API}/moderators`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -61,11 +61,12 @@ export default function ModeratorDashboard() {
       setCurrentUser({ 
         username, 
         role,
-        is_training_manager: currentMod?.is_training_manager || false
+        is_training_manager: currentMod?.is_training_manager || false,
+        is_admin: currentMod?.is_admin || role === 'admin'
       });
     } catch (error) {
       // If can't fetch (non-admin), just set basic info
-      setCurrentUser({ username, role, is_training_manager: false });
+      setCurrentUser({ username, role, is_training_manager: false, is_admin: role === 'admin' });
     }
   };
 
