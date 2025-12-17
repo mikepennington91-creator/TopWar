@@ -540,14 +540,26 @@ async def delete_moderator(username: str, current_user: dict = Depends(require_a
     return {"message": f"Moderator {username} has been deleted successfully"}
 
 @api_router.patch("/moderators/{username}/role")
-async def update_moderator_role(username: str, role_update: ModeratorRoleUpdate, current_user: dict = Depends(require_admin)):
+async def update_moderator_role(username: str, role_update: ModeratorRoleUpdate, current_user: dict = Depends(get_current_moderator)):
     if role_update.role not in ["admin", "mmod", "moderator", "lmod", "smod", "developer"]:
-        raise HTTPException(status_code=400, detail="Role must be 'admin', 'mmod', 'moderator', 'lmod', or 'smod'")
+        raise HTTPException(status_code=400, detail="Role must be 'admin', 'mmod', 'moderator', 'lmod', 'smod', or 'developer'")
     
     # Check if user exists
     moderator = await db.moderators.find_one({"username": username}, {"_id": 0})
     if not moderator:
         raise HTTPException(status_code=404, detail="Moderator not found")
+    
+    is_self = current_user["username"] == username
+    target_role = moderator.get("role", "moderator")
+    
+    # Check if current user can modify the target's role
+    if not can_modify_role(current_user["role"], target_role, is_self):
+        raise HTTPException(status_code=403, detail="You do not have permission to modify this user's role")
+    
+    # Check if the new role is assignable by current user
+    assignable_roles = get_assignable_roles(current_user["role"])
+    if role_update.role not in assignable_roles:
+        raise HTTPException(status_code=403, detail=f"You cannot assign the '{role_update.role}' role")
     
     # Update role
     await db.moderators.update_one(
