@@ -159,6 +159,7 @@ class ServerAssignment(BaseModel):
     end_date: Optional[str] = None  # UK format DD/MM/YYYY
     reason: str
     comments: str = ""
+    moderator_name: str = ""  # The moderator on the server (selected from dropdown)
     created_by: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -232,6 +233,7 @@ class ServerAssignmentCreate(BaseModel):
     end_date: Optional[str] = None
     reason: str
     comments: str = ""
+    moderator_name: str = ""  # The moderator on the server
 
 class ServerAssignmentUpdate(BaseModel):
     end_date: str
