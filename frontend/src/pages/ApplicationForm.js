@@ -141,6 +141,8 @@ export default function ApplicationForm() {
                     value={formData[question.name]}
                     onChange={handleChange}
                     required={question.required}
+                    min={question.min}
+                    max={question.max}
                     className="bg-slate-900/50 border-slate-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-slate-200 rounded-sm"
                     placeholder="Type your answer here..."
                   />
