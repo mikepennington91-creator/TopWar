@@ -217,6 +217,27 @@ export default function ApplicationForm() {
                       ))}
                     </SelectContent>
                   </Select>
+                ) : question.type === "rating" ? (
+                  <div className="flex items-center gap-4 py-2">
+                    {[1, 2, 3, 4, 5].map((rating) => (
+                      <button
+                        key={rating}
+                        type="button"
+                        data-testid={`rating-${rating}`}
+                        onClick={() => setFormData(prev => ({ ...prev, [question.name]: rating.toString() }))}
+                        className={`flex flex-col items-center gap-2 px-6 py-4 rounded-sm border-2 transition-all ${
+                          formData[question.name] === rating.toString()
+                            ? 'border-amber-500 bg-amber-500/20 text-amber-500'
+                            : 'border-slate-700 bg-slate-900/50 text-slate-400 hover:border-slate-600'
+                        }`}
+                      >
+                        <span className="text-3xl font-bold">{rating}</span>
+                        <span className="text-xs uppercase tracking-wide">
+                          {rating === 1 ? 'Novice' : rating === 2 ? 'Beginner' : rating === 3 ? 'Intermediate' : rating === 4 ? 'Advanced' : 'Expert'}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 ) : (
                   <Input
                     id={question.name}
