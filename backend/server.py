@@ -482,7 +482,10 @@ async def reset_password(username: str, password_data: PasswordReset, current_us
     return {"message": f"Password reset successfully for {username}"}
 
 @api_router.get("/moderators", response_model=List[ModeratorInfo])
-async def get_moderators(current_user: dict = Depends(require_admin)):
+async def get_moderators(current_user: dict = Depends(get_current_moderator)):
+    # Allow all roles in hierarchy to view moderators list
+    if current_user["role"] not in ["admin", "developer", "mmod", "smod", "lmod"]:
+        raise HTTPException(status_code=403, detail="You do not have permission to view moderators")
     moderators = await db.moderators.find({}, {"_id": 0, "hashed_password": 0}).to_list(1000)
     
     for mod in moderators:
