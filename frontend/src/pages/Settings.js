@@ -200,6 +200,82 @@ export default function Settings() {
     }
   };
 
+  const handleChangeRole = async (username, newRole) => {
+    if (!window.confirm(`Change ${username}'s role to ${newRole.replace('_', ' ')}?`)) {
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('moderator_token');
+      await axios.patch(
+        `${API}/moderators/${username}/role`,
+        { role: newRole },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`Role updated to ${newRole.replace('_', ' ')}!`);
+      fetchModerators();
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.detail || "Failed to update role");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangeUsername = async (e) => {
+    e.preventDefault();
+    
+    if (!changeUsernameForm.old_username || !changeUsernameForm.new_username) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('moderator_token');
+      await axios.patch(
+        `${API}/moderators/${changeUsernameForm.old_username}/username`,
+        { new_username: changeUsernameForm.new_username },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`Username changed successfully!`);
+      setChangeUsernameForm({ old_username: "", new_username: "" });
+      fetchModerators();
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.detail || "Failed to change username");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleTrainingManager = async (username, currentStatus) => {
+    const newStatus = !currentStatus;
+    const action = newStatus ? "enable" : "disable";
+    
+    if (!window.confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} Training Manager for ${username}?`)) {
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('moderator_token');
+      await axios.patch(
+        `${API}/moderators/${username}/training-manager`,
+        { is_training_manager: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`Training Manager ${action}d for ${username}!`);
+      fetchModerators();
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.detail || `Failed to ${action} Training Manager`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getRoleBadge = (role) => {
     const colors = {
       admin: "text-red-400",
