@@ -66,19 +66,55 @@ export default function ModeratorDashboard() {
   };
 
   useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setFilteredApplications(applications);
-    } else {
+    let filtered = [...applications];
+    
+    // Apply search filter
+    if (searchQuery.trim() !== "") {
       const query = searchQuery.toLowerCase();
-      const filtered = applications.filter(app => 
+      filtered = filtered.filter(app => 
         app.name.toLowerCase().includes(query) ||
         app.discord_handle.toLowerCase().includes(query) ||
         app.ingame_name.toLowerCase().includes(query) ||
         app.server.toLowerCase().includes(query)
       );
-      setFilteredApplications(filtered);
     }
-  }, [searchQuery, applications]);
+    
+    // Apply status filter
+    if (!statusFilter.includes("all")) {
+      filtered = filtered.filter(app => statusFilter.includes(app.status));
+    }
+    
+    // Apply sort order
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.submitted_at);
+      const dateB = new Date(b.submitted_at);
+      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    });
+    
+    setFilteredApplications(filtered);
+  }, [searchQuery, applications, sortOrder, statusFilter]);
+
+  const toggleStatusFilter = (status) => {
+    if (status === "all") {
+      setStatusFilter(["all"]);
+    } else {
+      setStatusFilter(prev => {
+        // Remove "all" if selecting specific status
+        let newFilter = prev.filter(s => s !== "all");
+        
+        if (newFilter.includes(status)) {
+          // Remove status if already selected
+          newFilter = newFilter.filter(s => s !== status);
+        } else {
+          // Add status
+          newFilter = [...newFilter, status];
+        }
+        
+        // If no filters selected, default to "all"
+        return newFilter.length === 0 ? ["all"] : newFilter;
+      });
+    }
+  };
 
   const fetchApplications = async () => {
     try {
