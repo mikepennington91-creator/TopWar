@@ -32,6 +32,10 @@ export default function Settings() {
     password: "",
     role: "moderator"
   });
+  const [changeUsernameForm, setChangeUsernameForm] = useState({
+    old_username: "",
+    new_username: ""
+  });
 
   useEffect(() => {
     const token = localStorage.getItem('moderator_token');
