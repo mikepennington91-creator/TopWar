@@ -262,17 +262,30 @@ export default function ModeratorDashboard() {
     <div className="min-h-screen bg-slate-950 text-slate-200 grid-texture">
       {/* Header */}
       <div className="bg-slate-900/50 border-b border-slate-800 sticky top-0 z-10 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-wider text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+            <h1 className="text-lg sm:text-2xl md:text-3xl font-bold uppercase tracking-wider text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
               Moderator Command Center
             </h1>
-            <div className="flex gap-3">
+            
+            {/* Mobile Menu Button */}
+            <Button
+              className="md:hidden border-slate-600 text-slate-300"
+              variant="outline"
+              size="sm"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+            
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex gap-2 lg:gap-3">
               <Button
                 data-testid="portal-btn"
                 onClick={() => navigate('/moderator/portal')}
                 variant="outline"
-                className="border-blue-500 text-blue-500 hover:bg-blue-500/20 uppercase tracking-wide rounded-sm"
+                size="sm"
+                className="border-blue-500 text-blue-500 hover:bg-blue-500/20 uppercase tracking-wide rounded-sm text-xs lg:text-sm"
               >
                 Portal
               </Button>
@@ -280,31 +293,75 @@ export default function ModeratorDashboard() {
                 data-testid="server-assignments-btn"
                 onClick={() => navigate('/moderator/server-assignments')}
                 variant="outline"
-                className="border-emerald-500 text-emerald-500 hover:bg-emerald-500/20 uppercase tracking-wide rounded-sm"
+                size="sm"
+                className="border-emerald-500 text-emerald-500 hover:bg-emerald-500/20 uppercase tracking-wide rounded-sm text-xs lg:text-sm"
               >
-                <Server className="mr-2 h-4 w-4" />
+                <Server className="mr-1 lg:mr-2 h-3 w-3 lg:h-4 lg:w-4" />
                 Servers
               </Button>
               <Button
                 data-testid="settings-btn"
                 onClick={() => navigate('/moderator/settings')}
                 variant="outline"
-                className="border-amber-500 text-amber-500 hover:bg-amber-500/20 uppercase tracking-wide rounded-sm"
+                size="sm"
+                className="border-amber-500 text-amber-500 hover:bg-amber-500/20 uppercase tracking-wide rounded-sm text-xs lg:text-sm"
               >
-                <Settings className="mr-2 h-4 w-4" />
+                <Settings className="mr-1 lg:mr-2 h-3 w-3 lg:h-4 lg:w-4" />
                 Settings
               </Button>
               <Button
                 data-testid="logout-btn"
                 onClick={handleLogout}
                 variant="outline"
-                className="border-red-500 text-red-500 hover:bg-red-500/20 uppercase tracking-wide rounded-sm"
+                size="sm"
+                className="border-red-500 text-red-500 hover:bg-red-500/20 uppercase tracking-wide rounded-sm text-xs lg:text-sm"
               >
-                <LogOut className="mr-2 h-4 w-4" />
+                <LogOut className="mr-1 lg:mr-2 h-3 w-3 lg:h-4 lg:w-4" />
                 Logout
               </Button>
             </div>
           </div>
+          
+          {/* Mobile Navigation Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden mt-3 pt-3 border-t border-slate-700 grid grid-cols-2 gap-2">
+              <Button
+                onClick={() => { navigate('/moderator/portal'); setMobileMenuOpen(false); }}
+                variant="outline"
+                size="sm"
+                className="border-blue-500 text-blue-500 hover:bg-blue-500/20 uppercase tracking-wide rounded-sm text-xs w-full"
+              >
+                Portal
+              </Button>
+              <Button
+                onClick={() => { navigate('/moderator/server-assignments'); setMobileMenuOpen(false); }}
+                variant="outline"
+                size="sm"
+                className="border-emerald-500 text-emerald-500 hover:bg-emerald-500/20 uppercase tracking-wide rounded-sm text-xs w-full"
+              >
+                <Server className="mr-1 h-3 w-3" />
+                Servers
+              </Button>
+              <Button
+                onClick={() => { navigate('/moderator/settings'); setMobileMenuOpen(false); }}
+                variant="outline"
+                size="sm"
+                className="border-amber-500 text-amber-500 hover:bg-amber-500/20 uppercase tracking-wide rounded-sm text-xs w-full"
+              >
+                <Settings className="mr-1 h-3 w-3" />
+                Settings
+              </Button>
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                size="sm"
+                className="border-red-500 text-red-500 hover:bg-red-500/20 uppercase tracking-wide rounded-sm text-xs w-full"
+              >
+                <LogOut className="mr-1 h-3 w-3" />
+                Logout
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
