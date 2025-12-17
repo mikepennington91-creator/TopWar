@@ -162,6 +162,20 @@ class ServerAssignment(BaseModel):
     created_by: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+class Announcement(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    title: str
+    message: str
+    created_by: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    is_active: bool = True
+
+class AnnouncementCreate(BaseModel):
+    title: str
+    message: str
+
 class ModeratorCreate(BaseModel):
     username: str
     password: str
