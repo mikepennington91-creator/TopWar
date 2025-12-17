@@ -630,6 +630,7 @@ export default function Settings() {
                         <SelectItem value="moderator" className="text-blue-400">Moderator</SelectItem>
                         <SelectItem value="lmod" className="text-purple-400">LMOD</SelectItem>
                         <SelectItem value="smod" className="text-pink-400">SMOD</SelectItem>
+                        <SelectItem value="developer" className="text-yellow-400">Developer</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
