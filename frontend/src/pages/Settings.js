@@ -329,12 +329,15 @@ export default function Settings() {
   };
 
   const getRoleBadge = (role) => {
-    const colors = {
-      admin: "text-red-400",
-      senior_moderator: "text-amber-400",
-      moderator: "text-emerald-400"
+    const config = {
+      admin: { color: "text-red-400", label: "ADMIN" },
+      mmod: { color: "text-red-500", label: "MMOD" },
+      moderator: { color: "text-blue-400", label: "MODERATOR" },
+      lmod: { color: "text-purple-400", label: "LMOD" },
+      smod: { color: "text-pink-400", label: "SMOD" }
     };
-    return <span className={`uppercase font-semibold ${colors[role] || 'text-slate-400'}`}>{role.replace('_', ' ')}</span>;
+    const roleConfig = config[role] || { color: "text-slate-400", label: role };
+    return <span className={`uppercase font-semibold ${roleConfig.color}`}>{roleConfig.label}</span>;
   };
 
   const getStatusBadge = (status) => {
