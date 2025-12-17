@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ArrowLeft, Server, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Server, Plus, Trash2, Download, Info } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -25,6 +25,12 @@ const REASON_OPTIONS = [
   "Dev Request",
   "Buddy",
   "Other (State in comments)"
+];
+
+const TAG_OPTIONS = [
+  { label: "1/3/6/12 Without Mod Chat", value: "Tag 2" },
+  { label: "1/3/6/12 with Mod Chat", value: "Tag 5" },
+  { label: "Only Mod Chat", value: "Tag 8" }
 ];
 
 export default function ServerAssignments() {
@@ -64,10 +70,10 @@ export default function ServerAssignments() {
       setCurrentUser({ 
         username, 
         role,
-        is_admin: currentMod?.is_admin || false
+        is_admin: currentMod?.is_admin || role === 'admin'
       });
     } catch (error) {
-      setCurrentUser({ username, role, is_admin: false });
+      setCurrentUser({ username, role, is_admin: role === 'admin' });
     }
   };
 
@@ -156,6 +162,41 @@ export default function ServerAssignments() {
     }
   };
 
+  const downloadExcel = () => {
+    if (assignments.length === 0) {
+      toast.error("No data to download");
+      return;
+    }
+
+    // Create CSV content (Excel compatible)
+    const headers = ["Server", "Tag", "Start Date", "End Date", "Reason", "Comments", "Created By", "Created At"];
+    const csvContent = [
+      headers.join(","),
+      ...assignments.map(a => [
+        a.server,
+        `"${a.tag}"`,
+        a.start_date,
+        a.end_date || "",
+        `"${a.reason}"`,
+        `"${(a.comments || "").replace(/"/g, '""')}"`,
+        a.created_by,
+        new Date(a.created_at).toLocaleDateString()
+      ].join(","))
+    ].join("\n");
+
+    // Create and download file
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `server_assignments_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Download started!");
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 py-12 px-4 sm:px-6 lg:px-8 grid-texture">
       <div className="max-w-7xl mx-auto">
@@ -169,10 +210,22 @@ export default function ServerAssignments() {
           Back to Portal
         </Button>
 
-        <h1 className="text-4xl font-bold uppercase tracking-wider mb-8 text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+        <h1 className="text-4xl font-bold uppercase tracking-wider mb-4 text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
           <Server className="inline-block mr-3 h-10 w-10" />
           Server Assignments
         </h1>
+
+        {/* Instruction Text */}
+        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mb-8">
+          <div className="flex items-start gap-3">
+            <Info className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
+            <div className="space-y-1 text-slate-300">
+              <p>Please use this form to log your main server account and all moderator accounts you use. 🗂️</p>
+              <p>Make sure to select the correct reason for why each account exists. ✅</p>
+              <p>Once your information has been submitted, you will only be able to edit the end date. ⏳</p>
+            </div>
+          </div>
+        </div>
 
         {/* Add Assignment Form */}
         <Card className="glass-card border-slate-700 mb-8">
@@ -206,18 +259,25 @@ export default function ServerAssignments() {
                 
                 <div className="space-y-2">
                   <Label htmlFor="tag" className="text-slate-300">Tag *</Label>
-                  <Input
-                    id="tag"
-                    name="tag"
-                    data-testid="tag-input"
-                    type="number"
+                  <Select
                     value={formData.tag}
-                    onChange={handleChange}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, tag: value }))}
                     required
-                    min="1"
-                    className="bg-slate-900/50 border-slate-700 focus:border-amber-500 text-slate-200 rounded-sm"
-                    placeholder="Enter tag number"
-                  />
+                  >
+                    <SelectTrigger 
+                      data-testid="tag-select"
+                      className="bg-slate-900/50 border-slate-700 focus:border-amber-500 text-slate-200 rounded-sm"
+                    >
+                      <SelectValue placeholder="Select tag type..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-900 border-slate-700">
+                      {TAG_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value} className="text-slate-200">
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
@@ -302,13 +362,25 @@ export default function ServerAssignments() {
 
         {/* Assignments Table */}
         <Card className="glass-card border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold uppercase tracking-wide text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-              Server Assignment Records
-            </CardTitle>
-            <CardDescription className="text-slate-400">
-              All server assignments
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-2xl font-bold uppercase tracking-wide text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                Server Assignment Records
+              </CardTitle>
+              <CardDescription className="text-slate-400">
+                All server assignments
+              </CardDescription>
+            </div>
+            {currentUser.is_admin && (
+              <Button
+                data-testid="download-excel-btn"
+                onClick={downloadExcel}
+                className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-sm"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download Excel
+              </Button>
+            )}
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
