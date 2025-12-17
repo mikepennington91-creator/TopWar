@@ -833,6 +833,60 @@ async def update_application_status(application_id: str, update: ApplicationUpda
     return application
 
 
+# Announcement endpoints
+@api_router.get("/announcements")
+async def get_announcements():
+    """Get all active announcements - accessible to everyone"""
+    announcements = await db.announcements.find({"is_active": True}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return announcements
+
+@api_router.get("/announcements/all")
+async def get_all_announcements(current_user: dict = Depends(get_current_moderator)):
+    """Get all announcements including inactive - requires login"""
+    if current_user["role"] not in ["admin", "mmod"]:
+        raise HTTPException(status_code=403, detail="Only Admin and MMOD can view all announcements")
+    announcements = await db.announcements.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return announcements
+
+@api_router.post("/announcements")
+async def create_announcement(announcement: AnnouncementCreate, current_user: dict = Depends(get_current_moderator)):
+    """Create a new announcement - MMOD and Admin only"""
+    if current_user["role"] not in ["admin", "mmod"]:
+        raise HTTPException(status_code=403, detail="Only Admin and MMOD can create announcements")
+    
+    new_announcement = Announcement(
+        title=announcement.title,
+        message=announcement.message,
+        created_by=current_user["username"]
+    )
+    await db.announcements.insert_one(new_announcement.model_dump())
+    return {"message": "Announcement created successfully", "id": new_announcement.id}
+
+@api_router.delete("/announcements/{announcement_id}")
+async def delete_announcement(announcement_id: str, current_user: dict = Depends(get_current_moderator)):
+    """Delete an announcement - MMOD and Admin only"""
+    if current_user["role"] not in ["admin", "mmod"]:
+        raise HTTPException(status_code=403, detail="Only Admin and MMOD can delete announcements")
+    
+    result = await db.announcements.delete_one({"id": announcement_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Announcement not found")
+    return {"message": "Announcement deleted successfully"}
+
+@api_router.patch("/announcements/{announcement_id}/toggle")
+async def toggle_announcement(announcement_id: str, current_user: dict = Depends(get_current_moderator)):
+    """Toggle announcement active status - MMOD and Admin only"""
+    if current_user["role"] not in ["admin", "mmod"]:
+        raise HTTPException(status_code=403, detail="Only Admin and MMOD can toggle announcements")
+    
+    announcement = await db.announcements.find_one({"id": announcement_id}, {"_id": 0})
+    if not announcement:
+        raise HTTPException(status_code=404, detail="Announcement not found")
+    
+    new_status = not announcement.get("is_active", True)
+    await db.announcements.update_one({"id": announcement_id}, {"$set": {"is_active": new_status}})
+    return {"message": f"Announcement {'activated' if new_status else 'deactivated'} successfully"}
+
 # Include the router in the main app
 app.include_router(api_router)
 
