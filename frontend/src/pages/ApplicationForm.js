@@ -33,7 +33,6 @@ export default function ApplicationForm() {
     heroes_mutated: "",
     discord_tools_comfort: "",
     guidelines_rating: "",
-    high_profile_violation: "",
     complex_mechanic: "",
     unknown_question: "",
     hero_development: "",
