@@ -415,13 +415,19 @@ async def vote_on_application(application_id: str, vote_data: VoteCreate, curren
     votes = application.get('votes', [])
     existing_vote = next((v for v in votes if v['moderator'] == current_user['username']), None)
     
+    # Change status from awaiting_review to pending when first vote is cast
+    update_fields = {}
+    if application.get('status') == 'awaiting_review':
+        update_fields['status'] = 'pending'
+    
     if existing_vote:
         # Update existing vote
         await db.applications.update_one(
             {"id": application_id, "votes.moderator": current_user['username']},
             {"$set": {
                 "votes.$.vote": vote_data.vote,
-                "votes.$.timestamp": datetime.now(timezone.utc).isoformat()
+                "votes.$.timestamp": datetime.now(timezone.utc).isoformat(),
+                **update_fields
             }}
         )
     else:
@@ -431,9 +437,13 @@ async def vote_on_application(application_id: str, vote_data: VoteCreate, curren
             "vote": vote_data.vote,
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
+        update_query = {"$push": {"votes": vote}}
+        if update_fields:
+            update_query["$set"] = update_fields
+        
         await db.applications.update_one(
             {"id": application_id},
-            {"$push": {"votes": vote}}
+            update_query
         )
     
     return {"message": "Vote recorded successfully"}
