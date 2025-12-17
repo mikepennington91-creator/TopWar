@@ -43,25 +43,26 @@ export default function ModeratorLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 flex items-center justify-center px-4 grid-texture">
+    <div className="min-h-screen bg-slate-950 text-slate-200 flex items-center justify-center px-3 sm:px-4 py-6 grid-texture">
       <div className="w-full max-w-md">
         <Button
           data-testid="back-to-home-btn"
           onClick={() => navigate('/')}
           variant="ghost"
-          className="mb-8 text-amber-500 hover:text-amber-400 hover:bg-slate-900"
+          size="sm"
+          className="mb-4 sm:mb-8 text-amber-500 hover:text-amber-400 hover:bg-slate-900 text-sm"
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="mr-1 sm:mr-2 h-4 w-4" />
           Back to Home
         </Button>
 
-        <div className="glass-card rounded-lg p-8">
-          <div className="text-center mb-8">
-            <Shield className="w-16 h-16 mx-auto text-amber-500 mb-4" />
-            <h1 className="text-3xl font-bold uppercase tracking-wider text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+        <div className="glass-card rounded-lg p-5 sm:p-8">
+          <div className="text-center mb-6 sm:mb-8">
+            <Shield className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-amber-500 mb-3 sm:mb-4" />
+            <h1 className="text-2xl sm:text-3xl font-bold uppercase tracking-wider text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
               Moderator Access
             </h1>
-            <p className="text-slate-400 mt-2">Authorized personnel only</p>
+            <p className="text-slate-400 mt-2 text-sm">Authorized personnel only</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6" data-testid="login-form">
