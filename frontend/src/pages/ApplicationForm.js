@@ -56,6 +56,18 @@ export default function ApplicationForm() {
         age: parseInt(formData.age)
       };
 
+      // If position is "In-Game", set discord_tools_comfort to N/A
+      if (formData.position === "In-Game") {
+        submitData.discord_tools_comfort = "N/A";
+      }
+
+      // If position is "Discord", set in-game questions to N/A
+      if (formData.position === "Discord") {
+        submitData.hero_development = "N/A";
+        submitData.racist_r4 = "N/A";
+        submitData.moderator_swearing = "N/A";
+      }
+
       await axios.post(`${API}/applications`, submitData);
       toast.success("Application submitted successfully! You will be notified of the decision.");
       setTimeout(() => navigate('/'), 2000);
