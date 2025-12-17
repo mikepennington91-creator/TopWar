@@ -369,38 +369,9 @@ async def login_moderator(credentials: ModeratorLogin):
     if moderator.get("status", "active") == "disabled":
         raise HTTPException(status_code=403, detail="Account has been disabled. Contact administrator.")
     
-    # Check if account is locked
-    if moderator.get("locked_at"):
-        raise HTTPException(status_code=403, detail="Account is locked due to multiple failed login attempts. Contact an administrator to unlock your account.")
-    
     # Verify password
     if not pwd_context.verify(credentials.password, moderator["hashed_password"]):
-        # Increment failed login attempts
-        failed_attempts = moderator.get("failed_login_attempts", 0) + 1
-        update_data = {"failed_login_attempts": failed_attempts}
-        
-        # Lock account if max attempts reached
-        if failed_attempts >= MAX_LOGIN_ATTEMPTS:
-            update_data["locked_at"] = datetime.now(timezone.utc).isoformat()
-            await db.moderators.update_one(
-                {"username": credentials.username},
-                {"$set": update_data}
-            )
-            raise HTTPException(status_code=403, detail=f"Account locked after {MAX_LOGIN_ATTEMPTS} failed attempts. Contact an administrator to unlock your account.")
-        
-        await db.moderators.update_one(
-            {"username": credentials.username},
-            {"$set": update_data}
-        )
-        
-        remaining_attempts = MAX_LOGIN_ATTEMPTS - failed_attempts
-        raise HTTPException(status_code=401, detail=f"Invalid username or password. {remaining_attempts} attempt(s) remaining before account lockout.")
-    
-    # Successful login - reset failed attempts
-    await db.moderators.update_one(
-        {"username": credentials.username},
-        {"$set": {"failed_login_attempts": 0}}
-    )
+        raise HTTPException(status_code=401, detail="Invalid username or password")
     
     # Create token
     access_token = create_access_token(data={"sub": credentials.username, "role": moderator.get("role", "moderator")})
