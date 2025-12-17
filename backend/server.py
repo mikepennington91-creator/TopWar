@@ -81,6 +81,12 @@ class Application(BaseModel):
     hero_development: str
     racist_r4: str
     moderator_swearing: str
+    # Discord-specific questions
+    discord_moderation_tools: str = "N/A"
+    discord_spam_handling: str = "N/A"
+    discord_bots_experience: str = "N/A"
+    discord_harassment_handling: str = "N/A"
+    discord_voice_channel_management: str = "N/A"
     status: str = "awaiting_review"  # awaiting_review, pending, approved, rejected
     votes: List[Dict] = Field(default_factory=list)
     comments: List[Dict] = Field(default_factory=list)
