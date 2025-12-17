@@ -225,6 +225,15 @@ export default function ModeratorDashboard() {
             </h1>
             <div className="flex gap-3">
               <Button
+                data-testid="server-assignments-btn"
+                onClick={() => navigate('/moderator/server-assignments')}
+                variant="outline"
+                className="border-emerald-500 text-emerald-500 hover:bg-emerald-500/20 uppercase tracking-wide rounded-sm"
+              >
+                <Server className="mr-2 h-4 w-4" />
+                Servers
+              </Button>
+              <Button
                 data-testid="settings-btn"
                 onClick={() => navigate('/moderator/settings')}
                 variant="outline"
