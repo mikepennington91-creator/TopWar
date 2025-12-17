@@ -536,7 +536,7 @@ export default function ModeratorDashboard() {
                 {selectedApp.status === 'pending' && (
                   currentUser.role === 'admin' || 
                   currentUser.role === 'senior_moderator' || 
-                  moderators.find(m => m.username === currentUser.username)?.is_training_manager
+                  currentUser.is_training_manager
                 ) && (
                   <div className="border-t border-slate-700 pt-4">
                     <h3 className="text-lg font-semibold uppercase tracking-wide text-red-500 mb-4" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
