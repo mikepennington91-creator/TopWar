@@ -123,11 +123,14 @@ class Moderator(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     username: str
     hashed_password: str
+    password_history: List[str] = Field(default_factory=list)  # Store last 10 hashed passwords
     role: str = "moderator"  # admin, mmod, moderator, lmod, smod
     status: str = "active"  # active, disabled
     is_training_manager: bool = False
     is_admin: bool = False
     can_view_applications: bool = True
+    failed_login_attempts: int = 0
+    locked_at: Optional[datetime] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ServerAssignment(BaseModel):
