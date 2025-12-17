@@ -878,10 +878,13 @@ export default function ModeratorDashboard() {
                     <h3 className="text-lg font-semibold uppercase tracking-wide text-red-500 mb-4" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
                       Final Decision (Admin/Senior Mod/Training Manager)
                     </h3>
-                    <div className="flex gap-4">
+                    <div className="flex flex-col sm:flex-row gap-3">
                       <Button
                         data-testid="approve-btn"
-                        onClick={() => handleStatusUpdate(selectedApp.id, 'approved')}
+                        onClick={() => {
+                          setStatusChangeData({ status: "approved", comment: "" });
+                          setShowStatusChangeDialog(true);
+                        }}
                         disabled={actionLoading}
                         className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold uppercase tracking-wide py-3 rounded-sm"
                       >
@@ -890,7 +893,10 @@ export default function ModeratorDashboard() {
                       </Button>
                       <Button
                         data-testid="reject-btn"
-                        onClick={() => handleStatusUpdate(selectedApp.id, 'rejected')}
+                        onClick={() => {
+                          setStatusChangeData({ status: "rejected", comment: "" });
+                          setShowStatusChangeDialog(true);
+                        }}
                         disabled={actionLoading}
                         className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold uppercase tracking-wide py-3 rounded-sm"
                       >
@@ -900,9 +906,173 @@ export default function ModeratorDashboard() {
                     </div>
                   </div>
                 )}
+
+                {/* Admin Actions - Change Status & Delete */}
+                {currentUser.is_admin && (
+                  <div className="border-t border-slate-700 pt-4">
+                    <h3 className="text-lg font-semibold uppercase tracking-wide text-amber-500 mb-4" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                      Admin Actions
+                    </h3>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Button
+                        data-testid="change-status-btn"
+                        onClick={() => {
+                          setStatusChangeData({ status: "", comment: "" });
+                          setShowStatusChangeDialog(true);
+                        }}
+                        disabled={actionLoading}
+                        variant="outline"
+                        className="flex-1 border-amber-500 text-amber-500 hover:bg-amber-500/20 font-bold uppercase tracking-wide py-3 rounded-sm"
+                      >
+                        <Edit className="mr-2 h-4 w-4" />
+                        Change Status
+                      </Button>
+                      <Button
+                        data-testid="delete-app-btn"
+                        onClick={() => handleDeleteApplication(selectedApp.id, selectedApp.name)}
+                        disabled={actionLoading}
+                        className="flex-1 bg-red-900 hover:bg-red-800 text-white font-bold uppercase tracking-wide py-3 rounded-sm"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete Application
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Status Change Dialog */}
+      <Dialog open={showStatusChangeDialog} onOpenChange={setShowStatusChangeDialog}>
+        <DialogContent className="max-w-md bg-slate-900 border-slate-700 text-slate-200">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold uppercase tracking-wider text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+              {statusChangeData.status ? `Confirm ${statusChangeData.status.charAt(0).toUpperCase() + statusChangeData.status.slice(1)}` : "Change Application Status"}
+            </DialogTitle>
+            <DialogDescription className="text-slate-400">
+              A comment is required to explain this decision.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 mt-4">
+            {!statusChangeData.status && (
+              <div className="space-y-2">
+                <label className="text-sm text-slate-400">Select new status:</label>
+                <Select
+                  value={statusChangeData.status}
+                  onValueChange={(value) => setStatusChangeData(prev => ({ ...prev, status: value }))}
+                >
+                  <SelectTrigger className="bg-slate-800 border-slate-700 text-slate-200">
+                    <SelectValue placeholder="Select status..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-900 border-slate-700">
+                    <SelectItem value="awaiting_review" className="text-slate-400">Awaiting Review</SelectItem>
+                    <SelectItem value="pending" className="text-blue-400">Pending</SelectItem>
+                    <SelectItem value="approved" className="text-emerald-400">Approved</SelectItem>
+                    <SelectItem value="rejected" className="text-red-400">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <label className="text-sm text-slate-400">
+                Comment (required) <span className="text-red-400">*</span>
+              </label>
+              <Textarea
+                placeholder="Explain the reason for this status change..."
+                value={statusChangeData.comment}
+                onChange={(e) => setStatusChangeData(prev => ({ ...prev, comment: e.target.value }))}
+                className="bg-slate-800 border-slate-700 focus:border-amber-500 text-slate-200 rounded-sm min-h-[100px]"
+              />
+            </div>
+            
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowStatusChangeDialog(false);
+                  setStatusChangeData({ status: "", comment: "" });
+                }}
+                className="flex-1 border-slate-600 text-slate-400 hover:bg-slate-800"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => handleStatusUpdate(selectedApp?.id, statusChangeData.status, statusChangeData.comment)}
+                disabled={actionLoading || !statusChangeData.status || !statusChangeData.comment.trim()}
+                className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase"
+              >
+                {actionLoading ? "Processing..." : "Confirm"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Audit Log Dialog */}
+      <Dialog open={showAuditLog} onOpenChange={setShowAuditLog}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-slate-900 border-slate-700 text-slate-200">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold uppercase tracking-wider text-purple-500 flex items-center gap-2" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+              <ClipboardList className="h-6 w-6" />
+              Audit Log
+            </DialogTitle>
+            <DialogDescription className="text-slate-400">
+              Record of all application status changes and deletions
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="mt-4">
+            {auditLogs.length === 0 ? (
+              <p className="text-slate-400 text-center py-8">No audit log entries found.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-800/50">
+                    <tr>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400 uppercase">Date</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400 uppercase">Action</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400 uppercase">Applicant</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400 uppercase">By</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400 uppercase">Details</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800">
+                    {auditLogs.map((log) => (
+                      <tr key={log.id} className="hover:bg-slate-800/30">
+                        <td className="px-3 py-2 text-slate-400 text-xs whitespace-nowrap">
+                          {new Date(log.created_at).toLocaleString()}
+                        </td>
+                        <td className="px-3 py-2">
+                          {log.action === "deleted" ? (
+                            <Badge className="bg-red-900/50 text-red-400 border-red-800 text-xs uppercase">Deleted</Badge>
+                          ) : log.new_status === "approved" ? (
+                            <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/50 text-xs uppercase">Approved</Badge>
+                          ) : log.new_status === "rejected" ? (
+                            <Badge className="bg-red-500/20 text-red-400 border-red-500/50 text-xs uppercase">Rejected</Badge>
+                          ) : (
+                            <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/50 text-xs uppercase">Status Change</Badge>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 text-slate-200 font-medium">{log.application_name}</td>
+                        <td className="px-3 py-2 text-amber-400 font-semibold">{log.performed_by}</td>
+                        <td className="px-3 py-2 text-slate-400 text-xs max-w-[200px] truncate" title={log.comment}>
+                          {log.old_status && log.new_status && (
+                            <span className="text-slate-500 mr-1">{log.old_status}→{log.new_status}:</span>
+                          )}
+                          {log.comment}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
