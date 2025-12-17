@@ -75,7 +75,7 @@ export default function ApplicationForm() {
     { name: "age", label: "Age", type: "number", required: true, min: 13, max: 100 },
     { name: "country", label: "Country of residence", type: "text", required: true },
     { name: "activity_times", label: "What are your typical activity times per day? i.e. Reset - 5 to reset.", type: "text", required: true },
-    { name: "server", label: "What server are you in? Only write your main Warzone", type: "text", required: true },
+    { name: "server", label: "What server are you in? Only write your main Warzone", type: "number", required: true, min: 1 },
     { name: "native_language", label: "What is your native language?", type: "text", required: true },
     { name: "other_languages", label: "What other languages do you speak?", type: "text", required: true },
     { name: "previous_experience", label: "Describe your previous experience with online moderation, if any (platforms, roles, duration).", type: "textarea", required: true },
