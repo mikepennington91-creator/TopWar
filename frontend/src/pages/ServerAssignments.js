@@ -13,6 +13,16 @@ import { ArrowLeft, Server, Plus, Trash2, Download, Info } from "lucide-react";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Role color configuration for displaying moderator names
+const ROLE_COLORS = {
+  admin: "text-red-400",
+  mmod: "text-red-500",
+  moderator: "text-blue-400",
+  lmod: "text-purple-400",
+  smod: "text-pink-400",
+  developer: "text-yellow-400"
+};
+
 const REASON_OPTIONS = [
   "Racism",
   "Inappropriate Language",
@@ -37,6 +47,7 @@ export default function ServerAssignments() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [assignments, setAssignments] = useState([]);
+  const [moderators, setModerators] = useState([]);
   const [currentUser, setCurrentUser] = useState({ username: "", role: "moderator", is_admin: false });
   const [formData, setFormData] = useState({
     server: "",
@@ -44,7 +55,8 @@ export default function ServerAssignments() {
     start_date: "",
     end_date: "",
     reason: "",
-    comments: ""
+    comments: "",
+    moderator_name: ""
   });
 
   useEffect(() => {
@@ -59,7 +71,23 @@ export default function ServerAssignments() {
     
     fetchCurrentUser(token, username, role);
     fetchAssignments();
+    fetchModerators();
   }, [navigate]);
+
+  const fetchModerators = async () => {
+    try {
+      const token = localStorage.getItem('moderator_token');
+      const response = await axios.get(`${API}/moderators`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Filter out developers and store moderators with their roles
+      const filteredMods = response.data.filter(mod => mod.role !== 'developer' && mod.status === 'active');
+      setModerators(filteredMods);
+    } catch (error) {
+      console.error("Failed to fetch moderators:", error);
+      // If user doesn't have permission to view moderators, silently fail
+    }
+  };
 
   const fetchCurrentUser = async (token, username, role) => {
     try {
@@ -111,7 +139,8 @@ export default function ServerAssignments() {
         start_date: "",
         end_date: "",
         reason: "",
-        comments: ""
+        comments: "",
+        moderator_name: ""
       });
       fetchAssignments();
     } catch (error) {
@@ -311,7 +340,7 @@ export default function ServerAssignments() {
                   />
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-2">
                   <Label htmlFor="reason" className="text-slate-300">Reason *</Label>
                   <Select
                     value={formData.reason}
@@ -328,6 +357,33 @@ export default function ServerAssignments() {
                       {REASON_OPTIONS.map((option) => (
                         <SelectItem key={option} value={option} className="text-slate-200">
                           {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="moderator_name" className="text-slate-300">Moderator on Server *</Label>
+                  <Select
+                    value={formData.moderator_name}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, moderator_name: value }))}
+                    required
+                  >
+                    <SelectTrigger 
+                      data-testid="moderator-select"
+                      className="bg-slate-900/50 border-slate-700 focus:border-amber-500 text-slate-200 rounded-sm"
+                    >
+                      <SelectValue placeholder="Select moderator..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-900 border-slate-700">
+                      {moderators.map((mod) => (
+                        <SelectItem 
+                          key={mod.username} 
+                          value={mod.username} 
+                          className={ROLE_COLORS[mod.role] || "text-slate-200"}
+                        >
+                          {mod.username} ({mod.role.toUpperCase()})
                         </SelectItem>
                       ))}
                     </SelectContent>

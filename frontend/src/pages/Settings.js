@@ -707,6 +707,7 @@ export default function Settings() {
                           <p className="text-sm text-slate-500 mono">
                             Joined: {new Date(mod.created_at).toLocaleDateString()}
                           </p>
+                          <p className="text-sm mt-1">{getRoleBadge(mod.role)}</p>
                         </div>
                         <div className="flex items-center gap-3">
                           {getStatusBadge(mod.status || "active")}
