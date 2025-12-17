@@ -146,60 +146,61 @@ export default function ModeratorPortal() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 grid-texture">
       {/* Header */}
-      <div className="bg-slate-900/80 border-b border-slate-800 py-4 px-6">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Shield className="w-8 h-8 text-amber-500" />
-            <div>
-              <h1 className="text-xl font-bold text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>TOP WAR PORTAL</h1>
-              <p className="text-sm text-slate-400">Welcome, {currentUser.username}</p>
+      <div className="bg-slate-900/80 border-b border-slate-800 py-3 sm:py-4 px-3 sm:px-6">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-amber-500" />
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg sm:text-xl font-bold text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>TOP WAR PORTAL</h1>
+              <p className="text-xs sm:text-sm text-slate-400 truncate">Welcome, {currentUser.username}</p>
             </div>
             {getRoleBadge(currentUser.role)}
           </div>
           <Button
             onClick={handleLogout}
             variant="ghost"
-            className="text-slate-400 hover:text-red-400"
+            size="sm"
+            className="text-slate-400 hover:text-red-400 self-end sm:self-auto"
           >
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
+            <LogOut className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="text-sm">Logout</span>
           </Button>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto py-8 px-6">
+      <div className="max-w-6xl mx-auto py-4 sm:py-8 px-3 sm:px-6">
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
           <Button
             onClick={() => navigate('/moderator/dashboard')}
-            className="bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide py-6 rounded-sm btn-glow"
+            className="bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide py-4 sm:py-6 rounded-sm btn-glow text-xs sm:text-sm"
           >
-            <FileText className="h-5 w-5 mr-2" />
-            Applications
+            <FileText className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
+            Apps
           </Button>
           <Button
             onClick={() => navigate('/moderator/server-assignments')}
             variant="outline"
-            className="border-2 border-emerald-500 text-emerald-500 hover:bg-emerald-500/20 font-bold uppercase tracking-wide py-6 rounded-sm"
+            className="border-2 border-emerald-500 text-emerald-500 hover:bg-emerald-500/20 font-bold uppercase tracking-wide py-4 sm:py-6 rounded-sm text-xs sm:text-sm"
           >
-            <Calendar className="h-5 w-5 mr-2" />
-            Server Assignments
+            <Calendar className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
+            Servers
           </Button>
           <Button
             onClick={() => navigate('/moderator/settings')}
             variant="outline"
-            className="border-2 border-slate-600 text-slate-300 hover:bg-slate-800 font-bold uppercase tracking-wide py-6 rounded-sm"
+            className="border-2 border-slate-600 text-slate-300 hover:bg-slate-800 font-bold uppercase tracking-wide py-4 sm:py-6 rounded-sm text-xs sm:text-sm"
           >
-            <Settings className="h-5 w-5 mr-2" />
+            <Settings className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
             Settings
           </Button>
           <Button
             onClick={() => navigate('/apply')}
             variant="outline"
-            className="border-2 border-blue-500 text-blue-400 hover:bg-blue-500/20 font-bold uppercase tracking-wide py-6 rounded-sm"
+            className="border-2 border-blue-500 text-blue-400 hover:bg-blue-500/20 font-bold uppercase tracking-wide py-4 sm:py-6 rounded-sm text-xs sm:text-sm"
           >
-            <Users className="h-5 w-5 mr-2" />
-            View Application Form
+            <Users className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
+            Apply
           </Button>
         </div>
 
