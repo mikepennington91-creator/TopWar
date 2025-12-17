@@ -23,6 +23,7 @@ const API = `${BACKEND_URL}/api`;
 export default function ApplicationForm() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     position: "",
