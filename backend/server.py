@@ -338,6 +338,60 @@ async def delete_moderator(username: str, current_user: dict = Depends(require_a
     
     return {"message": f"Moderator {username} has been deleted successfully"}
 
+@api_router.patch("/moderators/{username}/role")
+async def update_moderator_role(username: str, role_update: ModeratorRoleUpdate, current_user: dict = Depends(require_admin)):
+    if role_update.role not in ["admin", "senior_moderator", "moderator"]:
+        raise HTTPException(status_code=400, detail="Role must be 'admin', 'senior_moderator', or 'moderator'")
+    
+    # Check if user exists
+    moderator = await db.moderators.find_one({"username": username}, {"_id": 0})
+    if not moderator:
+        raise HTTPException(status_code=404, detail="Moderator not found")
+    
+    # Update role
+    await db.moderators.update_one(
+        {"username": username},
+        {"$set": {"role": role_update.role}}
+    )
+    
+    return {"message": f"Moderator {username} role updated to {role_update.role}"}
+
+@api_router.patch("/moderators/{username}/username")
+async def update_moderator_username(username: str, username_update: ModeratorUsernameUpdate, current_user: dict = Depends(require_admin)):
+    # Check if user exists
+    moderator = await db.moderators.find_one({"username": username}, {"_id": 0})
+    if not moderator:
+        raise HTTPException(status_code=404, detail="Moderator not found")
+    
+    # Check if new username already exists
+    existing = await db.moderators.find_one({"username": username_update.new_username}, {"_id": 0})
+    if existing:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    
+    # Update username
+    await db.moderators.update_one(
+        {"username": username},
+        {"$set": {"username": username_update.new_username}}
+    )
+    
+    return {"message": f"Username changed from {username} to {username_update.new_username}"}
+
+@api_router.patch("/moderators/{username}/training-manager")
+async def update_training_manager(username: str, tm_update: ModeratorTrainingManagerUpdate, current_user: dict = Depends(require_admin)):
+    # Check if user exists
+    moderator = await db.moderators.find_one({"username": username}, {"_id": 0})
+    if not moderator:
+        raise HTTPException(status_code=404, detail="Moderator not found")
+    
+    # Update training manager status
+    await db.moderators.update_one(
+        {"username": username},
+        {"$set": {"is_training_manager": tm_update.is_training_manager}}
+    )
+    
+    status = "enabled" if tm_update.is_training_manager else "disabled"
+    return {"message": f"Training Manager status {status} for {username}"}
+
 # Application Routes
 @api_router.post("/applications", response_model=Application)
 async def submit_application(app_data: ApplicationCreate):
