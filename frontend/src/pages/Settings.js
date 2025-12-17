@@ -488,7 +488,7 @@ export default function Settings() {
                   Change Moderator Username
                 </CardTitle>
                 <CardDescription className="text-slate-400">
-                  Change any moderator's username
+                  Change any moderator&apos;s username
                 </CardDescription>
               </CardHeader>
               <CardContent>
