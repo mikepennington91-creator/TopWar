@@ -29,6 +29,9 @@ export default function ModeratorDashboard() {
   const [actionLoading, setActionLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState({ username: "", role: "moderator", is_training_manager: false });
   const [newComment, setNewComment] = useState("");
+  const [sortOrder, setSortOrder] = useState("newest"); // newest or oldest
+  const [statusFilter, setStatusFilter] = useState(["all"]); // all, awaiting_review, pending, approved, rejected
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('moderator_token');
