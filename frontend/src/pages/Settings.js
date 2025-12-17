@@ -752,14 +752,18 @@ export default function Settings() {
                         const canChangePerms = canModifyPermissions(currentUser.role);
                         const assignableRoles = getAssignableRoles(currentUser.role, mod.role);
                         
-                        // Admin can edit self, others can only edit lower ranks
-                        if (!canChangeRole && !isSelf) return null;
-                        if (isSelf && currentUser.role !== 'admin') return null;
+                        // Determine what to show
+                        const showRoleDropdown = canChangeRole && assignableRoles.length > 0;
+                        const showPermissions = canChangePerms && !isSelf;
+                        const showActionButtons = canChangePerms && !isSelf;
+                        
+                        // If nothing to show, return null
+                        if (!showRoleDropdown && !showPermissions && !showActionButtons) return null;
                         
                         return (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Role Selection */}
-                            {canChangeRole && assignableRoles.length > 0 && (
+                            {showRoleDropdown && (
                               <div className="space-y-2">
                                 <Label className="text-slate-400 text-xs uppercase">Role</Label>
                                 <Select
@@ -795,7 +799,7 @@ export default function Settings() {
                             )}
                             
                             {/* Permissions Toggles - Admin Only */}
-                            {canChangePerms && !isSelf && (
+                            {showPermissions && (
                               <div className="space-y-3 md:col-span-2">
                                 <Label className="text-slate-400 text-xs uppercase">Permissions (Admin Only)</Label>
                                 
@@ -838,7 +842,7 @@ export default function Settings() {
                             )}
                             
                             {/* Action Buttons - Admin Only */}
-                            {canChangePerms && !isSelf && (
+                            {showActionButtons && (
                               <div className="md:col-span-2 flex gap-2 flex-wrap">
                                 {mod.locked_at && (
                                   <Button
