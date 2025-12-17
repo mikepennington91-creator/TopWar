@@ -73,7 +73,7 @@ export default function ApplicationForm() {
     { name: "position", label: "Which position are you applying for?", type: "select", required: true, options: ["In-Game", "Discord", "Both"] },
     { name: "discord_handle", label: "Discord Handle", type: "text", required: true },
     { name: "ingame_name", label: "In-Game Name", type: "text", required: true },
-    { name: "age", label: "Age", type: "number", required: true, min: 13, max: 100 },
+    { name: "age", label: "Age", type: "number", required: true, min: 21, max: 100 },
     { name: "country", label: "Country of residence", type: "text", required: true },
     { name: "activity_times", label: "What are your typical activity times per day? i.e. Reset - 5 to reset.", type: "text", required: true },
     { name: "server", label: "What server are you in? Only write your main Warzone", type: "number", required: true, min: 1 },
