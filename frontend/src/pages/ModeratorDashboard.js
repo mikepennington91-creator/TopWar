@@ -327,6 +327,18 @@ export default function ModeratorDashboard() {
             
             {/* Desktop Navigation */}
             <div className="hidden md:flex gap-2 lg:gap-3">
+              {(currentUser.role === "admin" || currentUser.role === "mmod") && (
+                <Button
+                  data-testid="audit-log-btn"
+                  onClick={fetchAuditLogs}
+                  variant="outline"
+                  size="sm"
+                  className="border-purple-500 text-purple-500 hover:bg-purple-500/20 uppercase tracking-wide rounded-sm text-xs lg:text-sm"
+                >
+                  <ClipboardList className="mr-1 lg:mr-2 h-3 w-3 lg:h-4 lg:w-4" />
+                  Audit Log
+                </Button>
+              )}
               <Button
                 data-testid="portal-btn"
                 onClick={() => navigate('/moderator/portal')}
@@ -372,6 +384,17 @@ export default function ModeratorDashboard() {
           {/* Mobile Navigation Menu */}
           {mobileMenuOpen && (
             <div className="md:hidden mt-3 pt-3 border-t border-slate-700 grid grid-cols-2 gap-2">
+              {(currentUser.role === "admin" || currentUser.role === "mmod") && (
+                <Button
+                  onClick={() => { fetchAuditLogs(); setMobileMenuOpen(false); }}
+                  variant="outline"
+                  size="sm"
+                  className="border-purple-500 text-purple-500 hover:bg-purple-500/20 uppercase tracking-wide rounded-sm text-xs w-full"
+                >
+                  <ClipboardList className="mr-1 h-3 w-3" />
+                  Audit Log
+                </Button>
+              )}
               <Button
                 onClick={() => { navigate('/moderator/portal'); setMobileMenuOpen(false); }}
                 variant="outline"
