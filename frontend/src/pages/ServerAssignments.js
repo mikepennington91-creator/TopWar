@@ -160,13 +160,13 @@ export default function ServerAssignments() {
     <div className="min-h-screen bg-slate-950 text-slate-200 py-12 px-4 sm:px-6 lg:px-8 grid-texture">
       <div className="max-w-7xl mx-auto">
         <Button
-          data-testid="back-to-dashboard-btn"
-          onClick={() => navigate('/moderator/dashboard')}
+          data-testid="back-to-portal-btn"
+          onClick={() => navigate('/moderator/portal')}
           variant="ghost"
           className="mb-8 text-amber-500 hover:text-amber-400 hover:bg-slate-900"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Dashboard
+          Back to Portal
         </Button>
 
         <h1 className="text-4xl font-bold uppercase tracking-wider mb-8 text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
