@@ -514,11 +514,15 @@ export default function ModeratorDashboard() {
                   </div>
                 </div>
 
-                {/* Final Decision - Admin/Senior Moderator Only */}
-                {selectedApp.status === 'pending' && (currentUser.role === 'admin' || currentUser.role === 'senior_moderator') && (
+                {/* Final Decision - Admin/Senior Moderator/Training Manager */}
+                {selectedApp.status === 'pending' && (
+                  currentUser.role === 'admin' || 
+                  currentUser.role === 'senior_moderator' || 
+                  moderators.find(m => m.username === currentUser.username)?.is_training_manager
+                ) && (
                   <div className="border-t border-slate-700 pt-4">
                     <h3 className="text-lg font-semibold uppercase tracking-wide text-red-500 mb-4" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                      Final Decision (Admin Only)
+                      Final Decision (Admin/Senior Mod/Training Manager)
                     </h3>
                     <div className="flex gap-4">
                       <Button
