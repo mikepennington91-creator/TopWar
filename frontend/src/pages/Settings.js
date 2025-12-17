@@ -844,17 +844,6 @@ export default function Settings() {
                             {/* Action Buttons - Admin Only */}
                             {showActionButtons && (
                               <div className="md:col-span-2 flex gap-2 flex-wrap">
-                                {mod.locked_at && (
-                                  <Button
-                                    data-testid={`unlock-${mod.username}`}
-                                    onClick={() => handleUnlockAccount(mod.username)}
-                                    disabled={loading}
-                                    size="sm"
-                                    className="bg-orange-500 hover:bg-orange-600 text-white rounded-sm"
-                                  >
-                                    <UserCheck className="h-4 w-4 mr-1" /> Unlock Account
-                                  </Button>
-                                )}
                                 <Button
                                   data-testid={`toggle-status-${mod.username}`}
                                   onClick={() => handleToggleStatus(mod.username, mod.status || "active")}
