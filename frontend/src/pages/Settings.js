@@ -109,7 +109,8 @@ export default function Settings() {
     
     setCurrentUser({ role, username });
     
-    if (role === 'admin' || role === 'mmod') {
+    // All roles with hierarchy access can see moderators list
+    if (['admin', 'developer', 'mmod', 'smod', 'lmod'].includes(role)) {
       fetchModerators();
     }
   }, [navigate]);
