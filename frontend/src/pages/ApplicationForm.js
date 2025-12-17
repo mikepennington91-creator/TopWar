@@ -325,6 +325,74 @@ export default function ApplicationForm() {
             </Button>
           </form>
         </div>
+
+        {/* Confirmation Dialog */}
+        <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+          <DialogContent className="max-w-2xl bg-slate-900 border-slate-700 text-slate-200" data-testid="confirmation-dialog">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold uppercase tracking-wider text-amber-500 flex items-center gap-2" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                <AlertCircle className="h-6 w-6" />
+                Confirm Your Discord Handle
+              </DialogTitle>
+              <DialogDescription className="text-slate-400">
+                Please verify your information before submitting
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-6 py-4">
+              {/* Discord Handle Confirmation */}
+              <div className="bg-slate-800/50 p-6 rounded-lg border-2 border-amber-500/30">
+                <p className="text-slate-400 mb-2">Your Discord Handle:</p>
+                <p className="text-2xl font-bold text-amber-500 mono" data-testid="discord-handle-display">
+                  {formData.discord_handle || "Not provided"}
+                </p>
+              </div>
+
+              {/* Important Notice */}
+              <div className="bg-blue-500/10 border-2 border-blue-500/50 p-6 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-6 w-6 text-blue-400 flex-shrink-0 mt-1" />
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-bold text-blue-400 uppercase tracking-wide" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                      Important: Discord Messages
+                    </h3>
+                    <p className="text-slate-300 leading-relaxed">
+                      Feedback regarding your application will be sent to your registered Discord account. 
+                      <span className="font-bold text-amber-400"> Please ensure you are accepting direct messages</span>, 
+                      otherwise you may not receive feedback about your application status.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Confirmation Question */}
+              <div className="text-center">
+                <p className="text-lg text-slate-300">
+                  Is your Discord Handle <span className="font-bold text-amber-500">{formData.discord_handle}</span> correct?
+                </p>
+              </div>
+            </div>
+
+            <DialogFooter className="flex gap-3">
+              <Button
+                data-testid="cancel-btn"
+                onClick={() => setShowConfirmation(false)}
+                variant="outline"
+                className="border-slate-600 text-slate-300 hover:bg-slate-800"
+              >
+                Go Back & Edit
+              </Button>
+              <Button
+                data-testid="confirm-submit-btn"
+                onClick={handleConfirmedSubmit}
+                disabled={loading}
+                className="bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide px-8 rounded-sm btn-glow"
+              >
+                {loading ? "Submitting..." : "Confirm & Submit Application"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
