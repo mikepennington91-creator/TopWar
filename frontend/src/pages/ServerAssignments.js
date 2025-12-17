@@ -198,17 +198,17 @@ export default function ServerAssignments() {
     }
 
     // Create CSV content (Excel compatible)
-    const headers = ["Server", "Tag", "Start Date", "End Date", "Reason", "Comments", "Created By", "Created At"];
+    const headers = ["Server", "Moderator", "Tag", "Start Date", "End Date", "Reason", "Comments", "Created At"];
     const csvContent = [
       headers.join(","),
       ...assignments.map(a => [
         a.server,
+        a.moderator_name || a.created_by,
         `"${a.tag}"`,
         a.start_date,
         a.end_date || "",
         `"${a.reason}"`,
         `"${(a.comments || "").replace(/"/g, '""')}"`,
-        a.created_by,
         new Date(a.created_at).toLocaleDateString()
       ].join(","))
     ].join("\n");
@@ -444,12 +444,12 @@ export default function ServerAssignments() {
                 <thead className="bg-slate-900/70">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Server</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Moderator</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Tag</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Start Date</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase" style={{ fontFamily: 'Rajdhani, sans-serif' }}>End Date</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Reason</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Comments</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Created By</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Actions</th>
                   </tr>
                 </thead>
@@ -461,44 +461,52 @@ export default function ServerAssignments() {
                       </td>
                     </tr>
                   ) : (
-                    assignments.map((assignment) => (
-                      <tr key={assignment.id} className="hover:bg-slate-900/30">
-                        <td className="px-4 py-3 text-slate-200 mono">{assignment.server}</td>
-                        <td className="px-4 py-3 text-slate-200 mono">{assignment.tag}</td>
-                        <td className="px-4 py-3 text-slate-200">{assignment.start_date}</td>
-                        <td className="px-4 py-3">
-                          {assignment.end_date || (
-                            <Input
-                              type="text"
-                              placeholder="DD/MM/YYYY"
-                              pattern="\d{2}/\d{2}/\d{4}"
-                              onBlur={(e) => {
-                                if (e.target.value) {
-                                  handleUpdateEndDate(assignment.id, e.target.value);
-                                }
-                              }}
-                              className="bg-slate-900 border-slate-700 text-slate-200 text-sm rounded-sm w-32"
-                            />
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-slate-200 text-sm">{assignment.reason}</td>
-                        <td className="px-4 py-3 text-slate-400 text-sm max-w-xs truncate">{assignment.comments || "-"}</td>
-                        <td className="px-4 py-3 text-slate-300 mono text-sm">{assignment.created_by}</td>
-                        <td className="px-4 py-3">
-                          {currentUser.is_admin && (
-                            <Button
-                              data-testid={`delete-${assignment.id}`}
-                              onClick={() => handleDelete(assignment.id)}
-                              disabled={loading}
-                              size="sm"
-                              className="bg-red-500 hover:bg-red-600 text-white rounded-sm"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </td>
-                      </tr>
-                    ))
+                    assignments.map((assignment) => {
+                      // Find moderator's role for coloring
+                      const modInfo = moderators.find(m => m.username === assignment.moderator_name);
+                      const modRoleColor = modInfo ? ROLE_COLORS[modInfo.role] : "text-slate-300";
+                      
+                      return (
+                        <tr key={assignment.id} className="hover:bg-slate-900/30">
+                          <td className="px-4 py-3 text-slate-200 mono">{assignment.server}</td>
+                          <td className={`px-4 py-3 mono text-sm font-semibold ${modRoleColor}`}>
+                            {assignment.moderator_name || assignment.created_by}
+                          </td>
+                          <td className="px-4 py-3 text-slate-200 mono">{assignment.tag}</td>
+                          <td className="px-4 py-3 text-slate-200">{assignment.start_date}</td>
+                          <td className="px-4 py-3">
+                            {assignment.end_date || (
+                              <Input
+                                type="text"
+                                placeholder="DD/MM/YYYY"
+                                pattern="\d{2}/\d{2}/\d{4}"
+                                onBlur={(e) => {
+                                  if (e.target.value) {
+                                    handleUpdateEndDate(assignment.id, e.target.value);
+                                  }
+                                }}
+                                className="bg-slate-900 border-slate-700 text-slate-200 text-sm rounded-sm w-32"
+                              />
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-slate-200 text-sm">{assignment.reason}</td>
+                          <td className="px-4 py-3 text-slate-400 text-sm max-w-xs truncate">{assignment.comments || "-"}</td>
+                          <td className="px-4 py-3">
+                            {currentUser.is_admin && (
+                              <Button
+                                data-testid={`delete-${assignment.id}`}
+                                onClick={() => handleDelete(assignment.id)}
+                                disabled={loading}
+                                size="sm"
+                                className="bg-red-500 hover:bg-red-600 text-white rounded-sm"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
