@@ -651,10 +651,11 @@ export default function Settings() {
                             </Select>
                           </div>
                           
-                          {/* Training Manager Toggle */}
-                          <div className="space-y-2">
-                            <Label className="text-slate-400 text-xs uppercase">Training Manager</Label>
-                            <div className="flex items-center gap-2 h-10">
+                          {/* Permissions Toggles */}
+                          <div className="space-y-3 md:col-span-2">
+                            <Label className="text-slate-400 text-xs uppercase">Permissions</Label>
+                            
+                            <div className="flex items-center gap-2">
                               <input
                                 type="checkbox"
                                 data-testid={`training-manager-${mod.username}`}
@@ -664,6 +665,30 @@ export default function Settings() {
                                 className="w-5 h-5 rounded bg-slate-900 border-slate-700 text-blue-500 focus:ring-blue-500"
                               />
                               <span className="text-slate-300">Enable Training Manager</span>
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                data-testid={`admin-${mod.username}`}
+                                checked={mod.is_admin || false}
+                                onChange={() => handleToggleAdmin(mod.username, mod.is_admin || false)}
+                                disabled={loading}
+                                className="w-5 h-5 rounded bg-slate-900 border-slate-700 text-red-500 focus:ring-red-500"
+                              />
+                              <span className="text-slate-300">Enable Admin</span>
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                data-testid={`application-viewer-${mod.username}`}
+                                checked={mod.can_view_applications !== false}
+                                onChange={() => handleToggleApplicationViewer(mod.username, mod.can_view_applications !== false)}
+                                disabled={loading}
+                                className="w-5 h-5 rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-emerald-500"
+                              />
+                              <span className="text-slate-300">Application Viewer</span>
                             </div>
                           </div>
                           
