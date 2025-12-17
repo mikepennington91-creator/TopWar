@@ -235,9 +235,37 @@ async def get_current_moderator(credentials: HTTPAuthorizationCredentials = Depe
         raise HTTPException(status_code=401, detail="Could not validate credentials")
 
 async def require_admin(current_user: dict = Depends(get_current_moderator)):
-    if current_user["role"] not in ["admin", "senior_moderator"]:
-        raise HTTPException(status_code=403, detail="Admin or Senior Moderator access required")
+    if current_user["role"] not in ["admin", "mmod"]:
+        raise HTTPException(status_code=403, detail="Admin or MMOD access required")
     return current_user
+
+def validate_password_strength(password: str) -> tuple[bool, str]:
+    """Validate password meets security requirements"""
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters long"
+    
+    has_upper = any(c.isupper() for c in password)
+    has_lower = any(c.islower() for c in password)
+    has_digit = any(c.isdigit() for c in password)
+    has_symbol = any(not c.isalnum() for c in password)
+    
+    if not has_upper:
+        return False, "Password must contain at least one uppercase letter"
+    if not has_lower:
+        return False, "Password must contain at least one lowercase letter"
+    if not has_digit:
+        return False, "Password must contain at least one number"
+    if not has_symbol:
+        return False, "Password must contain at least one special character"
+    
+    return True, "Password is valid"
+
+def check_password_history(new_password: str, password_history: List[str]) -> bool:
+    """Check if password was used in last 10 passwords"""
+    for old_hash in password_history:
+        if pwd_context.verify(new_password, old_hash):
+            return False
+    return True
 
 
 # ============= Routes =============
