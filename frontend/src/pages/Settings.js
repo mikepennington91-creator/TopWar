@@ -334,7 +334,8 @@ export default function Settings() {
       mmod: { color: "text-red-500", label: "MMOD" },
       moderator: { color: "text-blue-400", label: "MODERATOR" },
       lmod: { color: "text-purple-400", label: "LMOD" },
-      smod: { color: "text-pink-400", label: "SMOD" }
+      smod: { color: "text-pink-400", label: "SMOD" },
+      developer: { color: "text-yellow-400", label: "DEVELOPER" }
     };
     const roleConfig = config[role] || { color: "text-slate-400", label: role };
     return <span className={`uppercase font-semibold ${roleConfig.color}`}>{roleConfig.label}</span>;
