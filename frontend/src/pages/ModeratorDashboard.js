@@ -90,6 +90,10 @@ export default function ModeratorDashboard() {
         toast.error("Session expired. Please login again.");
         localStorage.removeItem('moderator_token');
         navigate('/moderator/login');
+      } else if (error.response?.status === 403) {
+        // User doesn't have permission to view applications
+        toast.info("Redirecting to Server Assignments...");
+        navigate('/moderator/server-assignments');
       } else {
         toast.error("Failed to fetch applications");
       }
