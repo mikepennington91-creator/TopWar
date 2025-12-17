@@ -89,6 +89,15 @@ export default function ApplicationForm() {
         submitData.moderator_swearing = "N/A";
       }
 
+      // If position is "In-Game", set Discord-specific questions to N/A
+      if (formData.position === "In-Game") {
+        submitData.discord_moderation_tools = "N/A";
+        submitData.discord_spam_handling = "N/A";
+        submitData.discord_bots_experience = "N/A";
+        submitData.discord_harassment_handling = "N/A";
+        submitData.discord_voice_channel_management = "N/A";
+      }
+
       await axios.post(`${API}/applications`, submitData);
       toast.success("Application submitted successfully! You will be notified of the decision.");
       setTimeout(() => navigate('/'), 2000);
