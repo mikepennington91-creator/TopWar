@@ -402,37 +402,11 @@ export default function Settings() {
     return <span className={`uppercase font-semibold ${roleConfig.color}`}>{roleConfig.label}</span>;
   };
 
-  const getStatusBadge = (status, locked_at) => {
-    if (locked_at) {
-      return <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/50">LOCKED</Badge>;
-    }
+  const getStatusBadge = (status) => {
     if (status === "active") {
       return <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/50">ACTIVE</Badge>;
     }
     return <Badge className="bg-red-500/20 text-red-400 border-red-500/50">DISABLED</Badge>;
-  };
-
-  const handleUnlockAccount = async (username) => {
-    if (!window.confirm(`Unlock account for ${username}?`)) {
-      return;
-    }
-    
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('moderator_token');
-      await axios.patch(
-        `${API}/moderators/${username}/unlock`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success(`Account unlocked for ${username}!`);
-      fetchModerators();
-    } catch (error) {
-      console.error(error);
-      toast.error(error.response?.data?.detail || "Failed to unlock account");
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (
