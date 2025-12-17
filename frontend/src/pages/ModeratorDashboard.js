@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Search, LogOut, CheckCircle, XCircle, Eye, ThumbsUp, ThumbsDown, MessageSquare, Settings } from "lucide-react";
+import { Search, LogOut, CheckCircle, XCircle, Eye, ThumbsUp, ThumbsDown, MessageSquare, Settings, Server } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
