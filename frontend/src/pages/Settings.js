@@ -426,8 +426,8 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Admin/Senior Moderator: User Management */}
-        {currentUser && (currentUser.role === 'admin' || currentUser.role === 'senior_moderator') && (
+        {/* Admin/MMOD: User Management */}
+        {currentUser && (currentUser.role === 'admin' || currentUser.role === 'mmod') && (
           <>
             {/* Reset Password */}
             <Card className="glass-card border-slate-700 mb-8">
