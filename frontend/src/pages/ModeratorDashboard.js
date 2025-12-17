@@ -39,9 +39,27 @@ export default function ModeratorDashboard() {
       return;
     }
     
-    setCurrentUser({ username, role });
+    fetchCurrentUser(token, username, role);
     fetchApplications();
   }, [navigate]);
+
+  const fetchCurrentUser = async (token, username, role) => {
+    try {
+      // Fetch moderator list to check training manager status
+      const response = await axios.get(`${API}/moderators`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const currentMod = response.data.find(m => m.username === username);
+      setCurrentUser({ 
+        username, 
+        role,
+        is_training_manager: currentMod?.is_training_manager || false
+      });
+    } catch (error) {
+      // If can't fetch (non-admin), just set basic info
+      setCurrentUser({ username, role, is_training_manager: false });
+    }
+  };
 
   useEffect(() => {
     if (searchQuery.trim() === "") {
