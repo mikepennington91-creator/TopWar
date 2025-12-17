@@ -709,7 +709,7 @@ export default function Settings() {
                           </p>
                         </div>
                         <div className="flex items-center gap-3">
-                          {getStatusBadge(mod.status || "active", mod.locked_at)}
+                          {getStatusBadge(mod.status || "active")}
                           {mod.is_training_manager && (
                             <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/50">TRAINING MGR</Badge>
                           )}
