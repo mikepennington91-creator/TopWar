@@ -156,10 +156,20 @@ class ModeratorInfo(BaseModel):
     username: str
     role: str
     status: str
+    is_training_manager: bool
     created_at: datetime
 
 class ModeratorStatusUpdate(BaseModel):
     status: str  # active or disabled
+
+class ModeratorRoleUpdate(BaseModel):
+    role: str  # admin, senior_moderator, moderator
+
+class ModeratorUsernameUpdate(BaseModel):
+    new_username: str
+
+class ModeratorTrainingManagerUpdate(BaseModel):
+    is_training_manager: bool
 
 
 # ============= Auth Helpers =============
