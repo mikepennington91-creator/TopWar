@@ -364,6 +364,12 @@ async def delete_moderator(username: str, current_user: dict = Depends(require_a
     if not moderator:
         raise HTTPException(status_code=404, detail="Moderator not found")
     
+    # Check if this is the last admin
+    if moderator.get("is_admin", False):
+        admin_count = await db.moderators.count_documents({"is_admin": True})
+        if admin_count <= 1:
+            raise HTTPException(status_code=400, detail="Cannot delete the last admin. System must have at least one admin.")
+    
     # Delete moderator
     result = await db.moderators.delete_one({"username": username})
     
