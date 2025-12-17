@@ -179,12 +179,37 @@ export default function ApplicationForm() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6" data-testid="application-form">
-            {questions.map((question, index) => (
-              <div key={question.name} className="space-y-2">
-                <Label htmlFor={question.name} className="text-slate-300 font-medium">
-                  {index + 1}. {question.label}
-                  {question.required && <span className="text-red-500 ml-1">*</span>}
-                </Label>
+            {questions.map((question, index) => {
+              // Hide question 16 (discord_tools_comfort) if position is "In-Game"
+              if (question.name === "discord_tools_comfort" && formData.position === "In-Game") {
+                return null;
+              }
+              
+              // Hide questions 20, 21, 22 (hero_development, racist_r4, moderator_swearing) if position is "Discord"
+              if (formData.position === "Discord" && 
+                  (question.name === "hero_development" || question.name === "racist_r4" || question.name === "moderator_swearing")) {
+                return null;
+              }
+              
+              // Calculate visible question number
+              let visibleQuestionNumber = index + 1;
+              if (formData.position === "In-Game") {
+                // Adjust numbering if discord_tools_comfort (originally index 15) is hidden
+                if (index > 15) visibleQuestionNumber -= 1;
+              } else if (formData.position === "Discord") {
+                // Adjust numbering if hero_development, racist_r4, moderator_swearing are hidden
+                const hiddenQuestions = questions.slice(0, index).filter(q => 
+                  q.name === "hero_development" || q.name === "racist_r4" || q.name === "moderator_swearing"
+                ).length;
+                visibleQuestionNumber -= hiddenQuestions;
+              }
+              
+              return (
+                <div key={question.name} className="space-y-2">
+                  <Label htmlFor={question.name} className="text-slate-300 font-medium">
+                    {visibleQuestionNumber}. {question.label}
+                    {question.required && <span className="text-red-500 ml-1">*</span>}
+                  </Label>
                 {question.type === "textarea" ? (
                   <Textarea
                     id={question.name}
