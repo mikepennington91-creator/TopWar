@@ -706,7 +706,12 @@ export default function Settings() {
                 </form>
               </CardContent>
             </Card>
+          </>
+        )}
 
+        {/* User Management - Available to roles in hierarchy */}
+        {currentUser && ['admin', 'developer', 'mmod', 'smod', 'lmod'].includes(currentUser.role) && (
+          <>
             {/* Manage Moderators */}
             <Card className="glass-card border-slate-700">
               <CardHeader>
