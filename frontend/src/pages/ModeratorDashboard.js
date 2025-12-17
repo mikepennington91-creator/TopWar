@@ -486,19 +486,73 @@ export default function ModeratorDashboard() {
           </div>
         </div>
 
-        {/* Applications Table */}
-        <div className="glass-card rounded-lg overflow-hidden">
+        {/* Applications - Mobile Card View */}
+        <div className="sm:hidden space-y-3" data-testid="applications-mobile">
+          {filteredApplications.length === 0 ? (
+            <div className="glass-card p-6 text-center text-slate-400 rounded-lg">
+              No applications found.
+            </div>
+          ) : (
+            filteredApplications.map((app) => {
+              const voteCounts = getVoteCounts(app.votes);
+              return (
+                <div 
+                  key={app.id} 
+                  data-testid={`application-card-${app.id}`}
+                  className="glass-card p-4 rounded-lg"
+                  onClick={() => setSelectedApp(app)}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-slate-200 truncate">{app.name}</p>
+                      <p className="text-xs text-slate-500 mono truncate">{app.discord_handle}</p>
+                    </div>
+                    {getStatusBadge(app.status)}
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex gap-3">
+                      <span className="text-slate-400">{app.position}</span>
+                      <span className="text-slate-400 mono">S{app.server}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="text-emerald-400 font-semibold flex items-center gap-0.5">
+                        <ThumbsUp className="h-3 w-3" /> {voteCounts.approve}
+                      </span>
+                      <span className="text-red-400 font-semibold flex items-center gap-0.5">
+                        <ThumbsDown className="h-3 w-3" /> {voteCounts.reject}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-2 pt-2 border-t border-slate-700 flex items-center justify-between">
+                    <span className="text-xs text-slate-500">
+                      {new Date(app.submitted_at).toLocaleDateString()}
+                    </span>
+                    <Button
+                      size="sm"
+                      className="bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 text-xs px-3 py-1 h-auto rounded-sm"
+                    >
+                      <Eye className="h-3 w-3 mr-1" /> View
+                    </Button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Applications - Desktop Table View */}
+        <div className="hidden sm:block glass-card rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full" data-testid="applications-table">
               <thead className="bg-slate-900/70">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Applicant</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Position</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Server</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Votes</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Submitted</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Actions</th>
+                  <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Applicant</th>
+                  <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Position</th>
+                  <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Server</th>
+                  <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Votes</th>
+                  <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Status</th>
+                  <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Submitted</th>
+                  <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
@@ -513,29 +567,29 @@ export default function ModeratorDashboard() {
                     const voteCounts = getVoteCounts(app.votes);
                     return (
                       <tr key={app.id} data-testid={`application-row-${app.id}`} className="hover:bg-slate-900/30 transition-colors">
-                        <td className="px-6 py-4">
+                        <td className="px-4 lg:px-6 py-3 lg:py-4">
                           <div>
-                            <p className="font-semibold text-slate-200">{app.name}</p>
-                            <p className="text-sm text-slate-500 mono">{app.discord_handle}</p>
+                            <p className="font-semibold text-slate-200 text-sm lg:text-base">{app.name}</p>
+                            <p className="text-xs lg:text-sm text-slate-500 mono truncate max-w-[150px] lg:max-w-none">{app.discord_handle}</p>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-slate-300">{app.position}</td>
-                        <td className="px-6 py-4 text-slate-300 mono">{app.server}</td>
-                        <td className="px-6 py-4">
-                          <div className="flex gap-3">
-                            <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                        <td className="px-4 lg:px-6 py-3 lg:py-4 text-slate-300 text-sm">{app.position}</td>
+                        <td className="px-4 lg:px-6 py-3 lg:py-4 text-slate-300 mono text-sm">{app.server}</td>
+                        <td className="px-4 lg:px-6 py-3 lg:py-4">
+                          <div className="flex gap-2 lg:gap-3">
+                            <span className="text-emerald-400 font-semibold flex items-center gap-1 text-sm">
                               <ThumbsUp className="h-3 w-3" /> {voteCounts.approve}
                             </span>
-                            <span className="text-red-400 font-semibold flex items-center gap-1">
+                            <span className="text-red-400 font-semibold flex items-center gap-1 text-sm">
                               <ThumbsDown className="h-3 w-3" /> {voteCounts.reject}
                             </span>
                           </div>
                         </td>
-                        <td className="px-6 py-4">{getStatusBadge(app.status)}</td>
-                        <td className="px-6 py-4 text-slate-400 text-sm">
+                        <td className="px-4 lg:px-6 py-3 lg:py-4">{getStatusBadge(app.status)}</td>
+                        <td className="px-4 lg:px-6 py-3 lg:py-4 text-slate-400 text-xs lg:text-sm">
                           {new Date(app.submitted_at).toLocaleDateString()}
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-4 lg:px-6 py-3 lg:py-4">
                           <Button
                             data-testid={`view-btn-${app.id}`}
                             onClick={() => setSelectedApp(app)}
