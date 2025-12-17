@@ -101,3 +101,87 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Add role colors to moderator list in Settings and Server Assignments pages. Add dropdown to select moderator on server (excluding Developer role). Fix HTTP status codes."
+
+backend:
+  - task: "Server Assignment API with moderator_name field"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Added moderator_name field to ServerAssignment and ServerAssignmentCreate models. API tested via curl - working correctly."
+
+  - task: "Fixed HTTP 403 to 401 for disabled accounts"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Changed status code from 403 to 401 for disabled account login attempts."
+
+frontend:
+  - task: "Role colors in Manage Moderators list"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/Settings.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Added getRoleBadge() display under username showing colored role text. Screenshot verified - showing ADMIN in red, MMOD in red/orange."
+
+  - task: "Moderator dropdown on Server Assignments (excluding Developer)"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/ServerAssignments.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Added new 'Moderator on Server' dropdown with role-colored options. Developers are excluded. Screenshot verified - dropdown shows moderators with role colors."
+
+  - task: "Role colors in Server Assignments table"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/ServerAssignments.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Added new MODERATOR column to table showing moderator_name with role colors. Screenshot verified - testmmod showing in red/MMOD color."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: true
+
+test_plan:
+  current_focus:
+    - "Role colors in Manage Moderators list"
+    - "Moderator dropdown on Server Assignments (excluding Developer)"
+    - "Role colors in Server Assignments table"
+    - "Server Assignment API with moderator_name field"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "Implemented all requested features: 1) Role colors now display in Manage Moderators list, 2) New 'Moderator on Server' dropdown added to Server Assignments form (excluding Developer role), 3) Server Assignment table now shows Moderator column with role colors, 4) Excel export updated to include moderator name. Please test the UI flows - login as admin (admin/Admin123!@) and verify: Settings page shows role colors under each username, Server Assignments form has moderator dropdown with colored options, and the table displays moderator names with role colors."
