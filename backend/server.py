@@ -172,6 +172,8 @@ class ModeratorInfo(BaseModel):
     role: str
     status: str
     is_training_manager: bool
+    is_admin: bool
+    can_view_applications: bool
     created_at: datetime
 
 class ModeratorStatusUpdate(BaseModel):
