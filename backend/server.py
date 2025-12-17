@@ -78,7 +78,7 @@ class Application(BaseModel):
     hero_development: str
     racist_r4: str
     moderator_swearing: str
-    status: str = "pending"  # pending, approved, rejected
+    status: str = "awaiting_review"  # awaiting_review, pending, approved, rejected
     votes: List[Dict] = Field(default_factory=list)
     comments: List[Dict] = Field(default_factory=list)
     submitted_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
