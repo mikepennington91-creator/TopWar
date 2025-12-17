@@ -282,6 +282,11 @@ async def register_moderator(moderator: ModeratorCreate):
     if existing:
         raise HTTPException(status_code=400, detail="Username already registered")
     
+    # Validate password strength
+    is_valid, message = validate_password_strength(moderator.password)
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=message)
+    
     # Hash password
     hashed_password = pwd_context.hash(moderator.password)
     
