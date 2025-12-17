@@ -444,7 +444,7 @@ export default function ModeratorDashboard() {
                   )}
                   
                   {/* Vote Buttons */}
-                  {selectedApp.status === 'pending' && (
+                  {(selectedApp.status === 'awaiting_review' || selectedApp.status === 'pending') && (
                     <div className="flex gap-4">
                       <Button
                         data-testid="vote-approve-btn"
