@@ -18,6 +18,7 @@ function App() {
           <Route path="/moderator/login" element={<ModeratorLogin />} />
           <Route path="/moderator/dashboard" element={<ModeratorDashboard />} />
           <Route path="/moderator/settings" element={<Settings />} />
+          <Route path="/moderator/server-assignments" element={<ServerAssignments />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
