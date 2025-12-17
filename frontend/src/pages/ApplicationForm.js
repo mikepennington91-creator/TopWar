@@ -131,7 +131,13 @@ export default function ApplicationForm() {
     { name: "unknown_question", label: "A new player asks a question you don't know the answer to. What do you do?", type: "textarea", required: true },
     { name: "hero_development", label: "What advice would you give a new player struggling with hero development?", type: "textarea", required: true },
     { name: "racist_r4", label: "You see your R4's being racist to another player in Alliance chat on your main server. How would you handle the situation?", type: "textarea", required: true },
-    { name: "moderator_swearing", label: "In a shared language channel you see another moderator swearing and joking with players. How would you approach this situation?", type: "textarea", required: true }
+    { name: "moderator_swearing", label: "In a shared language channel you see another moderator swearing and joking with players. How would you approach this situation?", type: "textarea", required: true },
+    // Discord-specific questions - only shown for Discord or Both positions
+    { name: "discord_moderation_tools", label: "Are you familiar with Discord's moderation tools (e.g., roles, permissions, bans, mutes)? Please describe your experience.", type: "textarea", required: true, discordOnly: true },
+    { name: "discord_spam_handling", label: "How would you handle a situation where someone is spamming in multiple channels?", type: "textarea", required: true, discordOnly: true },
+    { name: "discord_bots_experience", label: "Do you know how to use bots for moderation (e.g., setting up auto-moderation, commands)? If yes, which bots have you used?", type: "textarea", required: true, discordOnly: true },
+    { name: "discord_harassment_handling", label: "What steps would you take if a user reports harassment through Discord DMs?", type: "textarea", required: true, discordOnly: true },
+    { name: "discord_voice_channel_management", label: "Are you comfortable managing voice channels (e.g., moving users, muting, handling disruptions)?", type: "textarea", required: true, discordOnly: true }
   ];
 
   return (
