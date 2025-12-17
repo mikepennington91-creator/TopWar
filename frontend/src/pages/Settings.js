@@ -13,6 +13,66 @@ import { ArrowLeft, Lock, Users, Shield, UserPlus, UserX, UserCheck, AlertCircle
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Role hierarchy - higher index = higher rank
+const ROLE_HIERARCHY = {
+  'moderator': 0,
+  'lmod': 1,
+  'smod': 2,
+  'mmod': 3,
+  'developer': 4,
+  'admin': 5  // Admin has highest privileges
+};
+
+// Get roles that a user can assign based on their role
+const getAssignableRoles = (currentUserRole, targetUserRole) => {
+  const currentRank = ROLE_HIERARCHY[currentUserRole] || 0;
+  const targetRank = ROLE_HIERARCHY[targetUserRole] || 0;
+  
+  // Admin can assign any role
+  if (currentUserRole === 'admin') {
+    return ['admin', 'developer', 'mmod', 'smod', 'lmod', 'moderator'];
+  }
+  
+  // Can only change roles of users with lower rank
+  if (currentRank <= targetRank) {
+    return [];
+  }
+  
+  // Return roles that are below the current user's rank
+  return Object.entries(ROLE_HIERARCHY)
+    .filter(([role, rank]) => rank < currentRank && role !== 'admin')
+    .map(([role]) => role);
+};
+
+// Check if current user can modify target user's role
+const canModifyRole = (currentUserRole, targetUserRole, isSelf) => {
+  // Admin can change their own role
+  if (currentUserRole === 'admin' && isSelf) {
+    return true;
+  }
+  
+  // No one else can change their own role
+  if (isSelf) {
+    return false;
+  }
+  
+  const currentRank = ROLE_HIERARCHY[currentUserRole] || 0;
+  const targetRank = ROLE_HIERARCHY[targetUserRole] || 0;
+  
+  // Admin can modify anyone
+  if (currentUserRole === 'admin') {
+    return true;
+  }
+  
+  // Can only modify users with lower rank
+  return currentRank > targetRank;
+};
+
+// Check if current user can modify permissions (checkboxes)
+const canModifyPermissions = (currentUserRole) => {
+  return currentUserRole === 'admin';
+};
+
 export default function Settings() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
