@@ -125,9 +125,24 @@ class Moderator(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     username: str
     hashed_password: str
-    role: str = "moderator"  # admin, senior_moderator, moderator
+    role: str = "moderator"  # admin, mmod, moderator, lmod, smod
     status: str = "active"  # active, disabled
     is_training_manager: bool = False
+    is_admin: bool = False
+    can_view_applications: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class ServerAssignment(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    server: int
+    tag: int
+    start_date: str  # UK format DD/MM/YYYY
+    end_date: Optional[str] = None  # UK format DD/MM/YYYY
+    reason: str
+    comments: str = ""
+    created_by: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ModeratorCreate(BaseModel):
