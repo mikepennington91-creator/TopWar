@@ -265,6 +265,40 @@ async def require_admin(current_user: dict = Depends(get_current_moderator)):
         raise HTTPException(status_code=403, detail="Admin or MMOD access required")
     return current_user
 
+# Role hierarchy - higher number = higher rank
+ROLE_HIERARCHY = {
+    'moderator': 0,
+    'lmod': 1,
+    'smod': 2,
+    'mmod': 3,
+    'developer': 4,
+    'admin': 5
+}
+
+def get_role_rank(role: str) -> int:
+    return ROLE_HIERARCHY.get(role, 0)
+
+def can_modify_role(current_role: str, target_role: str, is_self: bool = False) -> bool:
+    """Check if current user can modify target user's role"""
+    # Admin can change their own role
+    if current_role == 'admin' and is_self:
+        return True
+    # No one else can change their own role
+    if is_self:
+        return False
+    # Admin can modify anyone
+    if current_role == 'admin':
+        return True
+    # Others can only modify users with lower rank
+    return get_role_rank(current_role) > get_role_rank(target_role)
+
+def get_assignable_roles(current_role: str) -> list:
+    """Get roles that current user can assign"""
+    if current_role == 'admin':
+        return ['admin', 'developer', 'mmod', 'smod', 'lmod', 'moderator']
+    current_rank = get_role_rank(current_role)
+    return [role for role, rank in ROLE_HIERARCHY.items() if rank < current_rank and role != 'admin']
+
 def validate_password_strength(password: str) -> tuple[bool, str]:
     """Validate password meets security requirements"""
     if len(password) < 8:
