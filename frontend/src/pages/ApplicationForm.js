@@ -277,8 +277,9 @@ export default function ApplicationForm() {
                     placeholder="Type your answer here..."
                   />
                 )}
-              </div>
-            ))}
+                </div>
+              );
+            })}
 
             <Button
               data-testid="submit-application-btn"
