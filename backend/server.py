@@ -832,8 +832,18 @@ async def comment_on_application(application_id: str, comment_data: CommentCreat
 
 @api_router.patch("/applications/{application_id}", response_model=Application)
 async def update_application_status(application_id: str, update: ApplicationUpdate, current_user: dict = Depends(require_admin)):
-    if update.status not in ["approved", "rejected"]:
-        raise HTTPException(status_code=400, detail="Status must be 'approved' or 'rejected'")
+    if update.status not in ["approved", "rejected", "pending", "awaiting_review"]:
+        raise HTTPException(status_code=400, detail="Status must be 'approved', 'rejected', 'pending', or 'awaiting_review'")
+    
+    if not update.comment or not update.comment.strip():
+        raise HTTPException(status_code=400, detail="A comment is required when changing application status")
+    
+    # Get existing application to check old status
+    existing_app = await db.applications.find_one({"id": application_id}, {"_id": 0})
+    if not existing_app:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    old_status = existing_app.get('status', 'awaiting_review')
     
     # Update the application
     result = await db.applications.update_one(
@@ -847,8 +857,30 @@ async def update_application_status(application_id: str, update: ApplicationUpda
         }
     )
     
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Application not found")
+    # Add the required comment to the application
+    comment = {
+        "moderator": current_user['username'],
+        "comment": f"[STATUS CHANGE: {old_status.upper()} → {update.status.upper()}] {update.comment}",
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    await db.applications.update_one(
+        {"id": application_id},
+        {"$push": {"comments": comment}}
+    )
+    
+    # Create audit log entry
+    audit_log = AuditLog(
+        action="status_changed",
+        application_id=application_id,
+        application_name=existing_app.get('name', 'Unknown'),
+        performed_by=current_user['username'],
+        comment=update.comment,
+        old_status=old_status,
+        new_status=update.status
+    )
+    audit_doc = audit_log.model_dump()
+    audit_doc['created_at'] = audit_doc['created_at'].isoformat()
+    await db.audit_logs.insert_one(audit_doc)
     
     # Get updated application
     application = await db.applications.find_one({"id": application_id}, {"_id": 0})
@@ -867,6 +899,45 @@ async def update_application_status(application_id: str, update: ApplicationUpda
             comment['timestamp'] = datetime.fromisoformat(comment['timestamp'])
     
     return application
+
+@api_router.delete("/applications/{application_id}")
+async def delete_application(application_id: str, current_user: dict = Depends(require_admin)):
+    # Get existing application
+    existing_app = await db.applications.find_one({"id": application_id}, {"_id": 0})
+    if not existing_app:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    # Create audit log entry before deletion
+    audit_log = AuditLog(
+        action="deleted",
+        application_id=application_id,
+        application_name=existing_app.get('name', 'Unknown'),
+        performed_by=current_user['username'],
+        comment=f"Application deleted by {current_user['username']}",
+        old_status=existing_app.get('status', 'unknown'),
+        new_status="deleted"
+    )
+    audit_doc = audit_log.model_dump()
+    audit_doc['created_at'] = audit_doc['created_at'].isoformat()
+    await db.audit_logs.insert_one(audit_doc)
+    
+    # Delete the application
+    result = await db.applications.delete_one({"id": application_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    return {"message": f"Application from {existing_app.get('name', 'Unknown')} deleted successfully"}
+
+# Audit Log endpoints
+@api_router.get("/audit-logs")
+async def get_audit_logs(current_user: dict = Depends(get_current_moderator)):
+    # Only MMODs and Admins can view audit logs
+    if current_user["role"] not in ["admin", "mmod"]:
+        raise HTTPException(status_code=403, detail="Only Admin and MMOD can view audit logs")
+    
+    logs = await db.audit_logs.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return logs
 
 
 # Announcement endpoints
