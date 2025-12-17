@@ -72,7 +72,6 @@ class Application(BaseModel):
     heroes_mutated: str
     discord_tools_comfort: str
     guidelines_rating: str
-    high_profile_violation: str
     complex_mechanic: str
     unknown_question: str
     hero_development: str
@@ -103,7 +102,6 @@ class ApplicationCreate(BaseModel):
     heroes_mutated: str
     discord_tools_comfort: str
     guidelines_rating: str
-    high_profile_violation: str
     complex_mechanic: str
     unknown_question: str
     hero_development: str
