@@ -276,6 +276,58 @@ export default function Settings() {
     }
   };
 
+  const handleToggleAdmin = async (username, currentStatus) => {
+    const newStatus = !currentStatus;
+    const action = newStatus ? "enable" : "disable";
+    
+    if (!window.confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} Admin for ${username}?`)) {
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('moderator_token');
+      await axios.patch(
+        `${API}/moderators/${username}/admin`,
+        { is_admin: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`Admin ${action}d for ${username}!`);
+      fetchModerators();
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.detail || `Failed to ${action} Admin`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleApplicationViewer = async (username, currentStatus) => {
+    const newStatus = !currentStatus;
+    const action = newStatus ? "enable" : "disable";
+    
+    if (!window.confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} Application Viewer for ${username}?`)) {
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('moderator_token');
+      await axios.patch(
+        `${API}/moderators/${username}/application-viewer`,
+        { can_view_applications: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`Application Viewer ${action}d for ${username}!`);
+      fetchModerators();
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.detail || `Failed to ${action} Application Viewer`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getRoleBadge = (role) => {
     const colors = {
       admin: "text-red-400",
