@@ -557,19 +557,61 @@ export default function Settings() {
               <CardContent>
                 <div className="space-y-3" data-testid="moderator-list">
                   {moderators.map((mod) => (
-                    <div key={mod.username} className="flex items-center justify-between p-4 bg-slate-900/50 rounded border border-slate-800">
-                      <div className="flex-1">
-                        <p className="font-semibold text-slate-200">{mod.username}</p>
-                        <p className="text-sm text-slate-500 mono">
-                          Joined: {new Date(mod.created_at).toLocaleDateString()}
-                        </p>
+                    <div key={mod.username} className="p-4 bg-slate-900/50 rounded border border-slate-800">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex-1">
+                          <p className="font-semibold text-slate-200 text-lg">{mod.username}</p>
+                          <p className="text-sm text-slate-500 mono">
+                            Joined: {new Date(mod.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {getStatusBadge(mod.status || "active")}
+                          {mod.is_training_manager && (
+                            <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/50">TRAINING MGR</Badge>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        {getRoleBadge(mod.role)}
-                        {getStatusBadge(mod.status || "active")}
-                        
-                        {mod.username !== currentUser.username && (
-                          <div className="flex gap-2">
+                      
+                      {mod.username !== currentUser.username && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Role Selection */}
+                          <div className="space-y-2">
+                            <Label className="text-slate-400 text-xs uppercase">Role</Label>
+                            <Select
+                              value={mod.role}
+                              onValueChange={(value) => handleChangeRole(mod.username, value)}
+                              disabled={loading}
+                            >
+                              <SelectTrigger className="bg-slate-900/50 border-slate-700 text-slate-200 rounded-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-900 border-slate-700">
+                                <SelectItem value="moderator" className="text-emerald-400">Moderator</SelectItem>
+                                <SelectItem value="senior_moderator" className="text-amber-400">Senior Moderator</SelectItem>
+                                <SelectItem value="admin" className="text-red-400">Admin</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          {/* Training Manager Toggle */}
+                          <div className="space-y-2">
+                            <Label className="text-slate-400 text-xs uppercase">Training Manager</Label>
+                            <div className="flex items-center gap-2 h-10">
+                              <input
+                                type="checkbox"
+                                data-testid={`training-manager-${mod.username}`}
+                                checked={mod.is_training_manager || false}
+                                onChange={() => handleToggleTrainingManager(mod.username, mod.is_training_manager || false)}
+                                disabled={loading}
+                                className="w-5 h-5 rounded bg-slate-900 border-slate-700 text-blue-500 focus:ring-blue-500"
+                              />
+                              <span className="text-slate-300">Enable Training Manager</span>
+                            </div>
+                          </div>
+                          
+                          {/* Action Buttons */}
+                          <div className="md:col-span-2 flex gap-2">
                             <Button
                               data-testid={`toggle-status-${mod.username}`}
                               onClick={() => handleToggleStatus(mod.username, mod.status || "active")}
@@ -578,9 +620,9 @@ export default function Settings() {
                               className={`${(mod.status || "active") === "active" ? "bg-amber-500/20 border-amber-500 text-amber-400 hover:bg-amber-500/30" : "bg-emerald-500/20 border-emerald-500 text-emerald-400 hover:bg-emerald-500/30"} border-2 rounded-sm`}
                             >
                               {(mod.status || "active") === "active" ? (
-                                <><UserX className="h-4 w-4 mr-1" /> Disable</>
+                                <><UserX className="h-4 w-4 mr-1" /> Disable Account</>
                               ) : (
-                                <><UserCheck className="h-4 w-4 mr-1" /> Enable</>
+                                <><UserCheck className="h-4 w-4 mr-1" /> Enable Account</>
                               )}
                             </Button>
                             <Button
@@ -590,11 +632,11 @@ export default function Settings() {
                               size="sm"
                               className="bg-red-500 hover:bg-red-600 text-white rounded-sm"
                             >
-                              Delete
+                              Delete Permanently
                             </Button>
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
