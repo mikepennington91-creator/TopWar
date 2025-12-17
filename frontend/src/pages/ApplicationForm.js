@@ -133,6 +133,26 @@ export default function ApplicationForm() {
                     className="bg-slate-900/50 border-slate-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-slate-200 min-h-[100px] rounded-sm"
                     placeholder="Type your answer here..."
                   />
+                ) : question.type === "select" ? (
+                  <Select
+                    value={formData[question.name]}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, [question.name]: value }))}
+                    required={question.required}
+                  >
+                    <SelectTrigger 
+                      data-testid={`input-${question.name}`}
+                      className="bg-slate-900/50 border-slate-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-slate-200 rounded-sm"
+                    >
+                      <SelectValue placeholder="Select an option..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-900 border-slate-700">
+                      {question.options.map((option) => (
+                        <SelectItem key={option} value={option} className="text-slate-200">
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 ) : (
                   <Input
                     id={question.name}
