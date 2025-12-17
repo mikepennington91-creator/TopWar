@@ -26,7 +26,7 @@ export default function ModeratorDashboard() {
   const [selectedApp, setSelectedApp] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState({ username: "", role: "moderator" });
+  const [currentUser, setCurrentUser] = useState({ username: "", role: "moderator", is_training_manager: false });
   const [newComment, setNewComment] = useState("");
 
   useEffect(() => {
