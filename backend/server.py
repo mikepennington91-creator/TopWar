@@ -514,6 +514,11 @@ async def submit_application(app_data: ApplicationCreate):
 
 @api_router.get("/applications", response_model=List[Application])
 async def get_applications(search: Optional[str] = None, current_user: dict = Depends(get_current_moderator)):
+    # Check if user can view applications
+    moderator = await db.moderators.find_one({"username": current_user['username']}, {"_id": 0})
+    if moderator and not moderator.get('can_view_applications', True):
+        raise HTTPException(status_code=403, detail="You do not have permission to view applications")
+    
     query = {}
     if search:
         # Search in name, discord_handle, ingame_name, server
