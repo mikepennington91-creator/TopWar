@@ -432,8 +432,14 @@ export default function ModeratorDashboard() {
                       { label: "Unknown Question Response", value: selectedApp.unknown_question },
                       { label: "Hero Development Advice", value: selectedApp.hero_development },
                       { label: "Racist R4 Scenario", value: selectedApp.racist_r4 },
-                      { label: "Moderator Swearing Scenario", value: selectedApp.moderator_swearing }
-                    ].map((item, index) => (
+                      { label: "Moderator Swearing Scenario", value: selectedApp.moderator_swearing },
+                      // Discord-specific questions
+                      { label: "Discord Moderation Tools Experience", value: selectedApp.discord_moderation_tools },
+                      { label: "Discord Spam Handling", value: selectedApp.discord_spam_handling },
+                      { label: "Discord Bots Experience", value: selectedApp.discord_bots_experience },
+                      { label: "Discord Harassment Handling", value: selectedApp.discord_harassment_handling },
+                      { label: "Discord Voice Channel Management", value: selectedApp.discord_voice_channel_management }
+                    ].filter(item => item.value && item.value !== "N/A").map((item, index) => (
                       <div key={index} className="bg-slate-800/50 p-4 rounded">
                         <p className="text-slate-400 text-sm font-semibold mb-1">{item.label}</p>
                         <p className="text-slate-200">{item.value}</p>
