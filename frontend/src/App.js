@@ -5,6 +5,7 @@ import ApplicationForm from "@/pages/ApplicationForm";
 import ModeratorLogin from "@/pages/ModeratorLogin";
 import ModeratorDashboard from "@/pages/ModeratorDashboard";
 import Settings from "@/pages/Settings";
+import ServerAssignments from "@/pages/ServerAssignments";
 import { Toaster } from "@/components/ui/sonner";
 
 function App() {
