@@ -206,15 +206,15 @@ export default function ModeratorPortal() {
 
         {/* Announcements Section */}
         <Card className="glass-card border-slate-700 mb-8">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-2xl font-bold uppercase tracking-wide text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-              <Megaphone className="inline-block mr-2 h-6 w-6" />
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <CardTitle className="text-xl sm:text-2xl font-bold uppercase tracking-wide text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+              <Megaphone className="inline-block mr-2 h-5 w-5 sm:h-6 sm:w-6" />
               Announcements
             </CardTitle>
             {canManageAnnouncements && (
               <Button
                 onClick={() => setShowAnnouncementForm(!showAnnouncementForm)}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-sm"
+                className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-sm text-sm w-full sm:w-auto"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 New Announcement
