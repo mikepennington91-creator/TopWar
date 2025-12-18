@@ -26,6 +26,7 @@ export default function ApplicationForm() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
+    email: "",
     position: "",
     discord_handle: "",
     ingame_name: "",
