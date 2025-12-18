@@ -136,6 +136,7 @@ class Application(BaseModel):
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
+    email: str
     position: str
     discord_handle: str
     ingame_name: str
