@@ -214,7 +214,6 @@ frontend:
         agent: "main"
         comment: "Buttons stack on mobile, form fields full-width, table scrolls horizontally. Screenshot verified on 375px viewport."
 
-frontend_old:
   - task: "Role colors in Manage Moderators list"
     implemented: true
     working: true
