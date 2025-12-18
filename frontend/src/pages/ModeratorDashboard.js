@@ -690,6 +690,10 @@ export default function ModeratorDashboard() {
                     <p className="text-slate-200" data-testid="detail-name">{selectedApp.name}</p>
                   </div>
                   <div>
+                    <p className="text-slate-500 text-sm uppercase font-semibold" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Email</p>
+                    <p className="text-emerald-400 mono" data-testid="detail-email">{selectedApp.email || "Not provided"}</p>
+                  </div>
+                  <div>
                     <p className="text-slate-500 text-sm uppercase font-semibold" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Position</p>
                     <p className="text-slate-200" data-testid="detail-position">{selectedApp.position}</p>
                   </div>
