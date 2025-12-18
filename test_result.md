@@ -102,10 +102,10 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Add role colors to moderator list in Settings and Server Assignments pages. Add dropdown to select moderator on server (excluding Developer role). Fix HTTP status codes."
+user_problem_statement: "Add poll system to Moderator Portal - SMod/MMOD/Developer can create polls, everyone can vote, max 2 live polls, 1 week duration, notification for new polls, archived polls table."
 
 backend:
-  - task: "Server Assignment API with moderator_name field"
+  - task: "Poll CRUD API endpoints"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -115,21 +115,106 @@ backend:
     status_history:
       - working: true
         agent: "main"
-        comment: "Added moderator_name field to ServerAssignment and ServerAssignmentCreate models. API tested via curl - working correctly."
+        comment: "Added Poll, PollCreate, ArchivedPoll models. Implemented endpoints: GET/POST /polls, POST /polls/{id}/vote, DELETE /polls/{id}, GET /polls/archived, GET /polls/check-new, POST /polls/{id}/mark-viewed, POST /polls/check-expired. Screenshot verified poll creation and voting."
 
-  - task: "Fixed HTTP 403 to 401 for disabled accounts"
+  - task: "Poll creation permissions (SMod/MMOD/Developer)"
     implemented: true
     working: true
     file: "/app/backend/server.py"
     stuck_count: 0
-    priority: "low"
-    needs_retesting: false
+    priority: "high"
+    needs_retesting: true
     status_history:
       - working: true
         agent: "main"
-        comment: "Changed status code from 403 to 401 for disabled account login attempts."
+        comment: "POST /polls restricted to smod, mmod, developer, admin roles. Max 2 active polls enforced."
+
+  - task: "Poll voting and auto-close logic"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Voting records username in option.votes array. Auto-closes when all active moderators vote or after 7 days. Archives poll with outcome."
 
 frontend:
+  - task: "Poll section on Moderator Portal"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/ModeratorPortal.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Added Polls card above Announcements. Shows active polls with voting options. Displays results after voting with progress bars and percentages."
+
+  - task: "Poll creation form"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/ModeratorPortal.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Form with question, 2-6 options (add/remove), show_voters toggle. New Poll button visible only for SMod/MMOD/Developer/Admin."
+
+  - task: "Poll voting UI"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/ModeratorPortal.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Radio-style options before voting, progress bars after. Shows (Your vote) label, voter names if show_voters enabled."
+
+  - task: "New poll notification"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/ModeratorPortal.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Bell icon with red dot in header when unviewed polls exist. NEW badge on Polls title. Marks viewed on render."
+
+  - task: "Archived polls table"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/ModeratorPortal.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "View Archive button toggles table showing question, outcome, created_by, closed_at. Responsive design."
+
+  - task: "Mobile responsive polls"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/ModeratorPortal.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Buttons stack on mobile, form fields full-width, table scrolls horizontally. Screenshot verified on 375px viewport."
+
+frontend_old:
   - task: "Role colors in Manage Moderators list"
     implemented: true
     working: true
