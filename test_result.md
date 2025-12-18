@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Add poll system to Moderator Portal - SMod/MMOD/Developer can create polls, everyone can vote, max 2 live polls, 1 week duration, notification for new polls, archived polls table."
+user_problem_statement: "Add email notification system - Add email field to application form, send confirmation emails on submission, send approval/rejection emails when status changes, and manual verification popup showing email + Discord."
 
 backend:
   - task: "Poll CRUD API endpoints"
