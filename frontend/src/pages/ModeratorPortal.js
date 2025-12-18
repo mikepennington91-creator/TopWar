@@ -192,7 +192,7 @@ export default function ModeratorPortal() {
 
       <div className="max-w-6xl mx-auto py-4 sm:py-8 px-3 sm:px-6">
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 sm:gap-4 mb-4 sm:mb-8">
           <Button
             onClick={() => navigate('/moderator/dashboard')}
             className="bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide py-4 sm:py-6 rounded-sm btn-glow text-xs sm:text-sm"
@@ -207,6 +207,19 @@ export default function ModeratorPortal() {
           >
             <Calendar className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
             Servers
+          </Button>
+          <Button
+            onClick={() => navigate('/moderator/polls')}
+            variant="outline"
+            className={`border-2 font-bold uppercase tracking-wide py-4 sm:py-6 rounded-sm text-xs sm:text-sm ${
+              hasNewPolls 
+                ? 'border-cyan-400 text-cyan-400 hover:bg-cyan-500/20 animate-pulse' 
+                : 'border-cyan-500 text-cyan-500 hover:bg-cyan-500/20'
+            }`}
+          >
+            <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
+            Polls
+            {hasNewPolls && <span className="ml-1 w-2 h-2 bg-red-500 rounded-full"></span>}
           </Button>
           <Button
             onClick={() => navigate('/moderator/settings')}
