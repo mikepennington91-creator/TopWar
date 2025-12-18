@@ -805,12 +805,16 @@ async def delete_server_assignment(assignment_id: str, current_user: dict = Depe
 
 # Application Routes
 @api_router.post("/applications", response_model=Application)
-async def submit_application(app_data: ApplicationCreate):
+async def submit_application(app_data: ApplicationCreate, background_tasks: BackgroundTasks):
     app_obj = Application(**app_data.model_dump())
     doc = app_obj.model_dump()
     doc['submitted_at'] = doc['submitted_at'].isoformat()
     
     await db.applications.insert_one(doc)
+    
+    # Send confirmation email in background
+    background_tasks.add_task(send_application_confirmation_email, app_data.email, app_data.name)
+    
     return app_obj
 
 @api_router.get("/applications", response_model=List[Application])
