@@ -81,12 +81,19 @@ export default function ServerAssignments() {
       const response = await axios.get(`${API}/moderators`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      // Filter out developers and store moderators with their roles
-      const filteredMods = response.data.filter(mod => mod.role !== 'developer' && mod.status === 'active');
+      // Filter out developers, sort alphabetically, and store
+      const filteredMods = response.data
+        .filter(mod => mod.role !== 'developer' && mod.status === 'active')
+        .sort((a, b) => a.username.toLowerCase().localeCompare(b.username.toLowerCase()));
       setModerators(filteredMods);
     } catch (error) {
       console.error("Failed to fetch moderators:", error);
-      // If user doesn't have permission to view moderators, silently fail
+      // If user doesn't have permission, use current user as fallback
+      const username = localStorage.getItem('moderator_username');
+      const role = localStorage.getItem('moderator_role');
+      if (username && role !== 'developer') {
+        setModerators([{ username, role }]);
+      }
     }
   };
 
