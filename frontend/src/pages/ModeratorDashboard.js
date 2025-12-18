@@ -390,7 +390,8 @@ export default function ModeratorDashboard() {
                 size="sm"
                 className="border-blue-500 text-blue-500 hover:bg-blue-500/20 uppercase tracking-wide rounded-sm text-xs w-full"
               >
-                Portal
+                <LayoutDashboard className="mr-1 h-3 w-3" />
+                Dashboard
               </Button>
               <Button
                 onClick={() => { navigate('/moderator/server-assignments'); setMobileMenuOpen(false); }}
