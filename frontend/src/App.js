@@ -24,6 +24,7 @@ function App() {
           <Route path="/moderator/settings" element={<Settings />} />
           <Route path="/moderator/server-assignments" element={<ServerAssignments />} />
           <Route path="/moderator/audit-log" element={<AuditLog />} />
+          <Route path="/moderator/polls" element={<Polls />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
