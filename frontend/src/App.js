@@ -8,6 +8,7 @@ import ModeratorPortal from "@/pages/ModeratorPortal";
 import Settings from "@/pages/Settings";
 import ServerAssignments from "@/pages/ServerAssignments";
 import AuditLog from "@/pages/AuditLog";
+import Polls from "@/pages/Polls";
 import { Toaster } from "@/components/ui/sonner";
 
 function App() {
