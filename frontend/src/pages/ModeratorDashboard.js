@@ -331,7 +331,7 @@ export default function ModeratorDashboard() {
               {(currentUser.role === "admin" || currentUser.role === "mmod") && (
                 <Button
                   data-testid="audit-log-btn"
-                  onClick={fetchAuditLogs}
+                  onClick={() => navigate('/moderator/audit-log')}
                   variant="outline"
                   size="sm"
                   className="border-purple-500 text-purple-500 hover:bg-purple-500/20 uppercase tracking-wide rounded-sm text-xs lg:text-sm"
@@ -387,7 +387,7 @@ export default function ModeratorDashboard() {
             <div className="md:hidden mt-3 pt-3 border-t border-slate-700 grid grid-cols-2 gap-2">
               {(currentUser.role === "admin" || currentUser.role === "mmod") && (
                 <Button
-                  onClick={() => { fetchAuditLogs(); setMobileMenuOpen(false); }}
+                  onClick={() => { navigate('/moderator/audit-log'); setMobileMenuOpen(false); }}
                   variant="outline"
                   size="sm"
                   className="border-purple-500 text-purple-500 hover:bg-purple-500/20 uppercase tracking-wide rounded-sm text-xs w-full"
