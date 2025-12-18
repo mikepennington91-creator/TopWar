@@ -258,14 +258,15 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Role colors in Manage Moderators list"
-    - "Moderator dropdown on Server Assignments (excluding Developer)"
-    - "Role colors in Server Assignments table"
-    - "Server Assignment API with moderator_name field"
+    - "Poll CRUD API endpoints"
+    - "Poll creation form"
+    - "Poll voting UI"
+    - "Archived polls table"
+    - "New poll notification"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
-    message: "Implemented all requested features: 1) Role colors now display in Manage Moderators list, 2) New 'Moderator on Server' dropdown added to Server Assignments form (excluding Developer role), 3) Server Assignment table now shows Moderator column with role colors, 4) Excel export updated to include moderator name. Please test the UI flows - login as admin (admin/Admin123!@) and verify: Settings page shows role colors under each username, Server Assignments form has moderator dropdown with colored options, and the table displays moderator names with role colors."
+    message: "Implemented complete Poll system. Login as admin (admin/Admin123!@) to test: 1) Create poll via New Poll button - verify 2-6 options, show_voters toggle works, 2) Vote on poll - verify results display with progress bars, 3) Try creating 3rd poll - should fail with max 2 limit, 4) Check View Archive button - shows closed polls table, 5) Admin delete button visible, regular mods should not see it. A test poll already exists with one vote from admin on Wednesday option."
