@@ -267,6 +267,78 @@ test_plan:
   test_all: false
   test_priority: "high_first"
 
+  - task: "Email field on application form"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/ApplicationForm.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Added email field as Question 2 on the application form. Form requires email before submission."
+
+  - task: "Confirmation popup with email and Discord"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/ApplicationForm.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Updated confirmation popup to show both email (in green) and Discord handle (in amber). Important information section explains both will receive notifications."
+
+  - task: "Email display in application details"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/ModeratorDashboard.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Added email field to application detail view in dashboard. Shows 'Not provided' for legacy applications without email."
+
+  - task: "Email sending service (Gmail SMTP)"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Added Gmail SMTP email service with app password. Sends emails via background tasks to not block API responses. Tested and confirmed emails sent successfully."
+
+  - task: "Confirmation email on application submission"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "POST /api/applications now sends confirmation email in background after successful submission. Logs confirm email sent."
+
+  - task: "Approval/Rejection emails on status change"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "PATCH /api/applications/{id} now sends approval or rejection email based on new status. Uses user-provided email templates. Logs confirm emails sent."
+
 agent_communication:
   - agent: "main"
-    message: "Implemented complete Poll system. Login as admin (admin/Admin123!@) to test: 1) Create poll via New Poll button - verify 2-6 options, show_voters toggle works, 2) Vote on poll - verify results display with progress bars, 3) Try creating 3rd poll - should fail with max 2 limit, 4) Check View Archive button - shows closed polls table, 5) Admin delete button visible, regular mods should not see it. A test poll already exists with one vote from admin on Wednesday option."
+    message: "Implemented complete email notification system. Testing done via curl and screenshots: 1) Email field added to application form (Question 2), 2) Confirmation popup shows both email and Discord for manual verification, 3) Application details view shows email, 4) Backend sends confirmation email on submission, approval email when approved, rejection email when rejected. All emails tested and confirmed sent via Gmail SMTP. Login as admin (admin/Admin123!@) to view applications with email field."
