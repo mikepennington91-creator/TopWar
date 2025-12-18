@@ -173,6 +173,7 @@ class Application(BaseModel):
 
 class ApplicationCreate(BaseModel):
     name: str
+    email: str
     position: str
     discord_handle: str
     ingame_name: str
