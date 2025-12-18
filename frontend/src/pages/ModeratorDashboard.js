@@ -34,8 +34,7 @@ export default function ModeratorDashboard() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showStatusChangeDialog, setShowStatusChangeDialog] = useState(false);
   const [statusChangeData, setStatusChangeData] = useState({ status: "", comment: "" });
-  const [showAuditLog, setShowAuditLog] = useState(false);
-  const [auditLogs, setAuditLogs] = useState([]);
+  // Audit log moved to separate page
 
   useEffect(() => {
     const token = localStorage.getItem('moderator_token');
@@ -250,19 +249,7 @@ export default function ModeratorDashboard() {
     }
   };
 
-  const fetchAuditLogs = async () => {
-    try {
-      const token = localStorage.getItem('moderator_token');
-      const response = await axios.get(`${API}/audit-logs`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setAuditLogs(response.data);
-      setShowAuditLog(true);
-    } catch (error) {
-      console.error(error);
-      toast.error(error.response?.data?.detail || "Failed to fetch audit logs");
-    }
-  };
+  // Audit log fetch moved to separate page
 
   const handleLogout = () => {
     localStorage.clear();
