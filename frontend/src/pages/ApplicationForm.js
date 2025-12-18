@@ -363,7 +363,7 @@ export default function ApplicationForm() {
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold uppercase tracking-wider text-amber-500 flex items-center gap-2" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
                 <AlertCircle className="h-6 w-6" />
-                Confirm Your Discord Handle
+                Confirm Your Details
               </DialogTitle>
               <DialogDescription className="text-slate-400">
                 Please verify your information before submitting
@@ -371,10 +371,18 @@ export default function ApplicationForm() {
             </DialogHeader>
 
             <div className="space-y-6 py-4">
+              {/* Email Confirmation */}
+              <div className="bg-slate-800/50 p-6 rounded-lg border-2 border-emerald-500/30">
+                <p className="text-slate-400 mb-2">Your Email Address:</p>
+                <p className="text-xl font-bold text-emerald-400 mono" data-testid="email-display">
+                  {formData.email || "Not provided"}
+                </p>
+              </div>
+
               {/* Discord Handle Confirmation */}
               <div className="bg-slate-800/50 p-6 rounded-lg border-2 border-amber-500/30">
                 <p className="text-slate-400 mb-2">Your Discord Handle:</p>
-                <p className="text-2xl font-bold text-amber-500 mono" data-testid="discord-handle-display">
+                <p className="text-xl font-bold text-amber-500 mono" data-testid="discord-handle-display">
                   {formData.discord_handle || "Not provided"}
                 </p>
               </div>
@@ -385,12 +393,14 @@ export default function ApplicationForm() {
                   <AlertCircle className="h-6 w-6 text-blue-400 flex-shrink-0 mt-1" />
                   <div className="space-y-2">
                     <h3 className="text-lg font-bold text-blue-400 uppercase tracking-wide" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                      Important: Discord Messages
+                      Important Information
                     </h3>
                     <p className="text-slate-300 leading-relaxed">
-                      Feedback regarding your application will be sent to your registered Discord account. 
-                      <span className="font-bold text-amber-400"> Please ensure you are accepting direct messages</span>, 
-                      otherwise you may not receive feedback about your application status.
+                      <span className="font-bold text-emerald-400">Email:</span> You will receive email notifications about your application status.
+                    </p>
+                    <p className="text-slate-300 leading-relaxed">
+                      <span className="font-bold text-amber-400">Discord:</span> If approved, onboarding information will be sent via Discord DM. 
+                      <span className="font-bold text-amber-400"> Please ensure you are accepting direct messages.</span>
                     </p>
                   </div>
                 </div>
@@ -399,7 +409,7 @@ export default function ApplicationForm() {
               {/* Confirmation Question */}
               <div className="text-center">
                 <p className="text-lg text-slate-300">
-                  Is your Discord Handle <span className="font-bold text-amber-500">{formData.discord_handle}</span> correct?
+                  Are your email <span className="font-bold text-emerald-400">{formData.email}</span> and Discord Handle <span className="font-bold text-amber-500">{formData.discord_handle}</span> correct?
                 </p>
               </div>
             </div>
