@@ -334,7 +334,8 @@ export default function ModeratorDashboard() {
                 size="sm"
                 className="border-blue-500 text-blue-500 hover:bg-blue-500/20 uppercase tracking-wide rounded-sm text-xs lg:text-sm"
               >
-                Portal
+                <LayoutDashboard className="mr-1 lg:mr-2 h-3 w-3 lg:h-4 lg:w-4" />
+                Dashboard
               </Button>
               <Button
                 data-testid="server-assignments-btn"
