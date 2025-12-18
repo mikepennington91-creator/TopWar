@@ -37,7 +37,80 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60  # 1 hour
 MAX_LOGIN_ATTEMPTS = 3
 PASSWORD_HISTORY_COUNT = 10
 
+# Email settings
+GMAIL_USER = os.environ.get('GMAIL_USER', '')
+GMAIL_APP_PASSWORD = os.environ.get('GMAIL_APP_PASSWORD', '')
+
 security = HTTPBearer()
+
+# ============= Email Utility =============
+
+def send_email(to_email: str, subject: str, body: str):
+    """Send email via Gmail SMTP"""
+    if not GMAIL_USER or not GMAIL_APP_PASSWORD:
+        logging.warning("Email credentials not configured, skipping email send")
+        return False
+    
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = GMAIL_USER
+        msg['To'] = to_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'plain'))
+        
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
+            server.send_message(msg)
+        
+        logging.info(f"Email sent successfully to {to_email}")
+        return True
+    except Exception as e:
+        logging.error(f"Failed to send email to {to_email}: {str(e)}")
+        return False
+
+def send_application_confirmation_email(to_email: str, name: str):
+    """Send confirmation email when application is submitted"""
+    subject = "Top War - Application Received"
+    body = f"""Hi {name},
+
+Thank you for submitting your application to become a Top War Moderator. We have received your application and our team will review it shortly. You will receive an email once a decision has been made.
+
+Kind regards,
+Top War Moderation Team"""
+    send_email(to_email, subject, body)
+
+def send_application_approved_email(to_email: str, name: str):
+    """Send email when application is approved"""
+    subject = "Top War Moderator Application – Congratulations!"
+    body = f"""Hi {name},
+
+Congratulations! We're pleased to let you know that your application to become a Top War Moderator has been successful.
+
+Please check your Discord DMs, where we've sent you the next steps and onboarding information.
+
+Welcome to the team, we're excited to have you with us!
+
+Kind regards,
+Top War Moderation Team"""
+    send_email(to_email, subject, body)
+
+def send_application_rejected_email(to_email: str, name: str):
+    """Send email when application is rejected"""
+    subject = "Top War Moderator Application – Update"
+    body = f"""Hi {name},
+
+Thank you for taking the time to apply for a Top War Moderator position and for your interest in supporting the community.
+
+After careful review, we regret to inform you that your application has not been successful on this occasion. We received a strong number of applications, and this decision was not an easy one.
+
+This does not reflect negatively on your enthusiasm or commitment to the game. We actively encourage you to continue developing your game knowledge and community engagement, and you are welcome to reapply in three months should you wish to do so.
+
+Thank you again for your interest in the role and for being part of the Top War community. We wish you the best of luck moving forward and hope to see your application again in the future.
+
+Kind regards,
+Top War Moderation Team"""
+    send_email(to_email, subject, body)
 
 # Create the main app without a prefix
 app = FastAPI()
