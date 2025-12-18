@@ -943,7 +943,7 @@ async def comment_on_application(application_id: str, comment_data: CommentCreat
     return {"message": "Comment added successfully", "comment": comment}
 
 @api_router.patch("/applications/{application_id}", response_model=Application)
-async def update_application_status(application_id: str, update: ApplicationUpdate, current_user: dict = Depends(require_admin)):
+async def update_application_status(application_id: str, update: ApplicationUpdate, background_tasks: BackgroundTasks, current_user: dict = Depends(require_admin)):
     if update.status not in ["approved", "rejected", "pending", "awaiting_review"]:
         raise HTTPException(status_code=400, detail="Status must be 'approved', 'rejected', 'pending', or 'awaiting_review'")
     
@@ -993,6 +993,15 @@ async def update_application_status(application_id: str, update: ApplicationUpda
     audit_doc = audit_log.model_dump()
     audit_doc['created_at'] = audit_doc['created_at'].isoformat()
     await db.audit_logs.insert_one(audit_doc)
+    
+    # Send email notification based on new status (only if applicant has email)
+    applicant_email = existing_app.get('email')
+    applicant_name = existing_app.get('name', 'Applicant')
+    if applicant_email:
+        if update.status == "approved":
+            background_tasks.add_task(send_application_approved_email, applicant_email, applicant_name)
+        elif update.status == "rejected":
+            background_tasks.add_task(send_application_rejected_email, applicant_email, applicant_name)
     
     # Get updated application
     application = await db.applications.find_one({"id": application_id}, {"_id": 0})
