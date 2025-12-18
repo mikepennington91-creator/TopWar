@@ -38,6 +38,7 @@ const REASON_OPTIONS = [
 ];
 
 const TAG_OPTIONS = [
+  { label: "No tags", value: "No tags" },
   { label: "1/3/6/12 Without Mod Chat", value: "Tag 2" },
   { label: "1/3/6/12 with Mod Chat", value: "Tag 5" },
   { label: "Only Mod Chat", value: "Tag 8" }
