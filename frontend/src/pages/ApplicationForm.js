@@ -112,6 +112,7 @@ export default function ApplicationForm() {
 
   const questions = [
     { name: "name", label: "What is your name?", type: "text", required: true },
+    { name: "email", label: "Email Address", type: "email", required: true },
     { name: "position", label: "Which position are you applying for?", type: "select", required: true, options: ["In-Game", "Discord", "Both"] },
     { name: "discord_handle", label: "Discord Handle", type: "text", required: true },
     { name: "ingame_name", label: "In-Game Name", type: "text", required: true },
