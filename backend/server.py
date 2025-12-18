@@ -191,6 +191,38 @@ class AuditLog(BaseModel):
     new_status: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+# Poll Models
+class PollOption(BaseModel):
+    text: str
+    votes: List[str] = Field(default_factory=list)  # List of usernames who voted
+
+class Poll(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    question: str
+    options: List[Dict] = Field(default_factory=list)  # [{text: str, votes: [usernames]}]
+    show_voters: bool = False  # Toggle to show who voted for what
+    created_by: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    expires_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc) + timedelta(days=7))
+    is_active: bool = True
+    viewed_by: List[str] = Field(default_factory=list)  # Track who has viewed the poll
+
+class PollCreate(BaseModel):
+    question: str
+    options: List[str]  # 2-6 options
+    show_voters: bool = False
+
+class ArchivedPoll(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    question: str
+    outcome: str  # The winning option with vote count
+    created_by: str
+    closed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 class ModeratorCreate(BaseModel):
     username: str
     password: str
