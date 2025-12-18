@@ -1001,68 +1001,6 @@ export default function ModeratorDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Audit Log Dialog */}
-      <Dialog open={showAuditLog} onOpenChange={setShowAuditLog}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-slate-900 border-slate-700 text-slate-200">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold uppercase tracking-wider text-purple-500 flex items-center gap-2" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-              <ClipboardList className="h-6 w-6" />
-              Audit Log
-            </DialogTitle>
-            <DialogDescription className="text-slate-400">
-              Record of all application status changes and deletions
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="mt-4">
-            {auditLogs.length === 0 ? (
-              <p className="text-slate-400 text-center py-8">No audit log entries found.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-slate-800/50">
-                    <tr>
-                      <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400 uppercase">Date</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400 uppercase">Action</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400 uppercase">Applicant</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400 uppercase">By</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400 uppercase">Details</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800">
-                    {auditLogs.map((log) => (
-                      <tr key={log.id} className="hover:bg-slate-800/30">
-                        <td className="px-3 py-2 text-slate-400 text-xs whitespace-nowrap">
-                          {new Date(log.created_at).toLocaleString()}
-                        </td>
-                        <td className="px-3 py-2">
-                          {log.action === "deleted" ? (
-                            <Badge className="bg-red-900/50 text-red-400 border-red-800 text-xs uppercase">Deleted</Badge>
-                          ) : log.new_status === "approved" ? (
-                            <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/50 text-xs uppercase">Approved</Badge>
-                          ) : log.new_status === "rejected" ? (
-                            <Badge className="bg-red-500/20 text-red-400 border-red-500/50 text-xs uppercase">Rejected</Badge>
-                          ) : (
-                            <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/50 text-xs uppercase">Status Change</Badge>
-                          )}
-                        </td>
-                        <td className="px-3 py-2 text-slate-200 font-medium">{log.application_name}</td>
-                        <td className="px-3 py-2 text-amber-400 font-semibold">{log.performed_by}</td>
-                        <td className="px-3 py-2 text-slate-400 text-xs max-w-[200px] truncate" title={log.comment}>
-                          {log.old_status && log.new_status && (
-                            <span className="text-slate-500 mr-1">{log.old_status}→{log.new_status}:</span>
-                          )}
-                          {log.comment}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
