@@ -168,6 +168,9 @@ export default function ModeratorPortal() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 grid-texture">
+      {/* Seasonal Animation Overlay */}
+      <SeasonalOverlay />
+      
       {/* Header */}
       <div className="bg-slate-900/80 border-b border-slate-800 py-3 sm:py-4 px-3 sm:px-6">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
