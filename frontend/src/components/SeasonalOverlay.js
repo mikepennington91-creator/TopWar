@@ -12,15 +12,19 @@ const getCurrentSeason = () => {
 // Helper function to generate particles
 const generateParticles = () => {
   const count = 20;
-  return Array.from({ length: count }, (_, i) => ({
-    id: i,
-    left: Math.random() * 100,
-    delay: Math.random() * 10,
-    duration: 8 + Math.random() * 8,
-    size: 0.5 + Math.random() * 0.8,
-    opacity: 0.3 + Math.random() * 0.4,
-    swayAmount: 20 + Math.random() * 40,
-  }));
+  return Array.from({ length: count }, (_, i) => {
+    const duration = 8 + Math.random() * 8;
+    return {
+      id: i,
+      left: Math.random() * 100,
+      // Negative delay so particles start mid-animation (already falling)
+      delay: -Math.random() * duration,
+      duration: duration,
+      size: 0.5 + Math.random() * 0.8,
+      opacity: 0.3 + Math.random() * 0.4,
+      swayAmount: 20 + Math.random() * 40,
+    };
+  });
 };
 
 // Check for reduced motion preference
