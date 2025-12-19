@@ -142,7 +142,10 @@ export default function ApplicationForm() {
     { name: "discord_spam_handling", label: "How would you handle a situation where someone is spamming in multiple channels?", type: "textarea", required: true, discordOnly: true },
     { name: "discord_bots_experience", label: "Do you know how to use bots for moderation (e.g., setting up auto-moderation, commands)? If yes, which bots have you used?", type: "textarea", required: true, discordOnly: true },
     { name: "discord_harassment_handling", label: "What steps would you take if a user reports harassment through Discord DMs?", type: "textarea", required: true, discordOnly: true },
-    { name: "discord_voice_channel_management", label: "Are you comfortable managing voice channels (e.g., moving users, muting, handling disruptions)?", type: "textarea", required: true, discordOnly: true }
+    { name: "discord_voice_channel_management", label: "Are you comfortable managing voice channels (e.g., moving users, muting, handling disruptions)?", type: "textarea", required: true, discordOnly: true },
+    // In-Game specific questions - only shown for In-Game or Both positions
+    { name: "time_playing_topwar", label: "How long have you been playing Top War for?", type: "textarea", required: true, ingameOnly: true },
+    { name: "why_good_moderator", label: "Why do you think, you would make a good moderator?", type: "textarea", required: true, ingameOnly: true }
   ];
 
   return (
