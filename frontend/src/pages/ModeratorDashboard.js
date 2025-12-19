@@ -34,6 +34,7 @@ export default function ModeratorDashboard() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showStatusChangeDialog, setShowStatusChangeDialog] = useState(false);
   const [statusChangeData, setStatusChangeData] = useState({ status: "", comment: "" });
+  const [showFullQuestions, setShowFullQuestions] = useState(false);
   // Audit log moved to separate page
 
   useEffect(() => {
