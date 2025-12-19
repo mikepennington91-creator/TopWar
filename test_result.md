@@ -339,6 +339,42 @@ test_plan:
         agent: "main"
         comment: "PATCH /api/applications/{id} now sends approval or rejection email based on new status. Uses user-provided email templates. Logs confirm emails sent."
 
+  - task: "In-Game specific questions"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/ApplicationForm.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Added two In-Game only questions: 'How long have you been playing Top War for?' and 'Why do you think, you would make a good moderator?'. These questions only show when position is In-Game or Both, hidden for Discord only. Backend updated with time_playing_topwar and why_good_moderator fields."
+
+  - task: "Full questions toggle on application review"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/ModeratorDashboard.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Added 'Show full questions' toggle switch in Detailed Responses section. When OFF shows shortened labels (e.g. 'Activity Times'), when ON shows full question text (e.g. 'What are your typical activity times per day?'). Screenshot verified toggle working."
+
+  - task: "Email visibility restricted to training managers"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/ModeratorDashboard.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Email field in application details now only visible to users with is_training_manager=true. Tested by enabling training manager for admin user and verifying email appears. Non-training managers won't see the email field."
+
 agent_communication:
   - agent: "main"
-    message: "Implemented complete email notification system. Testing done via curl and screenshots: 1) Email field added to application form (Question 2), 2) Confirmation popup shows both email and Discord for manual verification, 3) Application details view shows email, 4) Backend sends confirmation email on submission, approval email when approved, rejection email when rejected. All emails tested and confirmed sent via Gmail SMTP. Login as admin (admin/Admin123!@) to view applications with email field."
+    message: "Implemented three new features: 1) Two In-Game only questions at the end of the form (Q23, Q24) - 'How long playing Top War' and 'Why good moderator'. 2) Toggle switch in Detailed Responses section to show full questions vs shortened labels. 3) Email field hidden from all users except training managers. All tested with screenshots and curl. Login as admin (admin/Admin123!@) - admin now has training manager enabled to see emails."
