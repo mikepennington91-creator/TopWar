@@ -1,48 +1,54 @@
 import { useState, useEffect } from "react";
 
+// Helper function to get current season
+const getCurrentSeason = () => {
+  const month = new Date().getMonth(); // 0-11
+  if (month >= 2 && month <= 4) return 'spring';   // Mar-May
+  if (month >= 5 && month <= 7) return 'summer';   // Jun-Aug
+  if (month >= 8 && month <= 10) return 'autumn';  // Sep-Nov
+  return 'winter'; // Dec-Feb
+};
+
+// Helper function to generate particles
+const generateParticles = () => {
+  const count = 20;
+  return Array.from({ length: count }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    delay: Math.random() * 10,
+    duration: 8 + Math.random() * 8,
+    size: 0.5 + Math.random() * 0.8,
+    opacity: 0.3 + Math.random() * 0.4,
+    swayAmount: 20 + Math.random() * 40,
+  }));
+};
+
+// Check for reduced motion preference
+const checkReducedMotion = () => {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+};
+
 /**
  * SeasonalOverlay - Renders unobtrusive seasonal particle animations
  * Winter: Snowflakes, Spring: Cherry blossoms, Summer: Fireflies, Autumn: Falling leaves
  */
 export default function SeasonalOverlay() {
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  const [particles, setParticles] = useState([]);
-  const [season, setSeason] = useState('winter');
+  // Initialize state with lazy initializers
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(checkReducedMotion);
+  const [particles] = useState(generateParticles);
+  const [season] = useState(getCurrentSeason);
 
   useEffect(() => {
-    // Determine current season based on month
-    const month = new Date().getMonth(); // 0-11
-    if (month >= 2 && month <= 4) setSeason('spring');   // Mar-May
-    else if (month >= 5 && month <= 7) setSeason('summer');   // Jun-Aug
-    else if (month >= 8 && month <= 10) setSeason('autumn');  // Sep-Nov
-    else setSeason('winter'); // Dec-Feb
-
-    // Generate particles with random values
-    const count = 20;
-    const newParticles = Array.from({ length: count }, (_, i) => ({
-      id: i,
-      left: Math.random() * 100,
-      delay: Math.random() * 10,
-      duration: 8 + Math.random() * 8,
-      size: 0.5 + Math.random() * 0.8,
-      opacity: 0.3 + Math.random() * 0.4,
-      swayAmount: 20 + Math.random() * 40,
-    }));
-    setParticles(newParticles);
-  }, []);
-
-  useEffect(() => {
-    // Check for reduced motion preference
+    // Listen for changes to reduced motion preference
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReducedMotion(mediaQuery.matches);
-    
     const handleChange = (e) => setPrefersReducedMotion(e.matches);
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  // Don't render if user prefers reduced motion or particles not yet generated
-  if (prefersReducedMotion || particles.length === 0) return null;
+  // Don't render if user prefers reduced motion
+  if (prefersReducedMotion) return null;
 
   const getParticleContent = () => {
     switch (season) {
