@@ -256,6 +256,16 @@ export default function ApplicationForm() {
               if (question.discordOnly && !formData.position) {
                 return null;
               }
+
+              // Hide In-Game specific questions if position is "Discord"
+              if (question.ingameOnly && formData.position === "Discord") {
+                return null;
+              }
+
+              // Hide In-Game specific questions if position is not selected yet
+              if (question.ingameOnly && !formData.position) {
+                return null;
+              }
               
               // Calculate visible question number
               const visibleQuestions = questions.filter((q, i) => {
