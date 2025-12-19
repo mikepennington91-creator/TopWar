@@ -91,6 +91,8 @@ export default function ApplicationForm() {
         submitData.hero_development = "N/A";
         submitData.racist_r4 = "N/A";
         submitData.moderator_swearing = "N/A";
+        submitData.time_playing_topwar = "N/A";
+        submitData.why_good_moderator = "N/A";
       }
 
       // If position is "In-Game", set Discord-specific questions to N/A
