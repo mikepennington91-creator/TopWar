@@ -258,11 +258,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Poll CRUD API endpoints"
-    - "Poll creation form"
-    - "Poll voting UI"
-    - "Archived polls table"
-    - "New poll notification"
+    - "In-Game specific questions"
+    - "Full questions toggle on application review"
+    - "Email visibility restricted to training managers"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
