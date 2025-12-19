@@ -274,6 +274,8 @@ export default function ApplicationForm() {
                 if (formData.position === "Discord" && (q.name === "hero_development" || q.name === "racist_r4" || q.name === "moderator_swearing")) return false;
                 if (q.discordOnly && formData.position === "In-Game") return false;
                 if (q.discordOnly && !formData.position) return false;
+                if (q.ingameOnly && formData.position === "Discord") return false;
+                if (q.ingameOnly && !formData.position) return false;
                 return true;
               });
               const visibleQuestionNumber = visibleQuestions.length + 1;
