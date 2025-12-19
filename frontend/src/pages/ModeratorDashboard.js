@@ -726,35 +726,137 @@ export default function ModeratorDashboard() {
                 </div>
 
                 <div className="border-t border-slate-700 pt-4">
-                  <h3 className="text-lg font-semibold uppercase tracking-wide text-amber-500 mb-4" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Detailed Responses</h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold uppercase tracking-wide text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Detailed Responses</h3>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-slate-400">Show full questions</span>
+                      <Switch
+                        checked={showFullQuestions}
+                        onCheckedChange={setShowFullQuestions}
+                        data-testid="toggle-full-questions"
+                      />
+                    </div>
+                  </div>
                   
                   <div className="space-y-4">
                     {[
-                      { label: "Activity Times", value: selectedApp.activity_times },
-                      { label: "Native Language", value: selectedApp.native_language },
-                      { label: "Other Languages", value: selectedApp.other_languages },
-                      { label: "Previous Experience", value: selectedApp.previous_experience },
-                      { label: "Basic Qualities of a Mod", value: selectedApp.basic_qualities },
-                      { label: "Favourite Event", value: selectedApp.favourite_event },
-                      { label: "Free Ways to Gain Gems", value: selectedApp.free_gems },
-                      { label: "Heroes That Can Be Mutated", value: selectedApp.heroes_mutated },
-                      { label: "Discord Tools Comfort Level", value: selectedApp.discord_tools_comfort },
-                      { label: "Guidelines Rating", value: selectedApp.guidelines_rating },
-                      { label: "High-Profile Violation Handling", value: selectedApp.high_profile_violation },
-                      { label: "Complex Game Mechanic", value: selectedApp.complex_mechanic },
-                      { label: "Unknown Question Response", value: selectedApp.unknown_question },
-                      { label: "Hero Development Advice", value: selectedApp.hero_development },
-                      { label: "Racist R4 Scenario", value: selectedApp.racist_r4 },
-                      { label: "Moderator Swearing Scenario", value: selectedApp.moderator_swearing },
+                      { 
+                        shortLabel: "Activity Times", 
+                        fullLabel: "What are your typical activity times per day? i.e. Reset - 5 to reset.",
+                        value: selectedApp.activity_times 
+                      },
+                      { 
+                        shortLabel: "Native Language", 
+                        fullLabel: "What is your native language?",
+                        value: selectedApp.native_language 
+                      },
+                      { 
+                        shortLabel: "Other Languages", 
+                        fullLabel: "What other languages do you speak?",
+                        value: selectedApp.other_languages 
+                      },
+                      { 
+                        shortLabel: "Previous Experience", 
+                        fullLabel: "Describe your previous experience with online moderation, if any (platforms, roles, duration).",
+                        value: selectedApp.previous_experience 
+                      },
+                      { 
+                        shortLabel: "Basic Qualities of a Mod", 
+                        fullLabel: "What do you think are the most basic qualities that a mod should possess?",
+                        value: selectedApp.basic_qualities 
+                      },
+                      { 
+                        shortLabel: "Favourite Event", 
+                        fullLabel: "What is your favourite in-game event, and why?",
+                        value: selectedApp.favourite_event 
+                      },
+                      { 
+                        shortLabel: "Free Ways to Gain Gems", 
+                        fullLabel: "What are the free ways to gain gems?",
+                        value: selectedApp.free_gems 
+                      },
+                      { 
+                        shortLabel: "Heroes That Can Be Mutated", 
+                        fullLabel: "How many heroes can be mutated? (Numerical)",
+                        value: selectedApp.heroes_mutated 
+                      },
+                      { 
+                        shortLabel: "Discord Tools Comfort Level", 
+                        fullLabel: "What is your comfort level with using discord moderation tools & bots?",
+                        value: selectedApp.discord_tools_comfort 
+                      },
+                      { 
+                        shortLabel: "Guidelines Rating", 
+                        fullLabel: "Rate your understanding of community guidelines enforcement and conflict resolution. (Be honest, you will be tested)",
+                        value: selectedApp.guidelines_rating 
+                      },
+                      { 
+                        shortLabel: "Complex Game Mechanic", 
+                        fullLabel: "Describe a complex game mechanic you understand well.",
+                        value: selectedApp.complex_mechanic 
+                      },
+                      { 
+                        shortLabel: "Unknown Question Response", 
+                        fullLabel: "A new player asks a question you don't know the answer to. What do you do?",
+                        value: selectedApp.unknown_question 
+                      },
+                      { 
+                        shortLabel: "Hero Development Advice", 
+                        fullLabel: "What advice would you give a new player struggling with hero development?",
+                        value: selectedApp.hero_development 
+                      },
+                      { 
+                        shortLabel: "Racist R4 Scenario", 
+                        fullLabel: "You see your R4's being racist to another player in Alliance chat on your main server. How would you handle the situation?",
+                        value: selectedApp.racist_r4 
+                      },
+                      { 
+                        shortLabel: "Moderator Swearing Scenario", 
+                        fullLabel: "In a shared language channel you see another moderator swearing and joking with players. How would you approach this situation?",
+                        value: selectedApp.moderator_swearing 
+                      },
+                      // In-Game specific questions
+                      { 
+                        shortLabel: "Time Playing Top War", 
+                        fullLabel: "How long have you been playing Top War for?",
+                        value: selectedApp.time_playing_topwar 
+                      },
+                      { 
+                        shortLabel: "Why Good Moderator", 
+                        fullLabel: "Why do you think, you would make a good moderator?",
+                        value: selectedApp.why_good_moderator 
+                      },
                       // Discord-specific questions
-                      { label: "Discord Moderation Tools Experience", value: selectedApp.discord_moderation_tools },
-                      { label: "Discord Spam Handling", value: selectedApp.discord_spam_handling },
-                      { label: "Discord Bots Experience", value: selectedApp.discord_bots_experience },
-                      { label: "Discord Harassment Handling", value: selectedApp.discord_harassment_handling },
-                      { label: "Discord Voice Channel Management", value: selectedApp.discord_voice_channel_management }
+                      { 
+                        shortLabel: "Discord Moderation Tools Experience", 
+                        fullLabel: "Are you familiar with Discord's moderation tools (e.g., roles, permissions, bans, mutes)? Please describe your experience.",
+                        value: selectedApp.discord_moderation_tools 
+                      },
+                      { 
+                        shortLabel: "Discord Spam Handling", 
+                        fullLabel: "How would you handle a situation where someone is spamming in multiple channels?",
+                        value: selectedApp.discord_spam_handling 
+                      },
+                      { 
+                        shortLabel: "Discord Bots Experience", 
+                        fullLabel: "Do you know how to use bots for moderation (e.g., setting up auto-moderation, commands)? If yes, which bots have you used?",
+                        value: selectedApp.discord_bots_experience 
+                      },
+                      { 
+                        shortLabel: "Discord Harassment Handling", 
+                        fullLabel: "What steps would you take if a user reports harassment through Discord DMs?",
+                        value: selectedApp.discord_harassment_handling 
+                      },
+                      { 
+                        shortLabel: "Discord Voice Channel Management", 
+                        fullLabel: "Are you comfortable managing voice channels (e.g., moving users, muting, handling disruptions)?",
+                        value: selectedApp.discord_voice_channel_management 
+                      }
                     ].filter(item => item.value && item.value !== "N/A").map((item, index) => (
                       <div key={index} className="bg-slate-800/50 p-4 rounded">
-                        <p className="text-slate-400 text-sm font-semibold mb-1">{item.label}</p>
+                        <p className="text-slate-400 text-sm font-semibold mb-1">
+                          {showFullQuestions ? item.fullLabel : item.shortLabel}
+                        </p>
                         <p className="text-slate-200">{item.value}</p>
                       </div>
                     ))}
