@@ -53,7 +53,10 @@ export default function ApplicationForm() {
     discord_spam_handling: "",
     discord_bots_experience: "",
     discord_harassment_handling: "",
-    discord_voice_channel_management: ""
+    discord_voice_channel_management: "",
+    // In-Game specific questions
+    time_playing_topwar: "",
+    why_good_moderator: ""
   });
 
   const handleChange = (e) => {
