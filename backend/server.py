@@ -164,6 +164,9 @@ class Application(BaseModel):
     discord_bots_experience: str = "N/A"
     discord_harassment_handling: str = "N/A"
     discord_voice_channel_management: str = "N/A"
+    # In-Game specific questions
+    time_playing_topwar: str = "N/A"
+    why_good_moderator: str = "N/A"
     status: str = "awaiting_review"  # awaiting_review, pending, approved, rejected
     votes: List[Dict] = Field(default_factory=list)
     comments: List[Dict] = Field(default_factory=list)
