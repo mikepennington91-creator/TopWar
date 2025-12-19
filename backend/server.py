@@ -204,6 +204,9 @@ class ApplicationCreate(BaseModel):
     discord_bots_experience: str = "N/A"
     discord_harassment_handling: str = "N/A"
     discord_voice_channel_management: str = "N/A"
+    # In-Game specific questions (optional, defaults to N/A for Discord only applicants)
+    time_playing_topwar: str = "N/A"
+    why_good_moderator: str = "N/A"
 
 class ApplicationUpdate(BaseModel):
     status: str  # approved, rejected, pending, awaiting_review
