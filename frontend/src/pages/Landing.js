@@ -1,12 +1,16 @@
 import { useNavigate } from "react-router-dom";
 import { Shield, Users, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import SeasonalOverlay from "@/components/SeasonalOverlay";
 
 export default function Landing() {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 grid-texture">
+      {/* Seasonal Animation Overlay */}
+      <SeasonalOverlay />
+      
       {/* Hero Section */}
       <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Background Image with Overlay */}
