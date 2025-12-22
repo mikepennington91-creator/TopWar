@@ -467,13 +467,13 @@ export default function ServerAssignments() {
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-xs mb-2">
-                        <div>
+                        <div className="overflow-hidden">
                           <span className="text-slate-500">Tag:</span>
                           <span className="text-slate-300 ml-1">{assignment.tag}</span>
                         </div>
-                        <div>
+                        <div className="overflow-hidden">
                           <span className="text-slate-500">Reason:</span>
-                          <span className="text-slate-300 ml-1 truncate">{assignment.reason}</span>
+                          <span className="text-slate-300 ml-1 block truncate">{assignment.reason}</span>
                         </div>
                         <div>
                           <span className="text-slate-500">Start:</span>
