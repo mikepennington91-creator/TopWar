@@ -600,7 +600,7 @@ async def update_moderator_status(username: str, status_update: ModeratorStatusU
     if status_update.status not in ["active", "disabled"]:
         raise HTTPException(status_code=400, detail="Status must be 'active' or 'disabled'")
     
-    # Prevent admin from disabling themselves
+    # Prevent user from disabling themselves
     if username == current_user["username"]:
         raise HTTPException(status_code=400, detail="You cannot disable your own account")
     
@@ -608,6 +608,13 @@ async def update_moderator_status(username: str, status_update: ModeratorStatusU
     moderator = await db.moderators.find_one({"username": username}, {"_id": 0})
     if not moderator:
         raise HTTPException(status_code=404, detail="Moderator not found")
+    
+    # MMODs can only modify users with lower rank
+    if current_user["role"] != "admin":
+        current_rank = get_role_rank(current_user["role"])
+        target_rank = get_role_rank(moderator.get("role", "moderator"))
+        if current_rank <= target_rank:
+            raise HTTPException(status_code=403, detail="You can only modify users with lower rank than yours")
     
     # Update status
     await db.moderators.update_one(
