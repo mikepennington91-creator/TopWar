@@ -7,6 +7,21 @@ import { ArrowLeft, FileText, Sparkles, Bug, Wrench, Plus } from "lucide-react";
 // Changelog data - newest first
 const CHANGELOG_DATA = [
   {
+    version: "2.5.0",
+    date: "22 December 2025",
+    title: "Moderator Activity & Security Enhancements",
+    changes: [
+      { type: "feature", text: "Added new Moderator Activity page showing last login times for all moderators" },
+      { type: "feature", text: "Activity page displays 'Never' for users who haven't logged in yet" },
+      { type: "feature", text: "Color-coded activity indicators (green=today, yellow=this month, red=inactive 30+ days)" },
+      { type: "feature", text: "Sortable columns: Last Login, Username, Role" },
+      { type: "feature", text: "Activity statistics: total moderators, active this week, never logged in, disabled" },
+      { type: "feature", text: "New users must change password on first login" },
+      { type: "feature", text: "Password reset by admin now forces password change on next login" },
+      { type: "improvement", text: "Enhanced security with mandatory password change flow" },
+    ]
+  },
+  {
     version: "2.4.0",
     date: "22 December 2025",
     title: "Server Assignments Enhancements",
