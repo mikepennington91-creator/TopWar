@@ -509,13 +509,20 @@ async def login_moderator(credentials: ModeratorLogin):
     if not pwd_context.verify(credentials.password, moderator["hashed_password"]):
         raise HTTPException(status_code=401, detail="Invalid username or password")
     
+    # Update last_login timestamp
+    await db.moderators.update_one(
+        {"username": credentials.username},
+        {"$set": {"last_login": datetime.now(timezone.utc).isoformat()}}
+    )
+    
     # Create token
     access_token = create_access_token(data={"sub": credentials.username, "role": moderator.get("role", "moderator")})
     return {
         "access_token": access_token, 
         "token_type": "bearer",
         "role": moderator.get("role", "moderator"),
-        "username": credentials.username
+        "username": credentials.username,
+        "must_change_password": moderator.get("must_change_password", False)
     }
 
 @api_router.patch("/auth/change-password")
