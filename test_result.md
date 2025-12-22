@@ -135,11 +135,74 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Voting records username in option.votes array. Auto-closes when all active moderators vote or after 7 days. Archives poll with outcome."
+      - working: true
+        agent: "testing"
+        comment: "Backend API tested successfully. All poll voting endpoints working correctly."
+
+  - task: "Last Login Tracking"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "GET /api/moderators endpoint returns last_login field for each moderator. Field is properly updated on login and returned in API responses."
+
+  - task: "Must Change Password Flag for New Users"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "New users created via POST /api/auth/register have must_change_password=true. Login response includes must_change_password field correctly."
+
+  - task: "Login Updates Last Login Timestamp"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Successful login via POST /api/auth/login updates user's last_login timestamp. Verified timestamp changes on each login."
+
+  - task: "Password Change Clears Must Change Flag"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "PATCH /api/auth/change-password sets must_change_password=false after successful password change. Flag properly cleared."
+
+  - task: "Password Reset Sets Must Change Flag"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Admin password reset via PATCH /api/auth/reset-password/{username} sets must_change_password=true. Flag properly set to force password change."
 
 frontend:
   - task: "Poll section on Moderator Portal"
