@@ -111,11 +111,14 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Added Poll, PollCreate, ArchivedPoll models. Implemented endpoints: GET/POST /polls, POST /polls/{id}/vote, DELETE /polls/{id}, GET /polls/archived, GET /polls/check-new, POST /polls/{id}/mark-viewed, POST /polls/check-expired. Screenshot verified poll creation and voting."
+      - working: true
+        agent: "testing"
+        comment: "Backend API tested successfully. All poll CRUD endpoints working correctly."
 
   - task: "Poll creation permissions (SMod/MMOD/Developer)"
     implemented: true
@@ -123,11 +126,14 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "POST /polls restricted to smod, mmod, developer, admin roles. Max 2 active polls enforced."
+      - working: true
+        agent: "testing"
+        comment: "Backend API tested successfully. Poll creation permissions working correctly."
 
   - task: "Poll voting and auto-close logic"
     implemented: true
