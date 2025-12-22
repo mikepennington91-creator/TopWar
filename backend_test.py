@@ -609,6 +609,27 @@ def main():
             tester.test_comment_on_application(app_id2, "Rejecting this application")
             tester.test_reject_application(app_id2)
     
+    # Test NEW FEATURES for last login tracking and password management
+    print("\n🔍 Testing New Features:")
+    print("-" * 30)
+    
+    # Test 1: Last login tracking in moderators endpoint
+    tester.test_last_login_tracking()
+    
+    # Test 2: New user must change password flag
+    new_user_success, new_username = tester.test_new_user_must_change_password()
+    
+    # Test 3: Login updates last_login timestamp
+    tester.test_login_updates_last_login()
+    
+    # Test 4: Password change clears must_change_password flag
+    if new_username:
+        tester.test_password_change_clears_flag(new_username)
+    
+    # Test 5: Password reset sets must_change_password flag
+    if new_username:
+        tester.test_password_reset_sets_flag(new_username)
+    
     # Print final results
     print("\n" + "=" * 50)
     print(f"📊 Final Results: {tester.tests_passed}/{tester.tests_run} tests passed")
