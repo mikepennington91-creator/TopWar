@@ -438,6 +438,44 @@ export default function Settings() {
     return <Badge className="bg-red-500/20 text-red-400 border-red-500/50">DISABLED</Badge>;
   };
 
+  // Format last login time
+  const formatLastLogin = (lastLogin) => {
+    if (!lastLogin) return "Never";
+    
+    const date = new Date(lastLogin);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+    
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
+
+  // Get activity status color based on last login
+  const getActivityIndicator = (lastLogin, status) => {
+    if (status === 'disabled') return 'bg-gray-500';
+    if (!lastLogin) return 'bg-gray-500';
+    
+    const date = new Date(lastLogin);
+    const now = new Date();
+    const diffDays = Math.floor((now - date) / 86400000);
+    
+    if (diffDays < 1) return 'bg-green-500';
+    if (diffDays < 7) return 'bg-emerald-500';
+    if (diffDays < 30) return 'bg-yellow-500';
+    return 'bg-red-500';
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 py-6 sm:py-12 px-3 sm:px-6 lg:px-8 grid-texture">
       <div className="max-w-4xl mx-auto">
