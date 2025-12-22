@@ -800,10 +800,18 @@ export default function Settings() {
                     <div key={mod.username} className="p-3 sm:p-4 bg-slate-900/50 rounded border border-slate-800">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 mb-3">
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-slate-200 text-base sm:text-lg truncate">{mod.username}</p>
-                          <p className="text-xs sm:text-sm text-slate-500 mono">
-                            Joined: {new Date(mod.created_at).toLocaleDateString()}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2.5 h-2.5 rounded-full ${getActivityIndicator(mod.last_login, mod.status)}`} title={mod.last_login ? `Last login: ${formatLastLogin(mod.last_login)}` : 'Never logged in'}></div>
+                            <p className="font-semibold text-slate-200 text-base sm:text-lg truncate">{mod.username}</p>
+                          </div>
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs sm:text-sm text-slate-500 mt-1">
+                            <span className="mono">Joined: {new Date(mod.created_at).toLocaleDateString()}</span>
+                            <span className="hidden sm:inline text-slate-600">•</span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              Last login: <span className={mod.last_login ? 'text-slate-400' : 'text-slate-600 italic'}>{formatLastLogin(mod.last_login)}</span>
+                            </span>
+                          </div>
                           <p className="text-sm mt-1">{getRoleBadge(mod.role)}</p>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
