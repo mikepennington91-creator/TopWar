@@ -784,15 +784,16 @@ export default function Settings() {
                         const isSelf = mod.username === currentUser.username;
                         const canChangeRole = canModifyRole(currentUser.role, mod.role, isSelf);
                         const canChangePerms = canModifyPermissions(currentUser.role);
+                        const canDeactivate = canDeactivateAccounts(currentUser.role, mod.role, isSelf);
                         const assignableRoles = getAssignableRoles(currentUser.role, mod.role);
                         
                         // Determine what to show
                         const showRoleDropdown = canChangeRole && assignableRoles.length > 0;
                         const showPermissions = canChangePerms && !isSelf;
-                        const showActionButtons = canChangePerms && !isSelf;
+                        const showDeleteButton = canChangePerms && !isSelf; // Only admin can delete
                         
                         // If nothing to show, return null
-                        if (!showRoleDropdown && !showPermissions && !showActionButtons) return null;
+                        if (!showRoleDropdown && !showPermissions && !canDeactivate) return null;
                         
                         return (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -875,31 +876,35 @@ export default function Settings() {
                               </div>
                             )}
                             
-                            {/* Action Buttons - Admin Only */}
-                            {showActionButtons && (
+                            {/* Action Buttons - Deactivate for Admin/MMOD, Delete for Admin only */}
+                            {(canDeactivate || showDeleteButton) && (
                               <div className="md:col-span-2 flex gap-2 flex-wrap">
-                                <Button
-                                  data-testid={`toggle-status-${mod.username}`}
-                                  onClick={() => handleToggleStatus(mod.username, mod.status || "active")}
-                                  disabled={loading}
-                                  size="sm"
-                                  className={`${(mod.status || "active") === "active" ? "bg-amber-500/20 border-amber-500 text-amber-400 hover:bg-amber-500/30" : "bg-emerald-500/20 border-emerald-500 text-emerald-400 hover:bg-emerald-500/30"} border-2 rounded-sm`}
-                                >
-                                  {(mod.status || "active") === "active" ? (
-                                    <><UserX className="h-4 w-4 mr-1" /> Disable Account</>
-                                  ) : (
-                                    <><UserCheck className="h-4 w-4 mr-1" /> Enable Account</>
-                                  )}
-                                </Button>
-                                <Button
-                                  data-testid={`delete-${mod.username}`}
-                                  onClick={() => handleDeleteModerator(mod.username)}
-                                  disabled={loading}
-                                  size="sm"
-                                  className="bg-red-500 hover:bg-red-600 text-white rounded-sm"
-                                >
-                                  Delete Permanently
-                                </Button>
+                                {canDeactivate && (
+                                  <Button
+                                    data-testid={`toggle-status-${mod.username}`}
+                                    onClick={() => handleToggleStatus(mod.username, mod.status || "active")}
+                                    disabled={loading}
+                                    size="sm"
+                                    className={`${(mod.status || "active") === "active" ? "bg-amber-500/20 border-amber-500 text-amber-400 hover:bg-amber-500/30" : "bg-emerald-500/20 border-emerald-500 text-emerald-400 hover:bg-emerald-500/30"} border-2 rounded-sm`}
+                                  >
+                                    {(mod.status || "active") === "active" ? (
+                                      <><UserX className="h-4 w-4 mr-1" /> Disable Account</>
+                                    ) : (
+                                      <><UserCheck className="h-4 w-4 mr-1" /> Enable Account</>
+                                    )}
+                                  </Button>
+                                )}
+                                {showDeleteButton && (
+                                  <Button
+                                    data-testid={`delete-${mod.username}`}
+                                    onClick={() => handleDeleteModerator(mod.username)}
+                                    disabled={loading}
+                                    size="sm"
+                                    className="bg-red-500 hover:bg-red-600 text-white rounded-sm"
+                                  >
+                                    Delete Permanently
+                                  </Button>
+                                )}
                               </div>
                             )}
                           </div>
