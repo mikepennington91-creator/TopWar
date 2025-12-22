@@ -631,14 +631,28 @@ export default function ServerAssignments() {
                           {assignment.end_date ? (
                             <span className="text-slate-300 ml-1">{assignment.end_date}</span>
                           ) : (
-                            <Input
-                              type="text"
-                              placeholder="DD/MM/YYYY"
-                              className="bg-slate-800 border-slate-700 text-slate-200 text-xs h-6 w-24 ml-1 inline-block"
-                              onBlur={(e) => {
-                                if (e.target.value) handleUpdateEndDate(assignment.id, e.target.value);
-                              }}
-                            />
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="ml-1 h-6 px-2 text-xs bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700"
+                                >
+                                  <CalendarIcon className="h-3 w-3 mr-1" />
+                                  Set date
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 bg-slate-900 border-slate-700" align="start">
+                                <Calendar
+                                  mode="single"
+                                  onSelect={(date) => {
+                                    if (date) handleUpdateEndDate(assignment.id, format(date, 'dd/MM/yyyy'));
+                                  }}
+                                  initialFocus
+                                  className="bg-slate-900 text-slate-200"
+                                />
+                              </PopoverContent>
+                            </Popover>
                           )}
                         </div>
                       </div>
