@@ -207,7 +207,7 @@ class TopWarModeratorAPITester:
             "PATCH",
             f"applications/{app_id}",
             200,
-            data={"status": "approved"}
+            data={"status": "approved", "comment": "Application approved after review"}
         )
         return success
 
@@ -222,7 +222,7 @@ class TopWarModeratorAPITester:
             "PATCH",
             f"applications/{app_id}",
             200,
-            data={"status": "rejected"}
+            data={"status": "rejected", "comment": "Application rejected after review"}
         )
         return success
 
@@ -237,7 +237,7 @@ class TopWarModeratorAPITester:
             "PATCH",
             f"applications/{app_id}",
             400,
-            data={"status": "invalid_status"}
+            data={"status": "invalid_status", "comment": "Test comment"}
         )
         return success
 
