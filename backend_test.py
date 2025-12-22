@@ -116,6 +116,7 @@ class TopWarModeratorAPITester:
         """Test application submission"""
         test_data = {
             "name": "John Test Applicant",
+            "email": "john.test@example.com",
             "position": "Community Moderator",
             "discord_handle": "johntester#1234",
             "ingame_name": "TestWarrior",
@@ -132,7 +133,6 @@ class TopWarModeratorAPITester:
             "heroes_mutated": "6",
             "discord_tools_comfort": "Very comfortable with bots and moderation tools",
             "guidelines_rating": "8/10 - I understand most guidelines well",
-            "high_profile_violation": "Document evidence, warn privately first, then escalate",
             "complex_mechanic": "Hero mutation system and stat calculations",
             "unknown_question": "Research the answer and ask senior moderators",
             "hero_development": "Focus on one hero at a time, prioritize skills",
