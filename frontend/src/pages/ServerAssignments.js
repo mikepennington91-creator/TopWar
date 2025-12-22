@@ -50,6 +50,8 @@ export default function ServerAssignments() {
   const [assignments, setAssignments] = useState([]);
   const [moderators, setModerators] = useState([]);
   const [currentUser, setCurrentUser] = useState({ username: "", role: "moderator", is_admin: false });
+  const [sortConfig, setSortConfig] = useState({ key: 'server', direction: 'asc' });
+  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
     server: "",
     tag: "",
