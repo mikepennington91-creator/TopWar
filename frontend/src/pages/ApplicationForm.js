@@ -131,7 +131,7 @@ export default function ApplicationForm() {
     { name: "basic_qualities", label: "What do you think are the most basic qualities that a mod should possess?", type: "textarea", required: true },
     { name: "favourite_event", label: "What is your favourite in-game event, and why?", type: "textarea", required: true },
     { name: "free_gems", label: "What are the free ways to gain gems?", type: "textarea", required: true },
-    { name: "heroes_mutated", label: "How many heroes can be mutated? (Numerical)", type: "text", required: true },
+    { name: "heroes_mutated", label: "How many heroes can be mutated?", type: "number", required: true },
     { name: "discord_tools_comfort", label: "What is your comfort level with using discord moderation tools & bots?", type: "rating", required: true },
     { name: "guidelines_rating", label: "Rate your understanding of community guidelines enforcement and conflict resolution. (Be honest, you will be tested)", type: "textarea", required: true },
     { name: "complex_mechanic", label: "Describe a complex game mechanic you understand well.", type: "textarea", required: true },
