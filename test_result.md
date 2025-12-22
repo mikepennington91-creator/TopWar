@@ -445,3 +445,5 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: "Implemented three new features: 1) Two In-Game only questions at the end of the form (Q23, Q24) - 'How long playing Top War' and 'Why good moderator'. 2) Toggle switch in Detailed Responses section to show full questions vs shortened labels. 3) Email field hidden from all users except training managers. All tested with screenshots and curl. Login as admin (admin/Admin123!@) - admin now has training manager enabled to see emails."
+  - agent: "testing"
+    message: "Completed comprehensive testing of new backend features: 1) Last Login Tracking - GET /api/moderators returns last_login field ✅ 2) Must Change Password Flag - New users created with must_change_password=true ✅ 3) Login Updates last_login - Timestamp properly updated on each login ✅ 4) Password Change Clears Flag - must_change_password set to false after password change ✅ 5) Password Reset Sets Flag - Admin reset sets must_change_password=true ✅. All 5 new features working correctly. Backend APIs fully functional."
