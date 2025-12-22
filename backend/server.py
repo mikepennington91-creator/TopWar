@@ -486,8 +486,8 @@ async def register_moderator(moderator: ModeratorCreate):
     # Hash password
     hashed_password = pwd_context.hash(moderator.password)
     
-    # Create moderator
-    mod_obj = Moderator(username=moderator.username, hashed_password=hashed_password, role=moderator.role)
+    # Create moderator with must_change_password=True for new users
+    mod_obj = Moderator(username=moderator.username, hashed_password=hashed_password, role=moderator.role, must_change_password=True)
     doc = mod_obj.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
     
