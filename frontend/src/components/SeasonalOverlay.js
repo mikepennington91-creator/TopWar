@@ -33,6 +33,13 @@ const checkReducedMotion = () => {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 };
 
+// Check if animation is enabled in localStorage
+const checkAnimationEnabled = () => {
+  if (typeof window === 'undefined') return true;
+  const stored = localStorage.getItem('seasonal_animation_enabled');
+  return stored !== 'false'; // Default to true if not set
+};
+
 /**
  * SeasonalOverlay - Renders unobtrusive seasonal particle animations
  * Winter: Snowflakes, Spring: Cherry blossoms, Summer: Fireflies, Autumn: Falling leaves
@@ -40,6 +47,7 @@ const checkReducedMotion = () => {
 export default function SeasonalOverlay() {
   // Initialize state with lazy initializers
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(checkReducedMotion);
+  const [animationEnabled, setAnimationEnabled] = useState(checkAnimationEnabled);
   const [particles] = useState(generateParticles);
   const [season] = useState(getCurrentSeason);
 
@@ -48,11 +56,21 @@ export default function SeasonalOverlay() {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     const handleChange = (e) => setPrefersReducedMotion(e.matches);
     mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    
+    // Listen for animation toggle events from Settings
+    const handleAnimationToggle = (e) => {
+      setAnimationEnabled(e.detail.enabled);
+    };
+    window.addEventListener('seasonalAnimationToggle', handleAnimationToggle);
+    
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+      window.removeEventListener('seasonalAnimationToggle', handleAnimationToggle);
+    };
   }, []);
 
-  // Don't render if user prefers reduced motion
-  if (prefersReducedMotion) return null;
+  // Don't render if user prefers reduced motion or has disabled animation
+  if (prefersReducedMotion || !animationEnabled) return null;
 
   const getParticleContent = () => {
     switch (season) {
