@@ -315,7 +315,7 @@ class TopWarModeratorAPITester:
             "PATCH",
             f"auth/reset-password/{target_username}",
             200,
-            data={"new_password": "admin123"}
+            data={"new_password": "Admin123!@"}
         )
         return success
 
