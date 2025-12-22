@@ -234,14 +234,6 @@ export default function ModeratorPortal() {
             Settings
           </Button>
           <Button
-            onClick={() => navigate('/moderator/activity')}
-            variant="outline"
-            className="border-2 border-teal-500 text-teal-400 hover:bg-teal-500/20 font-bold uppercase tracking-wide py-4 sm:py-6 rounded-sm text-xs sm:text-sm"
-          >
-            <Clock className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
-            Activity
-          </Button>
-          <Button
             onClick={() => navigate('/moderator/changelog')}
             variant="outline"
             className="border-2 border-purple-500 text-purple-400 hover:bg-purple-500/20 font-bold uppercase tracking-wide py-4 sm:py-6 rounded-sm text-xs sm:text-sm"
