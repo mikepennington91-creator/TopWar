@@ -553,12 +553,13 @@ async def change_password(password_data: PasswordChange, current_user: dict = De
     new_history = [moderator["hashed_password"]] + password_history
     new_history = new_history[:PASSWORD_HISTORY_COUNT]
     
-    # Update password
+    # Update password and clear must_change_password flag
     await db.moderators.update_one(
         {"username": current_user["username"]},
         {"$set": {
             "hashed_password": new_hashed,
-            "password_history": new_history
+            "password_history": new_history,
+            "must_change_password": False
         }}
     )
     
