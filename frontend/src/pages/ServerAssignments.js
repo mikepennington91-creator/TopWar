@@ -236,6 +236,80 @@ export default function ServerAssignments() {
     toast.success("Download started!");
   };
 
+  // Sorting function
+  const handleSort = (key) => {
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  // Get sort icon for column header
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) {
+      return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />;
+    }
+    return sortConfig.direction === 'asc' 
+      ? <ArrowUp className="h-3 w-3 ml-1 text-amber-500" />
+      : <ArrowDown className="h-3 w-3 ml-1 text-amber-500" />;
+  };
+
+  // Filter and sort assignments
+  const getFilteredAndSortedAssignments = () => {
+    let filtered = [...assignments];
+    
+    // Apply search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(a => 
+        a.server?.toString().includes(term) ||
+        a.moderator_name?.toLowerCase().includes(term) ||
+        a.reason?.toLowerCase().includes(term) ||
+        a.tag?.toLowerCase().includes(term)
+      );
+    }
+    
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let aVal, bVal;
+      
+      switch (sortConfig.key) {
+        case 'server':
+          aVal = parseInt(a.server) || 0;
+          bVal = parseInt(b.server) || 0;
+          break;
+        case 'moderator':
+          aVal = (a.moderator_name || a.created_by || '').toLowerCase();
+          bVal = (b.moderator_name || b.created_by || '').toLowerCase();
+          break;
+        case 'tag':
+          aVal = (a.tag || '').toLowerCase();
+          bVal = (b.tag || '').toLowerCase();
+          break;
+        case 'start_date':
+          // Parse DD/MM/YYYY to sortable format
+          aVal = a.start_date ? a.start_date.split('/').reverse().join('') : '';
+          bVal = b.start_date ? b.start_date.split('/').reverse().join('') : '';
+          break;
+        case 'reason':
+          aVal = (a.reason || '').toLowerCase();
+          bVal = (b.reason || '').toLowerCase();
+          break;
+        default:
+          aVal = a[sortConfig.key];
+          bVal = b[sortConfig.key];
+      }
+      
+      if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+    
+    return filtered;
+  };
+
+  const sortedAssignments = getFilteredAndSortedAssignments();
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 py-6 sm:py-12 px-3 sm:px-6 lg:px-8 grid-texture">
       <div className="max-w-7xl mx-auto">
