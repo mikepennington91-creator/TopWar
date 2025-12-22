@@ -398,34 +398,61 @@ export default function ServerAssignments() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="start_date" className="text-slate-300">Start Date (DD/MM/YYYY) *</Label>
-                  <Input
-                    id="start_date"
-                    name="start_date"
-                    data-testid="start-date-input"
-                    type="text"
-                    value={formData.start_date}
-                    onChange={handleChange}
-                    required
-                    placeholder="DD/MM/YYYY"
-                    pattern="\d{2}/\d{2}/\d{4}"
-                    className="bg-slate-900/50 border-slate-700 focus:border-amber-500 text-slate-200 rounded-sm"
-                  />
+                  <Label htmlFor="start_date" className="text-slate-300">Start Date *</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal bg-slate-900/50 border-slate-700 hover:bg-slate-800 text-slate-200 rounded-sm"
+                        data-testid="start-date-input"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formData.start_date ? formData.start_date : <span className="text-slate-500">Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-slate-900 border-slate-700" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={formData.start_date ? parse(formData.start_date, 'dd/MM/yyyy', new Date()) : undefined}
+                        onSelect={(date) => {
+                          if (date) {
+                            setFormData(prev => ({ ...prev, start_date: format(date, 'dd/MM/yyyy') }));
+                          }
+                        }}
+                        initialFocus
+                        className="bg-slate-900 text-slate-200"
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="end_date" className="text-slate-300">End Date (DD/MM/YYYY)</Label>
-                  <Input
-                    id="end_date"
-                    name="end_date"
-                    data-testid="end-date-input"
-                    type="text"
-                    value={formData.end_date}
-                    onChange={handleChange}
-                    placeholder="DD/MM/YYYY"
-                    pattern="\d{2}/\d{2}/\d{4}"
-                    className="bg-slate-900/50 border-slate-700 focus:border-amber-500 text-slate-200 rounded-sm"
-                  />
+                  <Label htmlFor="end_date" className="text-slate-300">End Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal bg-slate-900/50 border-slate-700 hover:bg-slate-800 text-slate-200 rounded-sm"
+                        data-testid="end-date-input"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formData.end_date ? formData.end_date : <span className="text-slate-500">Pick a date (optional)</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-slate-900 border-slate-700" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={formData.end_date ? parse(formData.end_date, 'dd/MM/yyyy', new Date()) : undefined}
+                        onSelect={(date) => {
+                          if (date) {
+                            setFormData(prev => ({ ...prev, end_date: format(date, 'dd/MM/yyyy') }));
+                          }
+                        }}
+                        initialFocus
+                        className="bg-slate-900 text-slate-200"
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 <div className="space-y-2">
