@@ -519,6 +519,35 @@ export default function Settings() {
           </CardContent>
         </Card>
 
+        {/* Seasonal Animation Toggle */}
+        <Card className="glass-card border-slate-700 mb-8">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold uppercase tracking-wide text-cyan-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+              <Snowflake className="inline-block mr-2 h-6 w-6" />
+              Visual Preferences
+            </CardTitle>
+            <CardDescription className="text-slate-400">
+              Customize your visual experience
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between p-3 bg-slate-900/50 rounded border border-slate-800">
+              <div className="flex-1">
+                <p className="font-semibold text-slate-200">Seasonal Animation</p>
+                <p className="text-sm text-slate-400">
+                  Show falling snowflakes, leaves, or other seasonal effects on the landing page and portal
+                </p>
+              </div>
+              <Switch
+                data-testid="seasonal-animation-toggle"
+                checked={seasonalAnimationEnabled}
+                onCheckedChange={handleSeasonalAnimationToggle}
+                className="ml-4"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Admin Only Sections */}
         {currentUser && currentUser.role === 'admin' && (
           <>
