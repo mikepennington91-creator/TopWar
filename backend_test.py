@@ -327,7 +327,7 @@ class TopWarModeratorAPITester:
             "moderators",
             200
         )
-        return success
+        return success, response if success else []
 
     def test_unauthorized_admin_actions(self):
         """Test admin-only actions without proper role"""
