@@ -233,6 +233,8 @@ class Moderator(BaseModel):
     failed_login_attempts: int = 0
     locked_at: Optional[datetime] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    last_login: Optional[datetime] = None  # Track last login time
+    must_change_password: bool = True  # Force password change on first login
 
 class ServerAssignment(BaseModel):
     model_config = ConfigDict(extra="ignore")
