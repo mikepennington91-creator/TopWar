@@ -234,6 +234,14 @@ export default function ModeratorPortal() {
             Settings
           </Button>
           <Button
+            onClick={() => navigate('/moderator/changelog')}
+            variant="outline"
+            className="border-2 border-purple-500 text-purple-400 hover:bg-purple-500/20 font-bold uppercase tracking-wide py-4 sm:py-6 rounded-sm text-xs sm:text-sm"
+          >
+            <ScrollText className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
+            Changelog
+          </Button>
+          <Button
             onClick={() => navigate('/apply')}
             variant="outline"
             className="border-2 border-blue-500 text-blue-400 hover:bg-blue-500/20 font-bold uppercase tracking-wide py-4 sm:py-6 rounded-sm text-xs sm:text-sm"
