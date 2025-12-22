@@ -585,12 +585,13 @@ async def reset_password(username: str, password_data: PasswordReset, current_us
     new_history = [moderator["hashed_password"]] + password_history
     new_history = new_history[:PASSWORD_HISTORY_COUNT]
     
-    # Update password
+    # Update password and set must_change_password to true (force password change after reset)
     await db.moderators.update_one(
         {"username": username},
         {"$set": {
             "hashed_password": new_hashed,
-            "password_history": new_history
+            "password_history": new_history,
+            "must_change_password": True
         }}
     )
     
@@ -604,6 +605,9 @@ async def get_moderators(current_user: dict = Depends(get_current_moderator)):
     for mod in moderators:
         if isinstance(mod.get('created_at'), str):
             mod['created_at'] = datetime.fromisoformat(mod['created_at'])
+        # Parse last_login if it's a string
+        if isinstance(mod.get('last_login'), str):
+            mod['last_login'] = datetime.fromisoformat(mod['last_login'])
     
     return moderators
 
