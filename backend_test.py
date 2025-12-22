@@ -564,6 +564,10 @@ def main():
     login_success = tester.test_existing_moderator_login()
     
     if not login_success:
+        # Try with the correct admin password
+        login_success = tester.test_moderator_login("admin", "Admin123!@")
+    
+    if not login_success:
         print("❌ Cannot proceed with authenticated tests - login failed")
         print(f"\n📊 Final Results: {tester.tests_passed}/{tester.tests_run} tests passed")
         return 1
