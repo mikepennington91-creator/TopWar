@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Shield, Megaphone, FileText, Calendar, Settings, LogOut, Plus, Trash2, Eye, EyeOff, Users, BarChart3, X } from "lucide-react";
+import { Shield, Megaphone, FileText, Calendar, Settings, LogOut, Plus, Trash2, Eye, EyeOff, Users, BarChart3, X, ScrollText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
