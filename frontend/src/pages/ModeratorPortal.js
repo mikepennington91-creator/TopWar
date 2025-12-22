@@ -196,7 +196,7 @@ export default function ModeratorPortal() {
 
       <div className="max-w-6xl mx-auto py-4 sm:py-8 px-3 sm:px-6">
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 sm:gap-4 mb-4 sm:mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4 mb-4 sm:mb-8">
           <Button
             onClick={() => navigate('/moderator/dashboard')}
             className="bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide py-4 sm:py-6 rounded-sm btn-glow text-xs sm:text-sm"
