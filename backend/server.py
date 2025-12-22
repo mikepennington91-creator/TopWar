@@ -330,6 +330,7 @@ class Token(BaseModel):
     token_type: str
     role: str
     username: str
+    must_change_password: bool = False  # Indicate if password change is required
 
 class ModeratorInfo(BaseModel):
     username: str
@@ -339,6 +340,7 @@ class ModeratorInfo(BaseModel):
     is_admin: bool
     can_view_applications: bool
     created_at: datetime
+    last_login: Optional[datetime] = None  # Include last login info
 
 class ModeratorStatusUpdate(BaseModel):
     status: str  # active or disabled
