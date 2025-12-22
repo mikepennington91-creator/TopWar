@@ -336,6 +336,215 @@ class TopWarModeratorAPITester:
         self.log_test("Unauthorized Admin Actions", True, "Skipped - using admin token")
         return True
 
+    def test_last_login_tracking(self):
+        """Test that GET /api/moderators returns last_login field"""
+        success, response = self.run_test(
+            "Last Login Tracking - Get Moderators",
+            "GET",
+            "moderators",
+            200
+        )
+        
+        if success and response:
+            # Check if moderators have last_login field
+            has_last_login = False
+            for moderator in response:
+                if 'last_login' in moderator:
+                    has_last_login = True
+                    break
+            
+            if has_last_login:
+                self.log_test("Last Login Field Present", True, "last_login field found in moderator data")
+                return True
+            else:
+                self.log_test("Last Login Field Present", False, "last_login field not found in moderator data")
+                return False
+        
+        return False
+
+    def test_new_user_must_change_password(self):
+        """Test that new users are created with must_change_password=true"""
+        test_username = f"newuser_{datetime.now().strftime('%H%M%S')}"
+        
+        # Register new user
+        success, response = self.run_test(
+            "Register New User for Password Test",
+            "POST",
+            "auth/register",
+            200,
+            data={"username": test_username, "password": "TestUser1!@#"}
+        )
+        
+        if not success:
+            return False, None
+        
+        # Login with new user to check must_change_password flag
+        success, login_response = self.run_test(
+            "Login New User - Check must_change_password",
+            "POST",
+            "auth/login",
+            200,
+            data={"username": test_username, "password": "TestUser1!@#"}
+        )
+        
+        if success and login_response:
+            must_change = login_response.get('must_change_password', False)
+            if must_change:
+                self.log_test("New User Must Change Password", True, "must_change_password=true for new user")
+                return True, test_username
+            else:
+                self.log_test("New User Must Change Password", False, f"must_change_password={must_change} (expected True)")
+                return False, test_username
+        
+        return False, test_username
+
+    def test_login_updates_last_login(self):
+        """Test that login updates the last_login timestamp"""
+        # Get current moderators list to check last_login before
+        success, moderators_before = self.run_test(
+            "Get Moderators Before Login",
+            "GET",
+            "moderators",
+            200
+        )
+        
+        if not success:
+            return False
+        
+        # Find admin user's last_login before
+        admin_before = None
+        for mod in moderators_before:
+            if mod.get('username') == 'admin':
+                admin_before = mod.get('last_login')
+                break
+        
+        # Login again
+        success = self.test_moderator_login("admin", "Admin123!@")
+        if not success:
+            return False
+        
+        # Get moderators list again to check last_login after
+        success, moderators_after = self.run_test(
+            "Get Moderators After Login",
+            "GET",
+            "moderators",
+            200
+        )
+        
+        if success:
+            # Find admin user's last_login after
+            admin_after = None
+            for mod in moderators_after:
+                if mod.get('username') == 'admin':
+                    admin_after = mod.get('last_login')
+                    break
+            
+            if admin_after and admin_after != admin_before:
+                self.log_test("Login Updates last_login", True, f"last_login updated from {admin_before} to {admin_after}")
+                return True
+            else:
+                self.log_test("Login Updates last_login", False, f"last_login not updated: before={admin_before}, after={admin_after}")
+                return False
+        
+        return False
+
+    def test_password_change_clears_flag(self, username):
+        """Test that changing password clears must_change_password flag"""
+        if not username:
+            self.log_test("Password Change Clears Flag", False, "No username provided")
+            return False
+        
+        # Login with the test user first
+        success, login_response = self.run_test(
+            "Login Test User Before Password Change",
+            "POST",
+            "auth/login",
+            200,
+            data={"username": username, "password": "TestUser1!@#"}
+        )
+        
+        if not success:
+            return False
+        
+        # Store the token for this user
+        old_token = self.token
+        if 'access_token' in login_response:
+            self.token = login_response['access_token']
+        
+        # Change password
+        success, response = self.run_test(
+            "Change Password to Clear Flag",
+            "PATCH",
+            "auth/change-password",
+            200,
+            data={"old_password": "TestUser1!@#", "new_password": "NewPass123!@#"}
+        )
+        
+        if not success:
+            self.token = old_token
+            return False
+        
+        # Login again to check if must_change_password is now false
+        success, login_response = self.run_test(
+            "Login After Password Change",
+            "POST",
+            "auth/login",
+            200,
+            data={"username": username, "password": "NewPass123!@#"}
+        )
+        
+        # Restore original token
+        self.token = old_token
+        
+        if success and login_response:
+            must_change = login_response.get('must_change_password', True)
+            if not must_change:
+                self.log_test("Password Change Clears Flag", True, "must_change_password=false after password change")
+                return True
+            else:
+                self.log_test("Password Change Clears Flag", False, f"must_change_password={must_change} (expected False)")
+                return False
+        
+        return False
+
+    def test_password_reset_sets_flag(self, target_username):
+        """Test that admin password reset sets must_change_password=true"""
+        if not target_username:
+            self.log_test("Password Reset Sets Flag", False, "No target username provided")
+            return False
+        
+        # Reset password as admin
+        success, response = self.run_test(
+            "Admin Reset User Password",
+            "PATCH",
+            f"auth/reset-password/{target_username}",
+            200,
+            data={"new_password": "ResetPass123!@#"}
+        )
+        
+        if not success:
+            return False
+        
+        # Login with reset password to check must_change_password flag
+        success, login_response = self.run_test(
+            "Login After Password Reset",
+            "POST",
+            "auth/login",
+            200,
+            data={"username": target_username, "password": "ResetPass123!@#"}
+        )
+        
+        if success and login_response:
+            must_change = login_response.get('must_change_password', False)
+            if must_change:
+                self.log_test("Password Reset Sets Flag", True, "must_change_password=true after admin reset")
+                return True
+            else:
+                self.log_test("Password Reset Sets Flag", False, f"must_change_password={must_change} (expected True)")
+                return False
+        
+        return False
+
 def main():
     print("🚀 Starting Top War Moderator API Tests")
     print("=" * 50)
