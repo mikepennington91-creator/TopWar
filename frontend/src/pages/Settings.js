@@ -407,6 +407,13 @@ export default function Settings() {
     return <span className={`uppercase font-semibold ${roleConfig.color}`}>{roleConfig.label}</span>;
   };
 
+  const handleSeasonalAnimationToggle = (enabled) => {
+    setSeasonalAnimationEnabled(enabled);
+    localStorage.setItem('seasonal_animation_enabled', String(enabled));
+    // Dispatch event so other components can react
+    window.dispatchEvent(new CustomEvent('seasonalAnimationToggle', { detail: { enabled } }));
+  };
+
   const getStatusBadge = (status) => {
     if (status === "active") {
       return <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/50">ACTIVE</Badge>;
