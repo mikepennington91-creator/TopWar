@@ -58,6 +58,7 @@ function App() {
           <Route path="/moderator/audit-log" element={<AuditLog />} />
           <Route path="/moderator/polls" element={<Polls />} />
           <Route path="/moderator/changelog" element={<Changelog />} />
+          <Route path="/moderator/activity" element={<ModeratorActivity />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
