@@ -74,6 +74,23 @@ const canModifyPermissions = (currentUserRole) => {
   return currentUserRole === 'admin';
 };
 
+// Check if current user can deactivate accounts (Admin and MMOD)
+const canDeactivateAccounts = (currentUserRole, targetUserRole, isSelf) => {
+  if (isSelf) return false;
+  
+  // Admin can deactivate anyone
+  if (currentUserRole === 'admin') return true;
+  
+  // MMOD can deactivate users with lower rank
+  if (currentUserRole === 'mmod') {
+    const currentRank = ROLE_HIERARCHY[currentUserRole] || 0;
+    const targetRank = ROLE_HIERARCHY[targetUserRole] || 0;
+    return currentRank > targetRank;
+  }
+  
+  return false;
+};
+
 export default function Settings() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
