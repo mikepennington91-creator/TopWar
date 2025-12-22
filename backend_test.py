@@ -99,7 +99,7 @@ class TopWarModeratorAPITester:
 
     def test_existing_moderator_login(self):
         """Test login with existing moderator credentials"""
-        return self.test_moderator_login("admin", "admin123")
+        return self.test_moderator_login("admin", "Admin123!@")
 
     def test_invalid_login(self):
         """Test login with invalid credentials"""
