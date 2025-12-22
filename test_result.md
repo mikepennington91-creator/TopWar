@@ -327,9 +327,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "In-Game specific questions"
-    - "Full questions toggle on application review"
-    - "Email visibility restricted to training managers"
+    - "Last Login Tracking"
+    - "Must Change Password Flag for New Users"
+    - "Login Updates Last Login Timestamp"
+    - "Password Change Clears Must Change Flag"
+    - "Password Reset Sets Must Change Flag"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
