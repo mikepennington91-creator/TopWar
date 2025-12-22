@@ -293,7 +293,7 @@ class TopWarModeratorAPITester:
             "PATCH",
             "auth/change-password",
             200,
-            data={"old_password": "admin123", "new_password": "newpass123"}
+            data={"old_password": "Admin123!@", "new_password": "NewAdmin123!@"}
         )
         
         # Change it back for other tests
@@ -303,7 +303,7 @@ class TopWarModeratorAPITester:
                 "PATCH",
                 "auth/change-password",
                 200,
-                data={"old_password": "newpass123", "new_password": "admin123"}
+                data={"old_password": "NewAdmin123!@", "new_password": "Admin123!@"}
             )
         
         return success
