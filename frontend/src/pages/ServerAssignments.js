@@ -792,14 +792,28 @@ export default function ServerAssignments() {
                             {assignment.end_date ? (
                               <span className="text-slate-300 text-sm mono">{assignment.end_date}</span>
                             ) : (
-                              <Input
-                                type="text"
-                                placeholder="DD/MM/YYYY"
-                                onBlur={(e) => {
-                                  if (e.target.value) handleUpdateEndDate(assignment.id, e.target.value);
-                                }}
-                                className="bg-slate-800/50 border-slate-700 text-slate-200 text-xs rounded-sm w-28 h-7 mono"
-                              />
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 px-2 text-xs bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-700"
+                                  >
+                                    <CalendarIcon className="h-3 w-3 mr-1" />
+                                    Set date
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0 bg-slate-900 border-slate-700" align="start">
+                                  <Calendar
+                                    mode="single"
+                                    onSelect={(date) => {
+                                      if (date) handleUpdateEndDate(assignment.id, format(date, 'dd/MM/yyyy'));
+                                    }}
+                                    initialFocus
+                                    className="bg-slate-900 text-slate-200"
+                                  />
+                                </PopoverContent>
+                              </Popover>
                             )}
                           </td>
                           <td className="px-4 py-3 text-slate-300 text-sm border-b border-slate-800/50 max-w-[180px]">
