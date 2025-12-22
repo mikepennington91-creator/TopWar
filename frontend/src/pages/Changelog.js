@@ -7,6 +7,17 @@ import { ArrowLeft, FileText, Sparkles, Bug, Wrench, Plus } from "lucide-react";
 // Changelog data - newest first
 const CHANGELOG_DATA = [
   {
+    version: "2.6.0",
+    date: "22 December 2025",
+    title: "Date Picker & Form Improvements",
+    changes: [
+      { type: "feature", text: "Added calendar date picker for Start Date and End Date on Server Assignments" },
+      { type: "improvement", text: "Click to open calendar popup instead of typing date manually" },
+      { type: "improvement", text: "Changed 'How many heroes can be mutated?' to numerical-only input field" },
+      { type: "fix", text: "Removed redundant '(Numerical)' text from heroes mutation question" },
+    ]
+  },
+  {
     version: "2.5.0",
     date: "22 December 2025",
     title: "Moderator Activity & Security Enhancements",
