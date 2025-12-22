@@ -97,6 +97,10 @@ export default function Settings() {
     old_username: "",
     new_username: ""
   });
+  const [seasonalAnimationEnabled, setSeasonalAnimationEnabled] = useState(() => {
+    const stored = localStorage.getItem('seasonal_animation_enabled');
+    return stored !== 'false'; // Default to true if not set
+  });
 
   useEffect(() => {
     const token = localStorage.getItem('moderator_token');
