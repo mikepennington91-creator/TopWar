@@ -503,34 +503,75 @@ export default function ServerAssignments() {
 
         {/* Assignments Table/Cards */}
         <Card className="glass-card border-slate-700">
-          <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <CardTitle className="text-lg sm:text-2xl font-bold uppercase tracking-wide text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                Server Assignment Records
-              </CardTitle>
-              <CardDescription className="text-slate-400 text-sm">
-                All server assignments
-              </CardDescription>
+          <CardHeader className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <CardTitle className="text-lg sm:text-2xl font-bold uppercase tracking-wide text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                  Server Assignment Records
+                </CardTitle>
+                <CardDescription className="text-slate-400 text-sm">
+                  {sortedAssignments.length} record{sortedAssignments.length !== 1 ? 's' : ''} found
+                </CardDescription>
+              </div>
+              {currentUser.is_admin && (
+                <Button
+                  data-testid="download-excel-btn"
+                  onClick={downloadExcel}
+                  size="sm"
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-sm text-xs sm:text-sm w-full sm:w-auto"
+                >
+                  <Download className="h-4 w-4 mr-1 sm:mr-2" />
+                  Download Excel
+                </Button>
+              )}
             </div>
-            {currentUser.is_admin && (
-              <Button
-                data-testid="download-excel-btn"
-                onClick={downloadExcel}
-                size="sm"
-                className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-sm text-xs sm:text-sm w-full sm:w-auto"
-              >
-                <Download className="h-4 w-4 mr-1 sm:mr-2" />
-                Download Excel
-              </Button>
-            )}
+            
+            {/* Search and Sort Controls */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* Search Input */}
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-500" />
+                <Input
+                  type="text"
+                  placeholder="Search by server, moderator, reason..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="bg-slate-900/50 border-slate-700 focus:border-amber-500 text-slate-200 pl-10 rounded-sm"
+                />
+              </div>
+              
+              {/* Mobile Sort Dropdown */}
+              <div className="sm:hidden">
+                <Select
+                  value={`${sortConfig.key}-${sortConfig.direction}`}
+                  onValueChange={(value) => {
+                    const [key, direction] = value.split('-');
+                    setSortConfig({ key, direction });
+                  }}
+                >
+                  <SelectTrigger className="bg-slate-900/50 border-slate-700 text-slate-200 rounded-sm">
+                    <SelectValue placeholder="Sort by..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-900 border-slate-700">
+                    <SelectItem value="server-asc" className="text-slate-200">Server ↑</SelectItem>
+                    <SelectItem value="server-desc" className="text-slate-200">Server ↓</SelectItem>
+                    <SelectItem value="moderator-asc" className="text-slate-200">Moderator A-Z</SelectItem>
+                    <SelectItem value="moderator-desc" className="text-slate-200">Moderator Z-A</SelectItem>
+                    <SelectItem value="start_date-asc" className="text-slate-200">Date (Oldest)</SelectItem>
+                    <SelectItem value="start_date-desc" className="text-slate-200">Date (Newest)</SelectItem>
+                    <SelectItem value="reason-asc" className="text-slate-200">Reason A-Z</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {/* Mobile Card View */}
             <div className="sm:hidden space-y-3">
-              {assignments.length === 0 ? (
+              {sortedAssignments.length === 0 ? (
                 <p className="text-center text-slate-400 py-8">No server assignments found</p>
               ) : (
-                assignments.map((assignment) => {
+                sortedAssignments.map((assignment) => {
                   const modInfo = moderators.find(m => m.username === assignment.moderator_name);
                   const modRoleColor = modInfo ? ROLE_COLORS[modInfo.role] : "text-slate-300";
                   
@@ -587,72 +628,172 @@ export default function ServerAssignments() {
               )}
             </div>
 
-            {/* Desktop Table View */}
-            <div className="hidden sm:block overflow-x-auto">
-              <table className="w-full" data-testid="assignments-table">
-                <thead className="bg-slate-900/70">
-                  <tr>
-                    <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400 uppercase" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Server</th>
-                    <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400 uppercase" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Moderator</th>
-                    <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400 uppercase" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Tag</th>
-                    <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400 uppercase" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Start</th>
-                    <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400 uppercase" style={{ fontFamily: 'Rajdhani, sans-serif' }}>End</th>
-                    <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400 uppercase" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Reason</th>
-                    <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400 uppercase" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Actions</th>
+            {/* Desktop Spreadsheet View */}
+            <div className="hidden sm:block overflow-x-auto rounded-lg border border-slate-700">
+              <table className="w-full border-collapse" data-testid="assignments-table">
+                <thead>
+                  <tr className="bg-slate-800/80">
+                    <th 
+                      className="px-4 py-3 text-left text-xs font-bold text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-700/50 transition-colors border-b border-slate-700 select-none"
+                      style={{ fontFamily: 'Rajdhani, sans-serif' }}
+                      onClick={() => handleSort('server')}
+                    >
+                      <div className="flex items-center">
+                        Server
+                        {getSortIcon('server')}
+                      </div>
+                    </th>
+                    <th 
+                      className="px-4 py-3 text-left text-xs font-bold text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-700/50 transition-colors border-b border-slate-700 select-none"
+                      style={{ fontFamily: 'Rajdhani, sans-serif' }}
+                      onClick={() => handleSort('moderator')}
+                    >
+                      <div className="flex items-center">
+                        Moderator
+                        {getSortIcon('moderator')}
+                      </div>
+                    </th>
+                    <th 
+                      className="px-4 py-3 text-left text-xs font-bold text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-700/50 transition-colors border-b border-slate-700 select-none"
+                      style={{ fontFamily: 'Rajdhani, sans-serif' }}
+                      onClick={() => handleSort('tag')}
+                    >
+                      <div className="flex items-center">
+                        Tag
+                        {getSortIcon('tag')}
+                      </div>
+                    </th>
+                    <th 
+                      className="px-4 py-3 text-left text-xs font-bold text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-700/50 transition-colors border-b border-slate-700 select-none"
+                      style={{ fontFamily: 'Rajdhani, sans-serif' }}
+                      onClick={() => handleSort('start_date')}
+                    >
+                      <div className="flex items-center">
+                        Start
+                        {getSortIcon('start_date')}
+                      </div>
+                    </th>
+                    <th 
+                      className="px-4 py-3 text-left text-xs font-bold text-slate-300 uppercase tracking-wider border-b border-slate-700"
+                      style={{ fontFamily: 'Rajdhani, sans-serif' }}
+                    >
+                      End
+                    </th>
+                    <th 
+                      className="px-4 py-3 text-left text-xs font-bold text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-700/50 transition-colors border-b border-slate-700 select-none"
+                      style={{ fontFamily: 'Rajdhani, sans-serif' }}
+                      onClick={() => handleSort('reason')}
+                    >
+                      <div className="flex items-center">
+                        Reason
+                        {getSortIcon('reason')}
+                      </div>
+                    </th>
+                    {currentUser.is_admin && (
+                      <th 
+                        className="px-4 py-3 text-center text-xs font-bold text-slate-300 uppercase tracking-wider border-b border-slate-700 w-20"
+                        style={{ fontFamily: 'Rajdhani, sans-serif' }}
+                      >
+                        Actions
+                      </th>
+                    )}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800">
-                  {assignments.length === 0 ? (
+                <tbody>
+                  {sortedAssignments.length === 0 ? (
                     <tr>
-                      <td colSpan="7" className="px-4 py-8 text-center text-slate-400">
-                        No server assignments found
+                      <td colSpan={currentUser.is_admin ? 7 : 6} className="px-4 py-12 text-center text-slate-400">
+                        <div className="flex flex-col items-center gap-2">
+                          <Server className="h-8 w-8 opacity-40" />
+                          <span>No server assignments found</span>
+                          {searchTerm && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => setSearchTerm("")}
+                              className="text-amber-500 hover:text-amber-400"
+                            >
+                              Clear search
+                            </Button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ) : (
-                    assignments.map((assignment) => {
+                    sortedAssignments.map((assignment, index) => {
                       const modInfo = moderators.find(m => m.username === assignment.moderator_name);
                       const modRoleColor = modInfo ? ROLE_COLORS[modInfo.role] : "text-slate-300";
+                      const isEven = index % 2 === 0;
                       
                       return (
-                        <tr key={assignment.id} className="hover:bg-slate-900/30">
-                          <td className="px-3 py-2 text-slate-200 mono text-sm">{assignment.server}</td>
-                          <td className={`px-3 py-2 mono text-sm font-semibold ${modRoleColor}`}>
+                        <tr 
+                          key={assignment.id} 
+                          className={`${isEven ? 'bg-slate-900/30' : 'bg-slate-900/10'} hover:bg-slate-800/50 transition-colors`}
+                        >
+                          <td className="px-4 py-3 text-amber-500 font-bold mono text-sm border-b border-slate-800/50">
+                            S{assignment.server}
+                          </td>
+                          <td className={`px-4 py-3 mono text-sm font-semibold border-b border-slate-800/50 ${modRoleColor}`}>
                             {assignment.moderator_name || assignment.created_by}
                           </td>
-                          <td className="px-3 py-2 text-slate-200 mono text-sm">{assignment.tag}</td>
-                          <td className="px-3 py-2 text-slate-200 text-sm">{assignment.start_date}</td>
-                          <td className="px-3 py-2">
-                            {assignment.end_date || (
+                          <td className="px-4 py-3 text-slate-300 text-sm border-b border-slate-800/50">
+                            <span className="px-2 py-1 bg-slate-800/50 rounded text-xs">
+                              {assignment.tag}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-slate-300 text-sm border-b border-slate-800/50 mono">
+                            {assignment.start_date}
+                          </td>
+                          <td className="px-4 py-3 border-b border-slate-800/50">
+                            {assignment.end_date ? (
+                              <span className="text-slate-300 text-sm mono">{assignment.end_date}</span>
+                            ) : (
                               <Input
                                 type="text"
                                 placeholder="DD/MM/YYYY"
                                 onBlur={(e) => {
                                   if (e.target.value) handleUpdateEndDate(assignment.id, e.target.value);
                                 }}
-                                className="bg-slate-900 border-slate-700 text-slate-200 text-xs rounded-sm w-28 h-7"
+                                className="bg-slate-800/50 border-slate-700 text-slate-200 text-xs rounded-sm w-28 h-7 mono"
                               />
                             )}
                           </td>
-                          <td className="px-3 py-2 text-slate-200 text-xs max-w-[120px] truncate">{assignment.reason}</td>
-                          <td className="px-3 py-2">
-                            {currentUser.is_admin && (
+                          <td className="px-4 py-3 text-slate-300 text-sm border-b border-slate-800/50 max-w-[180px]">
+                            <span className="block truncate" title={assignment.reason}>
+                              {assignment.reason}
+                            </span>
+                          </td>
+                          {currentUser.is_admin && (
+                            <td className="px-4 py-3 text-center border-b border-slate-800/50">
                               <Button
                                 data-testid={`delete-${assignment.id}`}
                                 onClick={() => handleDelete(assignment.id)}
                                 disabled={loading}
                                 size="sm"
-                                className="bg-red-500 hover:bg-red-600 text-white rounded-sm h-7 w-7 p-0"
+                                className="bg-red-500/20 hover:bg-red-500/40 text-red-400 rounded-sm h-7 w-7 p-0"
                               >
                                 <Trash2 className="h-3 w-3" />
                               </Button>
-                            )}
-                          </td>
+                            </td>
+                          )}
                         </tr>
                       );
                     })
                   )}
                 </tbody>
               </table>
+              
+              {/* Table Footer with summary */}
+              {sortedAssignments.length > 0 && (
+                <div className="bg-slate-800/50 px-4 py-2 border-t border-slate-700 flex items-center justify-between text-xs text-slate-400">
+                  <span>
+                    Showing {sortedAssignments.length} of {assignments.length} records
+                  </span>
+                  <span>
+                    Sorted by: <span className="text-amber-500 capitalize">{sortConfig.key.replace('_', ' ')}</span> ({sortConfig.direction === 'asc' ? 'ascending' : 'descending'})
+                  </span>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
