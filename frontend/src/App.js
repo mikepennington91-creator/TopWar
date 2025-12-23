@@ -61,6 +61,8 @@ function App() {
           <Route path="/moderator/polls" element={<Polls />} />
           <Route path="/moderator/changelog" element={<Changelog />} />
           <Route path="/secret-proposal" element={<SecretProposal />} />
+          <Route path="/secret-valentine" element={<SecretProposalAlt />} />
+          <Route path="/dev-secrets" element={<DevSecrets />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
