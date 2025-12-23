@@ -129,7 +129,8 @@ export default function SecretProposalAlt() {
           {/* The question */}
           <div className="text-center mb-10">
             <p className="text-lg sm:text-xl text-rose-200 mb-6 italic leading-relaxed">
-              "I heard you don't like reading and can only manage 1 Question."
+              "In all the stars across the universe, my heart found its way to you. 
+              Every moment with you feels like a dream I never want to wake from."
             </p>
             <h1 
               className="text-2xl sm:text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-rose-300 via-pink-300 to-rose-300 leading-tight"
@@ -138,7 +139,7 @@ export default function SecretProposalAlt() {
                 textShadow: '0 0 30px rgba(244, 63, 94, 0.5)'
               }}
             >
-              Therefore, will you Marry Evil?
+              Will you Marry me?
             </h1>
           </div>
 
