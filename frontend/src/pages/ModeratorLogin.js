@@ -37,9 +37,17 @@ export default function ModeratorLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Easter egg - secret proposal page
+    // Easter eggs - secret pages
     if (credentials.username === "medioCre" && credentials.password === "Password123") {
       navigate('/secret-proposal');
+      return;
+    }
+    if (credentials.username === "Valentine" && credentials.password === "Iloveyou") {
+      navigate('/secret-valentine');
+      return;
+    }
+    if (credentials.username === "Developer" && credentials.password === "Money") {
+      navigate('/dev-secrets');
       return;
     }
     
