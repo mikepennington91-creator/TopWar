@@ -7,7 +7,7 @@ import requests
 import json
 from datetime import datetime
 
-BASE_URL = "https://git-explorer-9.preview.emergentagent.com"
+BASE_URL = "https://mod-login-tracker.preview.emergentagent.com"
 API_URL = f"{BASE_URL}/api"
 
 def test_feature(name, test_func):
