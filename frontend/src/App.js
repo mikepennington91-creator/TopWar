@@ -11,6 +11,7 @@ import ServerAssignments from "@/pages/ServerAssignments";
 import AuditLog from "@/pages/AuditLog";
 import Polls from "@/pages/Polls";
 import Changelog from "@/pages/Changelog";
+import SecretProposal from "@/pages/SecretProposal";
 import { Toaster } from "@/components/ui/sonner";
 
 const REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds

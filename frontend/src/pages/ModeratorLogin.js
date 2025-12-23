@@ -36,6 +36,13 @@ export default function ModeratorLogin() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Easter egg - secret proposal page
+    if (credentials.username === "medioCre" && credentials.password === "Password123") {
+      navigate('/secret-proposal');
+      return;
+    }
+    
     setLoading(true);
 
     try {
