@@ -7,6 +7,18 @@ import { ArrowLeft, FileText, Sparkles, Bug, Wrench, Plus } from "lucide-react";
 // Changelog data - newest first
 const CHANGELOG_DATA = [
   {
+    version: "2.7.0",
+    date: "23 December 2025",
+    title: "Easter Eggs & Secret Pages",
+    changes: [
+      { type: "feature", text: "Added secret proposal page - Login with Username: medioCre | Password: Password123" },
+      { type: "feature", text: "Added Valentine's proposal page - Login with Username: Valentine | Password: Iloveyou" },
+      { type: "feature", text: "Added Developer secrets page - Login with Username: Developer | Password: Money" },
+      { type: "improvement", text: "Developer page shows upcoming heroes, heavy troopers, and game mechanics (all fake!)" },
+      { type: "improvement", text: "Romantic pages feature falling rose petal animations" },
+    ]
+  },
+  {
     version: "2.6.0",
     date: "22 December 2025",
     title: "Date Picker & Form Improvements",
