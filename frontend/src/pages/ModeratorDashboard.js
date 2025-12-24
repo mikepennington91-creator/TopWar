@@ -272,6 +272,51 @@ export default function ModeratorDashboard() {
     };
   };
 
+  // Check if current user has viewed the application
+  const hasUserViewed = (viewedBy) => {
+    if (!viewedBy || viewedBy.length === 0) return false;
+    return viewedBy.includes(currentUser.username);
+  };
+
+  // Check if current user has voted on the application
+  const hasUserVoted = (votes) => {
+    if (!votes || votes.length === 0) return false;
+    return votes.some(v => v.moderator === currentUser.username);
+  };
+
+  // Get the user's interaction status with an application
+  const getUserInteractionBadge = (app) => {
+    const voted = hasUserVoted(app.votes);
+    const viewed = hasUserViewed(app.viewed_by);
+    const userVote = getUserVote(app.votes);
+    
+    if (voted) {
+      // User has voted - show their vote
+      return userVote?.vote === 'approve' ? (
+        <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs gap-1">
+          <ThumbsUp className="h-3 w-3" /> Voted
+        </Badge>
+      ) : (
+        <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-xs gap-1">
+          <ThumbsDown className="h-3 w-3" /> Voted
+        </Badge>
+      );
+    } else if (viewed) {
+      // User has viewed but not voted
+      return (
+        <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs gap-1">
+          <Eye className="h-3 w-3" /> Viewed
+        </Badge>
+      );
+    }
+    // User hasn't viewed or voted - show "New" indicator
+    return (
+      <Badge variant="outline" className="border-slate-600 text-slate-500 text-xs gap-1">
+        <EyeOff className="h-3 w-3" /> New
+      </Badge>
+    );
+  };
+
   const getStatusBadge = (status) => {
     switch (status) {
       case "awaiting_review":
