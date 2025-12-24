@@ -151,18 +151,8 @@ export default function ApplicationForm() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-950 text-slate-200 pt-14 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
-        <Button
-          data-testid="back-btn"
-          onClick={() => navigate('/')}
-          variant="ghost"
-          className="mb-8 text-amber-500 hover:text-amber-400 hover:bg-slate-900"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Home
-        </Button>
-
         {/* Recruitment Information */}
         <div className="glass-card rounded-lg p-8 md:p-12 mb-8 border-2 border-amber-500/30">
           <h1 className="text-4xl md:text-5xl font-bold uppercase tracking-wider mb-6 text-amber-500 text-center" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
