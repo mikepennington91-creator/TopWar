@@ -170,6 +170,7 @@ class Application(BaseModel):
     status: str = "awaiting_review"  # awaiting_review, pending, approved, rejected
     votes: List[Dict] = Field(default_factory=list)
     comments: List[Dict] = Field(default_factory=list)
+    viewed_by: List[str] = Field(default_factory=list)  # Track who has viewed the application
     submitted_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     reviewed_at: Optional[datetime] = None
     reviewed_by: Optional[str] = None
