@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 
 class TopWarModeratorAPITester:
-    def __init__(self, base_url="https://mod-login-tracker.preview.emergentagent.com"):
+    def __init__(self, base_url="https://secret-pages-1.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.token = None
