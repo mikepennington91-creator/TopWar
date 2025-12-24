@@ -185,18 +185,8 @@ export default function ModeratorLogin() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 flex items-center justify-center px-3 sm:px-4 py-6 grid-texture">
+    <div className="min-h-screen bg-slate-950 text-slate-200 flex items-center justify-center px-3 sm:px-4 pt-14 py-6 grid-texture">
       <div className="w-full max-w-md">
-        <Button
-          data-testid="back-to-home-btn"
-          onClick={() => navigate('/')}
-          variant="ghost"
-          size="sm"
-          className="mb-4 sm:mb-8 text-amber-500 hover:text-amber-400 hover:bg-slate-900 text-sm"
-        >
-          <ArrowLeft className="mr-1 sm:mr-2 h-4 w-4" />
-          Back to Home
-        </Button>
 
         <div className="glass-card rounded-lg p-5 sm:p-8">
           <div className="text-center mb-6 sm:mb-8">
