@@ -74,6 +74,7 @@ function App() {
           <Route path="/secret-proposal" element={<SecretProposal />} />
           <Route path="/secret-valentine" element={<SecretProposalAlt />} />
           <Route path="/dev-secrets" element={<DevSecrets />} />
+          <Route path="/troll-detected" element={<TrollPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
