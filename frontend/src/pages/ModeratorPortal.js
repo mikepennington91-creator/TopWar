@@ -171,26 +171,13 @@ export default function ModeratorPortal() {
       {/* Seasonal Animation Overlay */}
       <SeasonalOverlay />
       
-      {/* Header */}
-      <div className="bg-slate-900/80 border-b border-slate-800 py-3 sm:py-4 px-3 sm:px-6">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-amber-500" />
-            <div className="flex-1 min-w-0">
-              <h1 className="text-lg sm:text-xl font-bold text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>TOP WAR PORTAL</h1>
-              <p className="text-xs sm:text-sm text-slate-400 truncate">Welcome, {currentUser.username}</p>
-            </div>
+      {/* User Info Bar */}
+      <div className="bg-slate-900/50 border-b border-slate-800 py-2 px-3 sm:px-6">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xs sm:text-sm text-slate-400">Welcome, <span className="text-amber-400">{currentUser.username}</span></span>
             {getRoleBadge(currentUser.role)}
           </div>
-          <Button
-            onClick={handleLogout}
-            variant="ghost"
-            size="sm"
-            className="text-slate-400 hover:text-red-400 self-end sm:self-auto"
-          >
-            <LogOut className="h-4 w-4 mr-1 sm:mr-2" />
-            <span className="text-sm">Logout</span>
-          </Button>
         </div>
       </div>
 
