@@ -630,7 +630,7 @@ export default function ModeratorDashboard() {
                   key={app.id} 
                   data-testid={`application-card-${app.id}`}
                   className="glass-card p-4 rounded-lg"
-                  onClick={() => setSelectedApp(app)}
+                  onClick={() => viewApplication(app)}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1 min-w-0">
