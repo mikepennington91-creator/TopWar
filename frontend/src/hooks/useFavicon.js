@@ -16,6 +16,7 @@ const FAVICON_MAP = {
   '/secret-proposal': '/favicons/proposal.svg',
   '/secret-valentine': '/favicons/valentine.svg',
   '/dev-secrets': '/favicons/developer.svg',
+  '/troll-detected': '/favicons/troll.svg',
 };
 
 // Map routes to their page titles
