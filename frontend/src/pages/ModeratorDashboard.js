@@ -661,6 +661,7 @@ export default function ModeratorDashboard() {
                   <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Server</th>
                   <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Votes</th>
                   <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Status</th>
+                  <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>My Status</th>
                   <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Submitted</th>
                   <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Actions</th>
                 </tr>
@@ -668,7 +669,7 @@ export default function ModeratorDashboard() {
               <tbody className="divide-y divide-slate-800">
                 {filteredApplications.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="px-6 py-8 text-center text-slate-400">
+                    <td colSpan="8" className="px-6 py-8 text-center text-slate-400">
                       No applications found.
                     </td>
                   </tr>
@@ -696,6 +697,7 @@ export default function ModeratorDashboard() {
                           </div>
                         </td>
                         <td className="px-4 lg:px-6 py-3 lg:py-4">{getStatusBadge(app.status)}</td>
+                        <td className="px-4 lg:px-6 py-3 lg:py-4">{getUserInteractionBadge(app)}</td>
                         <td className="px-4 lg:px-6 py-3 lg:py-4 text-slate-400 text-xs lg:text-sm">
                           {new Date(app.submitted_at).toLocaleDateString()}
                         </td>
