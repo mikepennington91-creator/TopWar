@@ -890,6 +890,18 @@ async def get_application(application_id: str, current_user: dict = Depends(get_
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
     
+    # Track that this moderator has viewed the application
+    username = current_user['username']
+    if username not in application.get('viewed_by', []):
+        await db.applications.update_one(
+            {"id": application_id},
+            {"$addToSet": {"viewed_by": username}}
+        )
+        # Update local copy
+        if 'viewed_by' not in application:
+            application['viewed_by'] = []
+        application['viewed_by'].append(username)
+    
     # Convert ISO string timestamps back to datetime objects
     if isinstance(application.get('submitted_at'), str):
         application['submitted_at'] = datetime.fromisoformat(application['submitted_at'])
