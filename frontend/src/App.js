@@ -14,6 +14,7 @@ import Changelog from "@/pages/Changelog";
 import SecretProposal from "@/pages/SecretProposal";
 import SecretProposalAlt from "@/pages/SecretProposalAlt";
 import DevSecrets from "@/pages/DevSecrets";
+import TrollPage from "@/pages/TrollPage";
 import { Toaster } from "@/components/ui/sonner";
 import useFavicon from "@/hooks/useFavicon";
 import Navigation from "@/components/Navigation";
