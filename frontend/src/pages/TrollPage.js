@@ -223,6 +223,21 @@ export default function TrollPage() {
               🚪 Fine, I'll leave...
             </button>
           </div>
+
+          {/* Rick Roll - the ultimate troll */}
+          <div className="mt-8 text-center">
+            <p className="text-purple-400 text-sm mb-3">Oh, and one more thing... 🎵</p>
+            <div className="rounded-xl overflow-hidden border-2 border-purple-500/50 inline-block shadow-lg shadow-purple-500/20">
+              <img 
+                src="https://media.giphy.com/media/Ju7l5y9osyymQ/giphy.gif" 
+                alt="Never Gonna Give You Up"
+                className="w-full max-w-sm"
+              />
+            </div>
+            <p className="text-purple-300 text-xs mt-2 italic">
+              🎤 Never gonna give you up, never gonna let you down... 🎤
+            </p>
+          </div>
         </div>
       </div>
     </div>
