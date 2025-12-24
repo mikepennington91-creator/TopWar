@@ -148,6 +148,29 @@ export default function ModeratorDashboard() {
     }
   };
 
+  // View application and track the view
+  const viewApplication = async (app) => {
+    try {
+      const token = localStorage.getItem('moderator_token');
+      // Fetch the individual application to record the view
+      const response = await axios.get(`${API}/applications/${app.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSelectedApp(response.data);
+      
+      // Update the local application list to reflect viewed status
+      setApplications(prev => prev.map(a => 
+        a.id === app.id 
+          ? { ...a, viewed_by: response.data.viewed_by || [...(a.viewed_by || []), currentUser.username] }
+          : a
+      ));
+    } catch (error) {
+      console.error(error);
+      // Fallback to just showing the app if fetch fails
+      setSelectedApp(app);
+    }
+  };
+
   const handleVote = async (applicationId, vote) => {
     setActionLoading(true);
     try {
