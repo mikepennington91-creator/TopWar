@@ -56,6 +56,7 @@ function App() {
   return (
     <div className="App">
       <BrowserRouter>
+        <FaviconHandler />
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/apply" element={<ApplicationForm />} />
