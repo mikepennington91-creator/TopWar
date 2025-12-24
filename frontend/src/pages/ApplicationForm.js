@@ -369,46 +369,46 @@ export default function ApplicationForm() {
 
         {/* Confirmation Dialog */}
         <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
-          <DialogContent className="max-w-2xl bg-slate-900 border-slate-700 text-slate-200" data-testid="confirmation-dialog">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700 text-slate-200" data-testid="confirmation-dialog">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold uppercase tracking-wider text-amber-500 flex items-center gap-2" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                <AlertCircle className="h-6 w-6" />
+              <DialogTitle className="text-xl sm:text-2xl font-bold uppercase tracking-wider text-amber-500 flex items-center gap-2" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6" />
                 Confirm Your Details
               </DialogTitle>
-              <DialogDescription className="text-slate-400">
+              <DialogDescription className="text-slate-400 text-sm">
                 Please verify your information before submitting
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-6 py-4">
+            <div className="space-y-4 sm:space-y-6 py-2 sm:py-4">
               {/* Email Confirmation */}
-              <div className="bg-slate-800/50 p-6 rounded-lg border-2 border-emerald-500/30">
-                <p className="text-slate-400 mb-2">Your Email Address:</p>
-                <p className="text-xl font-bold text-emerald-400 mono" data-testid="email-display">
+              <div className="bg-slate-800/50 p-4 sm:p-6 rounded-lg border-2 border-emerald-500/30">
+                <p className="text-slate-400 mb-1 sm:mb-2 text-sm">Your Email Address:</p>
+                <p className="text-base sm:text-xl font-bold text-emerald-400 mono break-all" data-testid="email-display">
                   {formData.email || "Not provided"}
                 </p>
               </div>
 
               {/* Discord Handle Confirmation */}
-              <div className="bg-slate-800/50 p-6 rounded-lg border-2 border-amber-500/30">
-                <p className="text-slate-400 mb-2">Your Discord Handle:</p>
-                <p className="text-xl font-bold text-amber-500 mono" data-testid="discord-handle-display">
+              <div className="bg-slate-800/50 p-4 sm:p-6 rounded-lg border-2 border-amber-500/30">
+                <p className="text-slate-400 mb-1 sm:mb-2 text-sm">Your Discord Handle:</p>
+                <p className="text-base sm:text-xl font-bold text-amber-500 mono break-all" data-testid="discord-handle-display">
                   {formData.discord_handle || "Not provided"}
                 </p>
               </div>
 
               {/* Important Notice */}
-              <div className="bg-blue-500/10 border-2 border-blue-500/50 p-6 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="h-6 w-6 text-blue-400 flex-shrink-0 mt-1" />
+              <div className="bg-blue-500/10 border-2 border-blue-500/50 p-4 sm:p-6 rounded-lg">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 text-blue-400 flex-shrink-0 mt-0.5" />
                   <div className="space-y-2">
-                    <h3 className="text-lg font-bold text-blue-400 uppercase tracking-wide" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                    <h3 className="text-base sm:text-lg font-bold text-blue-400 uppercase tracking-wide" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
                       Important Information
                     </h3>
-                    <p className="text-slate-300 leading-relaxed">
+                    <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
                       <span className="font-bold text-emerald-400">Email:</span> You will receive email notifications about your application status.
                     </p>
-                    <p className="text-slate-300 leading-relaxed">
+                    <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
                       <span className="font-bold text-amber-400">Discord:</span> If approved, onboarding information will be sent via Discord DM. 
                       <span className="font-bold text-amber-400"> Please ensure you are accepting direct messages.</span>
                     </p>
@@ -418,18 +418,18 @@ export default function ApplicationForm() {
 
               {/* Confirmation Question */}
               <div className="text-center">
-                <p className="text-lg text-slate-300">
-                  Are your email <span className="font-bold text-emerald-400">{formData.email}</span> and Discord Handle <span className="font-bold text-amber-500">{formData.discord_handle}</span> correct?
+                <p className="text-sm sm:text-lg text-slate-300">
+                  Are your email <span className="font-bold text-emerald-400 break-all">{formData.email}</span> and Discord Handle <span className="font-bold text-amber-500 break-all">{formData.discord_handle}</span> correct?
                 </p>
               </div>
             </div>
 
-            <DialogFooter className="flex gap-3">
+            <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
               <Button
                 data-testid="cancel-btn"
                 onClick={() => setShowConfirmation(false)}
                 variant="outline"
-                className="border-slate-600 text-slate-300 hover:bg-slate-800"
+                className="border-slate-600 text-slate-300 hover:bg-slate-800 w-full sm:w-auto order-2 sm:order-1"
               >
                 Go Back & Edit
               </Button>
@@ -437,9 +437,9 @@ export default function ApplicationForm() {
                 data-testid="confirm-submit-btn"
                 onClick={handleConfirmedSubmit}
                 disabled={loading}
-                className="bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide px-8 rounded-sm btn-glow"
+                className="bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide px-4 sm:px-8 rounded-sm btn-glow w-full sm:w-auto order-1 sm:order-2"
               >
-                {loading ? "Submitting..." : "Confirm & Submit Application"}
+                {loading ? "Submitting..." : "Confirm & Submit"}
               </Button>
             </DialogFooter>
           </DialogContent>
