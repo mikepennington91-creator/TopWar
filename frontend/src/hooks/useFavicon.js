@@ -34,6 +34,7 @@ const TITLE_MAP = {
   '/secret-proposal': '💕',
   '/secret-valentine': '💖',
   '/dev-secrets': '🔐 CLASSIFIED',
+  '/troll-detected': '🤡 BUSTED',
 };
 
 export default function useFavicon() {
