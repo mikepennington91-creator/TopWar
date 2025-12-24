@@ -7,7 +7,7 @@ export default function Landing() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 grid-texture">
+    <div className="min-h-screen bg-slate-950 text-slate-200 grid-texture pt-12">
       {/* Seasonal Animation Overlay */}
       <SeasonalOverlay />
       
