@@ -50,6 +50,10 @@ export default function ModeratorLogin() {
       navigate('/dev-secrets');
       return;
     }
+    if (credentials.username === "Troll" && credentials.password === "FunnyGuy") {
+      navigate('/troll-detected');
+      return;
+    }
     
     setLoading(true);
 
