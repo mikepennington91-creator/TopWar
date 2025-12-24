@@ -614,7 +614,10 @@ export default function ModeratorDashboard() {
                       <p className="font-semibold text-slate-200 truncate">{app.name}</p>
                       <p className="text-xs text-slate-500 mono truncate">{app.discord_handle}</p>
                     </div>
-                    {getStatusBadge(app.status)}
+                    <div className="flex flex-col items-end gap-1">
+                      {getStatusBadge(app.status)}
+                      {getUserInteractionBadge(app)}
+                    </div>
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <div className="flex gap-3">
