@@ -727,7 +727,7 @@ export default function ModeratorDashboard() {
                         <td className="px-4 lg:px-6 py-3 lg:py-4">
                           <Button
                             data-testid={`view-btn-${app.id}`}
-                            onClick={() => setSelectedApp(app)}
+                            onClick={() => viewApplication(app)}
                             size="sm"
                             className="bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-sm"
                           >
