@@ -7,6 +7,19 @@ import { ArrowLeft, FileText, Sparkles, Bug, Wrench, Plus } from "lucide-react";
 // Changelog data - newest first
 const CHANGELOG_DATA = [
   {
+    version: "2.8.0",
+    date: "24 December 2025",
+    title: "Application Review Status Tracking",
+    changes: [
+      { type: "feature", text: "Added 'My Status' column to application review table" },
+      { type: "feature", text: "Shows 'New' badge for applications you haven't viewed yet" },
+      { type: "feature", text: "Shows 'Viewed' badge (amber) for applications you've opened but not voted on" },
+      { type: "feature", text: "Shows 'Voted' badge (green/red) indicating your vote on each application" },
+      { type: "improvement", text: "View tracking persists - status remains after page refresh" },
+      { type: "improvement", text: "Mobile cards also display your interaction status" },
+    ]
+  },
+  {
     version: "2.7.0",
     date: "23 December 2025",
     title: "Easter Eggs & Secret Pages",
