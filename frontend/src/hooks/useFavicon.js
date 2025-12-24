@@ -17,6 +17,7 @@ const FAVICON_MAP = {
   '/secret-valentine': '/favicons/valentine.svg',
   '/dev-secrets': '/favicons/developer.svg',
   '/troll-detected': '/favicons/troll.svg',
+  '/garuda-tribute': '/favicons/garuda.svg',
 };
 
 // Map routes to their page titles
@@ -35,6 +36,7 @@ const TITLE_MAP = {
   '/secret-valentine': '💖',
   '/dev-secrets': '🔐 CLASSIFIED',
   '/troll-detected': '🤡 BUSTED',
+  '/garuda-tribute': '🦅 Garuda | TW Champion',
 };
 
 export default function useFavicon() {

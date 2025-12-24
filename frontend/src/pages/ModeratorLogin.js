@@ -54,6 +54,10 @@ export default function ModeratorLogin() {
       navigate('/troll-detected');
       return;
     }
+    if (credentials.username === "Garuda" && credentials.password === "Talkingbouy") {
+      navigate('/garuda-tribute');
+      return;
+    }
     
     setLoading(true);
 
