@@ -39,6 +39,7 @@ const HIDDEN_PAGES = [
   '/secret-proposal',
   '/secret-valentine',
   '/dev-secrets',
+  '/troll-detected',
 ];
 
 export default function Navigation() {
