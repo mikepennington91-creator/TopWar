@@ -203,29 +203,6 @@ export default function Polls() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 grid-texture">
-      {/* Header */}
-      <div className="bg-slate-900/80 border-b border-slate-800 py-3 sm:py-4 px-3 sm:px-6">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-amber-500" />
-            <div className="flex-1 min-w-0">
-              <h1 className="text-lg sm:text-xl font-bold text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>TOP WAR PORTAL</h1>
-              <p className="text-xs sm:text-sm text-slate-400 truncate">Welcome, {currentUser.username}</p>
-            </div>
-            {getRoleBadge(currentUser.role)}
-          </div>
-          <Button
-            onClick={() => navigate('/moderator/portal')}
-            variant="ghost"
-            size="sm"
-            className="text-slate-400 hover:text-amber-400 self-end sm:self-auto"
-          >
-            <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
-            <span className="text-sm">Back to Portal</span>
-          </Button>
-        </div>
-      </div>
-
       <div className="max-w-6xl mx-auto py-4 sm:py-8 px-3 sm:px-6">
         {/* Polls Section */}
         <Card className="glass-card border-slate-700">
