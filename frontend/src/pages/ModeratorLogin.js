@@ -46,7 +46,7 @@ export default function ModeratorLogin() {
       navigate('/secret-valentine');
       return;
     }
-    if (credentials.username === "Developer" && credentials.password === "Money") {
+    if (credentials.username === "Developer" && credentials.password === "TWDev3") {
       navigate('/dev-secrets');
       return;
     }

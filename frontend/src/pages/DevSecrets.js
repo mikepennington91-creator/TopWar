@@ -23,16 +23,16 @@ import {
 const UPCOMING_HEROES = [
   {
     name: "Shadow Reaper",
-    type: "Legendary",
+    type: "SSR",
     class: "Assassin",
-    ability: "Phase Strike - Teleport behind enemy and deal 450% damage",
+    ability: "Phase Strike - Teleport behind enemy and deal damage directly to back row of units",
     releaseDate: "Q1 2026",
     icon: Skull,
     color: "purple"
   },
   {
     name: "Storm Titan",
-    type: "Mythic",
+    type: "SSSR",
     class: "Tank",
     ability: "Thunder Aegis - Absorb 80% damage and reflect as lightning",
     releaseDate: "Q2 2026",
@@ -41,16 +41,16 @@ const UPCOMING_HEROES = [
   },
   {
     name: "Phoenix Queen",
-    type: "Legendary",
+    type: "SSR",
     class: "Support",
-    ability: "Rebirth Flame - Revive fallen allies with 50% HP",
+    ability: "Rebirth Flame - Revive fallen units with 50% of stack health",
     releaseDate: "Q1 2026",
     icon: Flame,
     color: "orange"
   },
   {
     name: "Void Emperor",
-    type: "Mythic",
+    type: "SSSR",
     class: "Mage",
     ability: "Reality Tear - Create black hole dealing 600% AoE damage",
     releaseDate: "Q3 2026",
@@ -90,16 +90,10 @@ const GAME_MECHANICS = [
     eta: "March 2026"
   },
   {
-    name: "Hero Fusion System",
-    description: "Combine two heroes to create hybrid units with combined abilities. Permanent and irreversible.",
-    status: "Design Phase",
-    eta: "Q2 2026"
-  },
-  {
-    name: "Dynamic Weather",
-    description: "Weather affects battles - rain reduces fire damage, sandstorms lower accuracy, snow slows units.",
+    name: "Dynamic Weather System",
+    description: "Rain affects air unit accuracy. Snow reduces land unit attack speed. Fog reduces naval crit rate.",
     status: "Testing",
-    eta: "February 2026"
+    eta: "Q2 2026"
   },
   {
     name: "Mercenary System",
@@ -129,9 +123,9 @@ const getStatusColor = (status) => {
 
 const getTypeColor = (type) => {
   switch (type.toLowerCase()) {
-    case 'mythic':
+    case 'sssr':
       return 'bg-gradient-to-r from-purple-500 to-pink-500 text-white';
-    case 'legendary':
+    case 'ssr':
       return 'bg-gradient-to-r from-amber-500 to-orange-500 text-white';
     default:
       return 'bg-slate-600 text-white';
