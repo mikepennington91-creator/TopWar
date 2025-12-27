@@ -170,7 +170,8 @@ export default function DevSecrets() {
   const [revealedSections, setRevealedSections] = useState({
     heroes: false,
     troopers: false,
-    mechanics: false
+    mechanics: false,
+    collaborations: false
   });
 
   const toggleReveal = (section) => {
