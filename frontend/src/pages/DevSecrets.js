@@ -104,6 +104,38 @@ const GAME_MECHANICS = [
   }
 ];
 
+// Upcoming collaborations data
+const UPCOMING_COLLABORATIONS = [
+  {
+    name: "50 Shades of Grey",
+    partner: "Dulux Paints",
+    description: "Transform your base with 50 exclusive paint schemes! From 'Tactical Taupe' to 'Battlefield Beige', customize your headquarters with premium designer colors. Limited edition paint buckets drop bonus resources when applied.",
+    status: "Negotiation",
+    eta: "Q3 2026"
+  },
+  {
+    name: "Fast & Furious: War Edition",
+    partner: "Universal Studios",
+    description: "Dom Toretto brings the family to Top War! Unlock exclusive muscle car units with nitro boost abilities. Special 'Family Bond' buff increases nearby ally attack speed by 25%. Because nothing is stronger than family.",
+    status: "Contract Signed",
+    eta: "Q2 2026"
+  },
+  {
+    name: "Gordon Ramsay's War Kitchen",
+    partner: "Hell's Kitchen",
+    description: "Chef Ramsay joins as a legendary commander! His 'It's RAW!' ability debuffs enemy troops with food poisoning. Build the Hell's Kitchen structure for premium troop recovery buffs. Donkey not included.",
+    status: "In Development",
+    eta: "Q4 2026"
+  },
+  {
+    name: "IKEA Fortress Builder",
+    partner: "IKEA",
+    description: "Flat-pack your way to victory! Unlock Swedish-designed fortifications with confusing assembly instructions. Troops gain the 'Allen Key' passive - 10% chance to instantly disassemble enemy structures. Meatball supply drops included.",
+    status: "Concept",
+    eta: "2027"
+  }
+];
+
 const getStatusColor = (status) => {
   switch (status.toLowerCase()) {
     case 'in testing':
