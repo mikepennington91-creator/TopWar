@@ -16,7 +16,8 @@ import {
   Flame,
   Skull,
   Crown,
-  Star
+  Star,
+  Handshake
 } from "lucide-react";
 
 // Fake upcoming heroes data
