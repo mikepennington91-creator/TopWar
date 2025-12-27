@@ -373,6 +373,45 @@ export default function DevSecrets() {
           )}
         </Card>
 
+        {/* Upcoming Collaborations Section */}
+        <Card className="bg-slate-900/80 border-pink-500/30 mb-6 backdrop-blur-sm">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Handshake className="w-6 h-6 text-pink-400" />
+              <CardTitle className="text-xl text-pink-400" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                UPCOMING COLLABORATIONS
+              </CardTitle>
+              <Badge className="bg-pink-500/20 text-pink-400 border-pink-500/30">TOP SECRET</Badge>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => toggleReveal('collaborations')}
+              className="text-pink-400 hover:text-pink-300 hover:bg-pink-500/10"
+            >
+              {revealedSections.collaborations ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {revealedSections.collaborations ? 'Hide' : 'Reveal'}
+            </Button>
+          </CardHeader>
+          {revealedSections.collaborations && (
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {UPCOMING_COLLABORATIONS.map((collab, index) => (
+                  <div key={index} className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 hover:border-pink-500/50 transition-colors">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-bold text-slate-200">{collab.name}</h3>
+                      <Badge className={getStatusColor(collab.status)}>{collab.status}</Badge>
+                    </div>
+                    <p className="text-xs text-pink-400 font-semibold mb-2">🤝 Partner: {collab.partner}</p>
+                    <p className="text-sm text-slate-400 mb-2">{collab.description}</p>
+                    <p className="text-xs text-pink-400 font-mono">📅 ETA: {collab.eta}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          )}
+        </Card>
+
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-slate-600 text-xs font-mono mb-4">SESSION ID: {Math.random().toString(36).substring(2, 15).toUpperCase()}</p>
