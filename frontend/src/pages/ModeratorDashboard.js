@@ -703,7 +703,7 @@ export default function ModeratorDashboard() {
                       <tr key={app.id} data-testid={`application-row-${app.id}`} className="hover:bg-slate-900/30 transition-colors">
                         <td className="px-4 lg:px-6 py-3 lg:py-4">
                           <div>
-                            <p className="font-semibold text-slate-200 text-sm lg:text-base">{app.name}</p>
+                            <p className="font-semibold text-amber-400 text-sm lg:text-base">{app.ingame_name}</p>
                             <p className="text-xs lg:text-sm text-slate-500 mono truncate max-w-[150px] lg:max-w-none">{app.discord_handle}</p>
                           </div>
                         </td>
