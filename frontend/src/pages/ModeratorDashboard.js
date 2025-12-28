@@ -634,7 +634,7 @@ export default function ModeratorDashboard() {
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-slate-200 truncate">{app.name}</p>
+                      <p className="font-semibold text-amber-400 truncate">{app.ingame_name}</p>
                       <p className="text-xs text-slate-500 mono truncate">{app.discord_handle}</p>
                     </div>
                     <div className="flex flex-col items-end gap-1">
