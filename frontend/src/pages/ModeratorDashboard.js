@@ -758,6 +758,17 @@ export default function ModeratorDashboard() {
                 </DialogDescription>
               </DialogHeader>
 
+              {/* Highlighted Applicant Info */}
+              <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 rounded-lg p-4 mt-2">
+                <p className="text-slate-400 text-xs uppercase tracking-wide mb-1" style={{ fontFamily: 'Rajdhani, sans-serif' }}>In-Game Name</p>
+                <p className="text-2xl font-bold text-amber-400" style={{ fontFamily: 'Rajdhani, sans-serif' }} data-testid="highlighted-ingame-name">
+                  {selectedApp.ingame_name}
+                </p>
+                <p className="text-slate-400 mono text-sm mt-1" data-testid="highlighted-discord">
+                  {selectedApp.discord_handle}
+                </p>
+              </div>
+
               <div className="space-y-4 mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
