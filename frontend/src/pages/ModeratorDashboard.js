@@ -941,8 +941,8 @@ export default function ModeratorDashboard() {
                         value: selectedApp.discord_voice_channel_management 
                       }
                     ].filter(item => item.value && item.value !== "N/A").map((item, index) => (
-                      <div key={index} className="bg-slate-800/50 p-4 rounded">
-                        <p className="text-slate-400 text-sm font-semibold mb-1">
+                      <div key={index} className="bg-slate-800/50 p-4 rounded overflow-hidden">
+                        <p className="text-slate-400 text-sm font-semibold mb-1 break-words">
                           {showFullQuestions ? item.fullLabel : item.shortLabel}
                         </p>
                         {item.isRating ? (
@@ -963,7 +963,7 @@ export default function ModeratorDashboard() {
                             </div>
                           </div>
                         ) : (
-                          <p className="text-slate-200">{item.value}</p>
+                          <p className="text-slate-200 break-words whitespace-pre-wrap">{item.value}</p>
                         )}
                       </div>
                     ))}
