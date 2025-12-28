@@ -746,7 +746,7 @@ export default function ModeratorDashboard() {
 
       {/* Application Detail Dialog */}
       <Dialog open={!!selectedApp} onOpenChange={() => setSelectedApp(null)}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-slate-900 border-slate-700 text-slate-200" data-testid="application-detail-dialog">
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto overflow-x-hidden bg-slate-900 border-slate-700 text-slate-200 w-[95vw] sm:w-auto" data-testid="application-detail-dialog">
           {selectedApp && (
             <>
               <DialogHeader>
