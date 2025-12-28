@@ -679,7 +679,7 @@ export default function ModeratorDashboard() {
             <table className="w-full" data-testid="applications-table">
               <thead className="bg-slate-900/70">
                 <tr>
-                  <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Applicant</th>
+                  <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>In-Game Name</th>
                   <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Position</th>
                   <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Server</th>
                   <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Votes</th>
