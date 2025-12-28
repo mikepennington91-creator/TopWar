@@ -856,14 +856,16 @@ export default function ModeratorDashboard() {
                         value: selectedApp.heroes_mutated 
                       },
                       { 
-                        shortLabel: "Discord Tools Comfort Level", 
-                        fullLabel: "What is your comfort level with using discord moderation tools & bots?",
-                        value: selectedApp.discord_tools_comfort 
+                        shortLabel: "Discord Tools Comfort Level (1-5)", 
+                        fullLabel: "What is your comfort level with using discord moderation tools & bots? (1 = Not comfortable, 5 = Very comfortable)",
+                        value: selectedApp.discord_tools_comfort,
+                        isRating: true
                       },
                       { 
-                        shortLabel: "Guidelines Rating", 
-                        fullLabel: "Rate your understanding of community guidelines enforcement and conflict resolution. (Be honest, you will be tested)",
-                        value: selectedApp.guidelines_rating 
+                        shortLabel: "Guidelines Rating (1-5)", 
+                        fullLabel: "Rate your understanding of community guidelines enforcement and conflict resolution. (Be honest, you will be tested) (1 = Poor, 5 = Excellent)",
+                        value: selectedApp.guidelines_rating,
+                        isRating: true
                       },
                       { 
                         shortLabel: "Complex Game Mechanic", 
@@ -932,7 +934,26 @@ export default function ModeratorDashboard() {
                         <p className="text-slate-400 text-sm font-semibold mb-1">
                           {showFullQuestions ? item.fullLabel : item.shortLabel}
                         </p>
-                        <p className="text-slate-200">{item.value}</p>
+                        {item.isRating ? (
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl font-bold text-amber-400">{item.value}</span>
+                            <span className="text-slate-400 text-sm">/ 5</span>
+                            <div className="flex gap-1 ml-2">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <div
+                                  key={star}
+                                  className={`w-4 h-4 rounded-full ${
+                                    star <= parseInt(item.value) 
+                                      ? 'bg-amber-500' 
+                                      : 'bg-slate-700'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-slate-200">{item.value}</p>
+                        )}
                       </div>
                     ))}
                   </div>
