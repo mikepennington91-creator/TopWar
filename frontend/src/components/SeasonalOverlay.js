@@ -45,10 +45,12 @@ const checkAnimationEnabled = () => {
  * Spring: Cherry blossoms + butterflies + occasional rainbow
  * Summer: Fireflies + shooting stars + occasional sun burst
  * Autumn: Falling leaves + occasional squirrel + wind gusts
+ * Note: Holiday animations override seasonal when active
  */
 export default function SeasonalOverlay() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(checkReducedMotion);
   const [animationEnabled, setAnimationEnabled] = useState(checkAnimationEnabled);
+  const [holidayActive, setHolidayActive] = useState(false);
   const [particles] = useState(generateParticles);
   const [season] = useState(getCurrentSeason);
   
