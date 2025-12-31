@@ -46,34 +46,38 @@ const checkHolidayActive = () => {
   const holidayEnabled = localStorage.getItem('holiday_animation_enabled') !== 'false';
   if (!holidayEnabled) return false;
   
-  // Simple check for current holiday (mirrors HolidayOverlay logic)
+  // Check for current holiday using same logic as HolidayOverlay
   const now = new Date();
   const month = now.getMonth();
   const day = now.getDate();
   
-  // Check common holidays with 3-day window (day before, day of, day after)
-  const isNearDate = (m, d) => {
-    if (month === m) {
-      return Math.abs(day - d) <= 1;
-    }
-    // Handle month boundaries
-    if (month === m - 1 && day >= 28) return d <= 2;
-    if (month === m + 1 && day <= 2) return d >= 28;
-    return false;
+  // Check if date is within 1 day of a fixed holiday
+  const isNearFixedDate = (targetMonth, targetDay) => {
+    const today = new Date(now.getFullYear(), month, day);
+    const holiday = new Date(now.getFullYear(), targetMonth, targetDay);
+    const diffDays = Math.abs((today - holiday) / (1000 * 60 * 60 * 24));
+    return diffDays <= 1;
   };
   
-  // New Year (Jan 1)
-  if (isNearDate(0, 1)) return true;
-  // Christmas (Dec 25)
-  if (isNearDate(11, 25)) return true;
-  // Boxing Day (Dec 26)
-  if (isNearDate(11, 26)) return true;
-  // July 4th
-  if (isNearDate(6, 4)) return true;
-  // China National Day (Oct 1)
-  if (isNearDate(9, 1)) return true;
+  // Fixed date holidays - check with 3-day window
+  // New Year (Jan 1) - also check Dec 31
+  if (month === 11 && day >= 31) return true; // Dec 31
+  if (month === 0 && day <= 2) return true;   // Jan 1-2
   
-  // For variable holidays, we rely on the event dispatch
+  // Christmas (Dec 25) and Boxing Day (Dec 26)
+  if (month === 11 && day >= 24 && day <= 27) return true;
+  
+  // July 4th (US Independence Day)
+  if (month === 6 && day >= 3 && day <= 5) return true;
+  
+  // China National Day (Oct 1)
+  if (month === 9 && day >= 0 && day <= 2) return true;
+  
+  // Qingming Festival (Apr 4-5)
+  if (month === 3 && day >= 3 && day <= 6) return true;
+  
+  // For variable holidays (Easter, Chinese New Year, etc.), 
+  // we rely on the HolidayOverlay's event dispatch
   return false;
 };
 
