@@ -2,10 +2,23 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, FileText, Sparkles, Bug, Wrench, Plus } from "lucide-react";
+import { ArrowLeft, FileText, Sparkles, Bug, Wrench, Plus, PartyPopper, Globe } from "lucide-react";
 
 // Changelog data - newest first
 const CHANGELOG_DATA = [
+  {
+    version: "3.4.0",
+    date: "31 December 2025",
+    title: "Holiday Animations System",
+    changes: [
+      { type: "feature", text: "Added holiday animation system for UK, US, and Chinese holidays" },
+      { type: "feature", text: "Holiday animations display 3 days: day before, day of, and day after" },
+      { type: "feature", text: "Holiday effects override seasonal animations when active" },
+      { type: "feature", text: "Added separate toggle in Settings to enable/disable holiday animations" },
+      { type: "feature", text: "Added info tooltips (ℹ️) explaining animation settings" },
+      { type: "improvement", text: "Each holiday has unique themed particle effects and colors" },
+    ]
+  },
   {
     version: "3.3.0",
     date: "28 December 2025",
