@@ -433,16 +433,6 @@ export default function HolidayOverlay() {
   const [particles] = useState(getInitialParticles);
 
   useEffect(() => {
-    // Check for current holiday
-    const holiday = getCurrentHoliday();
-    setCurrentHoliday(holiday);
-    
-    if (holiday && HOLIDAY_ANIMATIONS[holiday.type]) {
-      setParticles(generateHolidayParticles(HOLIDAY_ANIMATIONS[holiday.type]));
-    }
-  }, []);
-
-  useEffect(() => {
     // Listen for reduced motion preference
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     const handleChange = (e) => setPrefersReducedMotion(e.matches);
