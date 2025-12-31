@@ -216,7 +216,7 @@ export default function SeasonalOverlay() {
     };
   }, [season, animationEnabled, prefersReducedMotion, triggerSnowman, triggerButterfly, triggerShootingStar, triggerSquirrel, triggerWindGust]);
 
-  if (prefersReducedMotion || !animationEnabled) return null;
+  if (prefersReducedMotion || !animationEnabled || holidayActive) return null;
 
   const getParticleContent = () => {
     switch (season) {
