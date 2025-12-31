@@ -43,11 +43,13 @@ const checkAnimationEnabled = () => {
 /**
  * SeasonalOverlay - Renders unobtrusive seasonal particle animations
  * Winter: Snowflakes, Spring: Cherry blossoms, Summer: Fireflies, Autumn: Falling leaves
+ * Note: Holiday animations override seasonal when active
  */
 export default function SeasonalOverlay() {
   // Initialize state with lazy initializers
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(checkReducedMotion);
   const [animationEnabled, setAnimationEnabled] = useState(checkAnimationEnabled);
+  const [holidayActive, setHolidayActive] = useState(false);
   const [particles] = useState(generateParticles);
   const [season] = useState(getCurrentSeason);
 
@@ -63,14 +65,21 @@ export default function SeasonalOverlay() {
     };
     window.addEventListener('seasonalAnimationToggle', handleAnimationToggle);
     
+    // Listen for holiday active events
+    const handleHolidayActive = (e) => {
+      setHolidayActive(e.detail.active);
+    };
+    window.addEventListener('holidayActive', handleHolidayActive);
+    
     return () => {
       mediaQuery.removeEventListener('change', handleChange);
       window.removeEventListener('seasonalAnimationToggle', handleAnimationToggle);
+      window.removeEventListener('holidayActive', handleHolidayActive);
     };
   }, []);
 
-  // Don't render if user prefers reduced motion or has disabled animation
-  if (prefersReducedMotion || !animationEnabled) return null;
+  // Don't render if user prefers reduced motion, has disabled animation, or holiday is active
+  if (prefersReducedMotion || !animationEnabled || holidayActive) return null;
 
   const getParticleContent = () => {
     switch (season) {
