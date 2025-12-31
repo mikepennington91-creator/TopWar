@@ -7,6 +7,19 @@ import { ArrowLeft, FileText, Sparkles, Bug, Wrench, Plus } from "lucide-react";
 // Changelog data - newest first
 const CHANGELOG_DATA = [
   {
+    version: "2.9.0",
+    date: "26 December 2025",
+    title: "Holiday Animations System",
+    changes: [
+      { type: "feature", text: "Added holiday animation system for UK, US, and Chinese holidays" },
+      { type: "feature", text: "Holiday animations display 3 days: day before, day of, and day after" },
+      { type: "feature", text: "Holiday effects override seasonal animations when active" },
+      { type: "feature", text: "Added separate toggle in Settings to enable/disable holiday animations" },
+      { type: "feature", text: "Added info tooltips (ℹ️) explaining animation settings" },
+      { type: "improvement", text: "Each holiday has unique themed particle effects and colors" },
+    ]
+  },
+  {
     version: "2.8.0",
     date: "24 December 2025",
     title: "Application Review Status Tracking",
