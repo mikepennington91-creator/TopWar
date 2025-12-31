@@ -693,18 +693,76 @@ export default function Settings() {
             </div>
           </CardHeader>
           {expandedSections.preferences && (
-            <CardContent>
+            <CardContent className="space-y-4">
+              {/* Seasonal Animation Toggle */}
               <div className="flex items-center justify-between p-3 bg-slate-900/50 rounded border border-slate-800">
                 <div className="flex-1">
-                  <p className="font-semibold text-slate-200">Seasonal Animation</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-slate-200">Seasonal Animation</p>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-slate-400 cursor-help hover:text-cyan-400 transition-colors" />
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-slate-800 border-slate-700 text-slate-200 max-w-xs">
+                          <p className="text-sm">
+                            <strong>Seasonal effects change throughout the year:</strong><br/>
+                            ❄️ Winter: Snowflakes + snowman (Dec-Feb)<br/>
+                            🌸 Spring: Cherry blossoms + butterflies (Mar-May)<br/>
+                            ✨ Summer: Fireflies + shooting stars (Jun-Aug)<br/>
+                            🍂 Autumn: Falling leaves + squirrels (Sep-Nov)
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                   <p className="text-sm text-slate-400">
-                    Show falling snowflakes, leaves, or other seasonal effects on the landing page and portal
+                    Show falling snowflakes, leaves, or other seasonal effects
                   </p>
                 </div>
                 <Switch
                   data-testid="seasonal-animation-toggle"
                   checked={seasonalAnimationEnabled}
                   onCheckedChange={handleSeasonalAnimationToggle}
+                  className="ml-4"
+                />
+              </div>
+
+              {/* Holiday Animation Toggle */}
+              <div className="flex items-center justify-between p-3 bg-slate-900/50 rounded border border-slate-800">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <PartyPopper className="h-4 w-4 text-amber-400" />
+                    <p className="font-semibold text-slate-200">Holiday Animations</p>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-slate-400 cursor-help hover:text-amber-400 transition-colors" />
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-slate-800 border-slate-700 text-slate-200 max-w-sm">
+                          <p className="text-sm mb-2">
+                            <strong>Special animations for major holidays:</strong>
+                          </p>
+                          <div className="text-xs space-y-1">
+                            <p>🇬🇧 <strong>UK:</strong> New Year, Easter, Bank Holidays, Christmas</p>
+                            <p>🇺🇸 <strong>US:</strong> July 4th, Thanksgiving, Memorial Day, Christmas</p>
+                            <p>🇨🇳 <strong>China:</strong> Chinese New Year, Dragon Boat, Mid-Autumn</p>
+                          </div>
+                          <p className="text-xs mt-2 text-slate-400">
+                            Displays day before, day of, and day after each holiday. Overrides seasonal effects when active.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <p className="text-sm text-slate-400">
+                    Show festive effects on UK, US, and Chinese holidays (3-day display)
+                  </p>
+                </div>
+                <Switch
+                  data-testid="holiday-animation-toggle"
+                  checked={holidayAnimationEnabled}
+                  onCheckedChange={handleHolidayAnimationToggle}
                   className="ml-4"
                 />
               </div>
