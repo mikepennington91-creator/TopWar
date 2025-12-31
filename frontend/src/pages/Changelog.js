@@ -294,6 +294,121 @@ export default function Changelog() {
           ))}
         </div>
 
+        {/* Holiday Animations Reference */}
+        <Card className="glass-card border-slate-700 mt-8 overflow-hidden">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-xl sm:text-2xl font-bold text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+              <PartyPopper className="inline-block mr-2 h-6 w-6" />
+              Holiday Animations Reference
+            </CardTitle>
+            <CardDescription className="text-slate-400 text-sm mt-1">
+              All holiday animations and their display duration (day before + day of + day after = 3 days)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {/* UK Holidays */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-blue-400 mb-3 flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                🇬🇧 United Kingdom Holidays
+              </h3>
+              <div className="grid gap-2">
+                {[
+                  { name: "New Year's Day", date: "January 1", emoji: "🎊", effects: "Confetti, fireworks sparkles" },
+                  { name: "Good Friday", date: "Variable (March/April)", emoji: "✝️", effects: "Easter eggs, spring flowers" },
+                  { name: "Easter Sunday", date: "Variable (March/April)", emoji: "🐰", effects: "Bunnies, eggs, butterflies" },
+                  { name: "Easter Monday", date: "Variable (March/April)", emoji: "🥚", effects: "Easter eggs, spring flowers" },
+                  { name: "Early May Bank Holiday", date: "First Monday of May", emoji: "🌷", effects: "Spring flowers, butterflies" },
+                  { name: "Spring Bank Holiday", date: "Last Monday of May", emoji: "🌸", effects: "Cherry blossoms, sunshine" },
+                  { name: "Summer Bank Holiday", date: "Last Monday of August", emoji: "☀️", effects: "Sunshine, beach vibes" },
+                  { name: "Christmas Day", date: "December 25", emoji: "🎄", effects: "Ornaments, snowflakes, holly" },
+                  { name: "Boxing Day", date: "December 26", emoji: "🎁", effects: "Gift boxes, festive sparkles" },
+                ].map((holiday, i) => (
+                  <div key={i} className="flex items-center justify-between p-2 bg-slate-900/50 rounded text-sm">
+                    <div className="flex items-center gap-2">
+                      <span>{holiday.emoji}</span>
+                      <span className="text-slate-200">{holiday.name}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-slate-500 text-xs hidden sm:block">{holiday.effects}</span>
+                      <span className="text-slate-400 text-xs mono">{holiday.date}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* US Holidays */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-red-400 mb-3 flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                🇺🇸 United States Holidays
+              </h3>
+              <div className="grid gap-2">
+                {[
+                  { name: "New Year's Day", date: "January 1", emoji: "🎊", effects: "Confetti, fireworks sparkles" },
+                  { name: "Martin Luther King Jr. Day", date: "Third Monday of January", emoji: "✊", effects: "Patriotic stars, eagles" },
+                  { name: "Presidents' Day", date: "Third Monday of February", emoji: "🇺🇸", effects: "American flags, stars" },
+                  { name: "Easter Sunday", date: "Variable (March/April)", emoji: "🐰", effects: "Bunnies, eggs, butterflies" },
+                  { name: "Memorial Day", date: "Last Monday of May", emoji: "🎖️", effects: "Patriotic ribbons, flags" },
+                  { name: "Independence Day", date: "July 4", emoji: "🎆", effects: "Red/white/blue fireworks, stars" },
+                  { name: "Labor Day", date: "First Monday of September", emoji: "👷", effects: "Tools, gears, stars" },
+                  { name: "Thanksgiving", date: "Fourth Thursday of November", emoji: "🦃", effects: "Turkey, autumn leaves, pumpkins" },
+                  { name: "Christmas Day", date: "December 25", emoji: "🎄", effects: "Ornaments, snowflakes, holly" },
+                ].map((holiday, i) => (
+                  <div key={i} className="flex items-center justify-between p-2 bg-slate-900/50 rounded text-sm">
+                    <div className="flex items-center gap-2">
+                      <span>{holiday.emoji}</span>
+                      <span className="text-slate-200">{holiday.name}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-slate-500 text-xs hidden sm:block">{holiday.effects}</span>
+                      <span className="text-slate-400 text-xs mono">{holiday.date}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Chinese Holidays */}
+            <div>
+              <h3 className="text-lg font-semibold text-yellow-400 mb-3 flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                🇨🇳 Chinese Holidays
+              </h3>
+              <div className="grid gap-2">
+                {[
+                  { name: "Chinese New Year (Spring Festival)", date: "Variable (Jan 21 - Feb 20)", emoji: "🧧", effects: "Red lanterns, gold coins, firecrackers" },
+                  { name: "Qingming Festival", date: "April 4-5", emoji: "🌿", effects: "Green leaves, spring growth" },
+                  { name: "Dragon Boat Festival", date: "Variable (May/June)", emoji: "🐉", effects: "Dragons, boats, waves" },
+                  { name: "Mid-Autumn Festival", date: "Variable (September/October)", emoji: "🥮", effects: "Mooncakes, lanterns, full moon" },
+                  { name: "National Day", date: "October 1", emoji: "🇨🇳", effects: "Fireworks, stars, celebrations" },
+                ].map((holiday, i) => (
+                  <div key={i} className="flex items-center justify-between p-2 bg-slate-900/50 rounded text-sm">
+                    <div className="flex items-center gap-2">
+                      <span>{holiday.emoji}</span>
+                      <span className="text-slate-200">{holiday.name}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-slate-500 text-xs hidden sm:block">{holiday.effects}</span>
+                      <span className="text-slate-400 text-xs mono">{holiday.date}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Note */}
+            <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded">
+              <p className="text-sm text-amber-400">
+                <strong>Note:</strong> Holiday animations override seasonal animations when active. 
+                Each animation displays for 3 days: the day before, day of, and day after the holiday. 
+                You can toggle these in Settings → Visual Preferences.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Footer */}
         <div className="mt-8 text-center text-slate-500 text-sm">
           <p>Have feedback or feature requests? Contact an administrator.</p>
