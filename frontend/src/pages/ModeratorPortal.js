@@ -315,6 +315,8 @@ export default function ModeratorPortal() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 grid-texture">
+      {/* Holiday Animation Overlay (overrides seasonal when active) */}
+      <HolidayOverlay />
       {/* Seasonal Animation Overlay */}
       <SeasonalOverlay />
       
