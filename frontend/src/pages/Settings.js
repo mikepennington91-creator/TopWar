@@ -8,8 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ArrowLeft, Lock, Users, Shield, UserPlus, UserX, UserCheck, AlertCircle, Snowflake, Clock, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, Lock, Users, Shield, UserPlus, UserX, UserCheck, AlertCircle, Snowflake, Clock, ChevronDown, ChevronUp, PartyPopper, Info } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
