@@ -39,6 +39,44 @@ const checkAnimationEnabled = () => {
   return stored !== 'false';
 };
 
+// Check if holiday animation is currently active (to determine initial state)
+const checkHolidayActive = () => {
+  if (typeof window === 'undefined') return false;
+  // Check if holiday animations are enabled
+  const holidayEnabled = localStorage.getItem('holiday_animation_enabled') !== 'false';
+  if (!holidayEnabled) return false;
+  
+  // Simple check for current holiday (mirrors HolidayOverlay logic)
+  const now = new Date();
+  const month = now.getMonth();
+  const day = now.getDate();
+  
+  // Check common holidays with 3-day window (day before, day of, day after)
+  const isNearDate = (m, d) => {
+    if (month === m) {
+      return Math.abs(day - d) <= 1;
+    }
+    // Handle month boundaries
+    if (month === m - 1 && day >= 28) return d <= 2;
+    if (month === m + 1 && day <= 2) return d >= 28;
+    return false;
+  };
+  
+  // New Year (Jan 1)
+  if (isNearDate(0, 1)) return true;
+  // Christmas (Dec 25)
+  if (isNearDate(11, 25)) return true;
+  // Boxing Day (Dec 26)
+  if (isNearDate(11, 26)) return true;
+  // July 4th
+  if (isNearDate(6, 4)) return true;
+  // China National Day (Oct 1)
+  if (isNearDate(9, 1)) return true;
+  
+  // For variable holidays, we rely on the event dispatch
+  return false;
+};
+
 /**
  * SeasonalOverlay - Renders seasonal particle animations with bonus effects
  * Winter: Snowflakes + snow buildup + occasional snowman
