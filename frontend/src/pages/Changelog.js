@@ -2,21 +2,65 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, FileText, Sparkles, Bug, Wrench, Plus, PartyPopper, Globe } from "lucide-react";
+import { ArrowLeft, FileText, Sparkles, Bug, Wrench, Plus } from "lucide-react";
 
 // Changelog data - newest first
 const CHANGELOG_DATA = [
   {
-    version: "2.9.0",
-    date: "26 December 2025",
-    title: "Holiday Animations System",
+    version: "3.3.0",
+    date: "28 December 2025",
+    title: "Announcement Dismiss & Feature Requests",
     changes: [
-      { type: "feature", text: "Added holiday animation system for UK, US, and Chinese holidays" },
-      { type: "feature", text: "Holiday animations display 3 days: day before, day of, and day after" },
-      { type: "feature", text: "Holiday effects override seasonal animations when active" },
-      { type: "feature", text: "Added separate toggle in Settings to enable/disable holiday animations" },
-      { type: "feature", text: "Added info tooltips (ℹ️) explaining animation settings" },
-      { type: "improvement", text: "Each holiday has unique themed particle effects and colors" },
+      { type: "feature", text: "Moderators can now mark announcements as 'read' to minimize them" },
+      { type: "feature", text: "Read announcements are collapsed into a 'Read Announcements' section" },
+      { type: "feature", text: "Click to expand and view previously read announcements" },
+      { type: "feature", text: "NEW: Feature Request system - Submit suggestions for website improvements" },
+      { type: "feature", text: "Feature requests visible to Admins, MMODs, and Developers for review" },
+      { type: "feature", text: "Track status of your feature requests: Pending → Reviewed → Approved/Rejected → Implemented" },
+      { type: "improvement", text: "Request categories: General, UI, Functionality, Bug Report, Other" },
+      { type: "improvement", text: "Admins can add notes/responses to feature requests" },
+    ]
+  },
+  {
+    version: "3.2.0",
+    date: "28 December 2025",
+    title: "Enhanced Seasonal Animations",
+    changes: [
+      { type: "feature", text: "🌨️ Winter: Snow pile buildup - Snow gradually accumulates at the bottom of the screen, then melts away" },
+      { type: "feature", text: "🌨️ Winter: Walking snowman ⛄ - Occasionally waddles across the bottom of the screen with a bobbing animation" },
+      { type: "feature", text: "🌸 Spring: Butterfly 🦋 - Flutters across the screen with wing-flapping animation following a curved path" },
+      { type: "feature", text: "☀️ Summer: Shooting star ⭐ - Streaks across the night sky with a glowing trail effect" },
+      { type: "feature", text: "🍂 Autumn: Running squirrel 🐿️ - Dashes across the bottom of the screen collecting acorns" },
+      { type: "feature", text: "🍂 Autumn: Wind gusts - Periodically blows leaves sideways with wind indicators and ground leaves being swept across" },
+      { type: "improvement", text: "Special effects trigger randomly every 12 seconds for subtle, non-intrusive animations" },
+      { type: "improvement", text: "All animations respect 'Reduced Motion' preference and can be toggled in Settings" },
+    ]
+  },
+  {
+    version: "3.1.0",
+    date: "28 December 2025",
+    title: "Collapsible Settings Sections",
+    changes: [
+      { type: "feature", text: "All Settings page sections are now collapsible for easier mobile navigation" },
+      { type: "feature", text: "Click on any section header to expand/collapse the content" },
+      { type: "feature", text: "Chevron icons indicate section state (▲ expanded, ▼ collapsed)" },
+      { type: "improvement", text: "Change Your Password section expanded by default, others collapsed" },
+      { type: "improvement", text: "Reduced scrolling required on mobile devices" },
+      { type: "improvement", text: "Cleaner, more organized settings interface" },
+    ]
+  },
+  {
+    version: "3.0.0",
+    date: "28 December 2025",
+    title: "Major Backend Refactor & Admin Easter Egg Management",
+    changes: [
+      { type: "feature", text: "Full backend refactoring into modular architecture (routes, models, utils)" },
+      { type: "feature", text: "Admin-only Easter Egg Management - Edit username, password, and content for all joke pages" },
+      { type: "feature", text: "Mobile back button - All users can now navigate back on mobile devices" },
+      { type: "feature", text: "Real names from applications now hidden from non-Training Managers" },
+      { type: "improvement", text: "Easter egg credentials now stored in database instead of hardcoded" },
+      { type: "improvement", text: "Better code organization for easier maintenance and scaling" },
+      { type: "fix", text: "Fixed auto-logout issue when viewing application questions" },
     ]
   },
   {
@@ -38,8 +82,6 @@ const CHANGELOG_DATA = [
     title: "Easter Eggs & Secret Pages",
     changes: [
       { type: "feature", text: "Added secret troll page - Login with Username: Troll | Password: FunnyGuy" },
-      { type: "feature", text: "Added Valentine's proposal page - Login with Username: Valentine | Password: Iloveyou" },
-      { type: "feature", text: "Added Developer secrets page - Login with Username: Developer | Password: Money" },
       { type: "improvement", text: "Developer page shows upcoming heroes, heavy troopers, and game mechanics (all fake!)" },
       { type: "improvement", text: "Romantic pages feature falling rose petal animations" },
     ]
@@ -238,121 +280,6 @@ export default function Changelog() {
             </Card>
           ))}
         </div>
-
-        {/* Holiday Animations Reference */}
-        <Card className="glass-card border-slate-700 mt-8 overflow-hidden">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-xl sm:text-2xl font-bold text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-              <PartyPopper className="inline-block mr-2 h-6 w-6" />
-              Holiday Animations Reference
-            </CardTitle>
-            <CardDescription className="text-slate-400 text-sm mt-1">
-              All holiday animations and their display duration (day before + day of + day after = 3 days)
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* UK Holidays */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-blue-400 mb-3 flex items-center gap-2">
-                <Globe className="h-4 w-4" />
-                🇬🇧 United Kingdom Holidays
-              </h3>
-              <div className="grid gap-2">
-                {[
-                  { name: "New Year's Day", date: "January 1", emoji: "🎊", effects: "Confetti, fireworks sparkles" },
-                  { name: "Good Friday", date: "Variable (March/April)", emoji: "✝️", effects: "Easter eggs, spring flowers" },
-                  { name: "Easter Sunday", date: "Variable (March/April)", emoji: "🐰", effects: "Bunnies, eggs, butterflies" },
-                  { name: "Easter Monday", date: "Variable (March/April)", emoji: "🥚", effects: "Easter eggs, spring flowers" },
-                  { name: "Early May Bank Holiday", date: "First Monday of May", emoji: "🌷", effects: "Spring flowers, butterflies" },
-                  { name: "Spring Bank Holiday", date: "Last Monday of May", emoji: "🌸", effects: "Cherry blossoms, sunshine" },
-                  { name: "Summer Bank Holiday", date: "Last Monday of August", emoji: "☀️", effects: "Sunshine, beach vibes" },
-                  { name: "Christmas Day", date: "December 25", emoji: "🎄", effects: "Ornaments, snowflakes, holly" },
-                  { name: "Boxing Day", date: "December 26", emoji: "🎁", effects: "Gift boxes, festive sparkles" },
-                ].map((holiday, i) => (
-                  <div key={i} className="flex items-center justify-between p-2 bg-slate-900/50 rounded text-sm">
-                    <div className="flex items-center gap-2">
-                      <span>{holiday.emoji}</span>
-                      <span className="text-slate-200">{holiday.name}</span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="text-slate-500 text-xs hidden sm:block">{holiday.effects}</span>
-                      <span className="text-slate-400 text-xs mono">{holiday.date}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* US Holidays */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-red-400 mb-3 flex items-center gap-2">
-                <Globe className="h-4 w-4" />
-                🇺🇸 United States Holidays
-              </h3>
-              <div className="grid gap-2">
-                {[
-                  { name: "New Year's Day", date: "January 1", emoji: "🎊", effects: "Confetti, fireworks sparkles" },
-                  { name: "Martin Luther King Jr. Day", date: "Third Monday of January", emoji: "✊", effects: "Patriotic stars, eagles" },
-                  { name: "Presidents' Day", date: "Third Monday of February", emoji: "🇺🇸", effects: "American flags, stars" },
-                  { name: "Easter Sunday", date: "Variable (March/April)", emoji: "🐰", effects: "Bunnies, eggs, butterflies" },
-                  { name: "Memorial Day", date: "Last Monday of May", emoji: "🎖️", effects: "Patriotic ribbons, flags" },
-                  { name: "Independence Day", date: "July 4", emoji: "🎆", effects: "Red/white/blue fireworks, stars" },
-                  { name: "Labor Day", date: "First Monday of September", emoji: "👷", effects: "Tools, gears, stars" },
-                  { name: "Thanksgiving", date: "Fourth Thursday of November", emoji: "🦃", effects: "Turkey, autumn leaves, pumpkins" },
-                  { name: "Christmas Day", date: "December 25", emoji: "🎄", effects: "Ornaments, snowflakes, holly" },
-                ].map((holiday, i) => (
-                  <div key={i} className="flex items-center justify-between p-2 bg-slate-900/50 rounded text-sm">
-                    <div className="flex items-center gap-2">
-                      <span>{holiday.emoji}</span>
-                      <span className="text-slate-200">{holiday.name}</span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="text-slate-500 text-xs hidden sm:block">{holiday.effects}</span>
-                      <span className="text-slate-400 text-xs mono">{holiday.date}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Chinese Holidays */}
-            <div>
-              <h3 className="text-lg font-semibold text-yellow-400 mb-3 flex items-center gap-2">
-                <Globe className="h-4 w-4" />
-                🇨🇳 Chinese Holidays
-              </h3>
-              <div className="grid gap-2">
-                {[
-                  { name: "Chinese New Year (Spring Festival)", date: "Variable (Jan 21 - Feb 20)", emoji: "🧧", effects: "Red lanterns, gold coins, firecrackers" },
-                  { name: "Qingming Festival", date: "April 4-5", emoji: "🌿", effects: "Green leaves, spring growth" },
-                  { name: "Dragon Boat Festival", date: "Variable (May/June)", emoji: "🐉", effects: "Dragons, boats, waves" },
-                  { name: "Mid-Autumn Festival", date: "Variable (September/October)", emoji: "🥮", effects: "Mooncakes, lanterns, full moon" },
-                  { name: "National Day", date: "October 1", emoji: "🇨🇳", effects: "Fireworks, stars, celebrations" },
-                ].map((holiday, i) => (
-                  <div key={i} className="flex items-center justify-between p-2 bg-slate-900/50 rounded text-sm">
-                    <div className="flex items-center gap-2">
-                      <span>{holiday.emoji}</span>
-                      <span className="text-slate-200">{holiday.name}</span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="text-slate-500 text-xs hidden sm:block">{holiday.effects}</span>
-                      <span className="text-slate-400 text-xs mono">{holiday.date}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Note */}
-            <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded">
-              <p className="text-sm text-amber-400">
-                <strong>Note:</strong> Holiday animations override seasonal animations when active. 
-                Each animation displays for 3 days: the day before, day of, and day after the holiday. 
-                You can toggle these in Settings → Visual Preferences.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Footer */}
         <div className="mt-8 text-center text-slate-500 text-sm">

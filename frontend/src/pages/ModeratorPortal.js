@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Shield, Megaphone, FileText, Calendar, Settings, LogOut, Plus, Trash2, Eye, EyeOff, Users, BarChart3, X, ScrollText } from "lucide-react";
+import { Shield, Megaphone, FileText, Calendar, Settings, LogOut, Plus, Trash2, Eye, EyeOff, Users, BarChart3, X, ScrollText, Lightbulb, Check, ChevronDown, ChevronUp, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import SeasonalOverlay from "@/components/SeasonalOverlay";
 
@@ -27,6 +28,16 @@ export default function ModeratorPortal() {
   const [hasNewPolls, setHasNewPolls] = useState(false);
   const [newPollCount, setNewPollCount] = useState(0);
   const [showPollNotification, setShowPollNotification] = useState(true);
+  
+  // Dismissed announcements tracking
+  const [dismissedAnnouncements, setDismissedAnnouncements] = useState([]);
+  const [showDismissed, setShowDismissed] = useState(false);
+  
+  // Feature requests
+  const [featureRequests, setFeatureRequests] = useState([]);
+  const [showFeatureForm, setShowFeatureForm] = useState(false);
+  const [newFeatureRequest, setNewFeatureRequest] = useState({ title: "", description: "", category: "general" });
+  const [featureRequestsExpanded, setFeatureRequestsExpanded] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('moderator_token');
@@ -40,6 +51,8 @@ export default function ModeratorPortal() {
     
     setCurrentUser({ role, username, token });
     fetchAnnouncements();
+    fetchDismissedAnnouncements();
+    fetchFeatureRequests();
     checkNewPolls();
   }, [navigate]);
 
@@ -126,6 +139,114 @@ export default function ModeratorPortal() {
     }
   };
 
+  // Dismissed announcements functions
+  const fetchDismissedAnnouncements = async () => {
+    try {
+      const token = localStorage.getItem('moderator_token');
+      const response = await axios.get(`${API}/announcements/dismissed`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setDismissedAnnouncements(response.data);
+    } catch (error) {
+      console.error("Failed to fetch dismissed announcements:", error);
+    }
+  };
+
+  const handleDismissAnnouncement = async (id) => {
+    try {
+      const token = localStorage.getItem('moderator_token');
+      await axios.post(`${API}/announcements/${id}/dismiss`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setDismissedAnnouncements(prev => [...prev, id]);
+      toast.success("Announcement marked as read");
+    } catch (error) {
+      toast.error("Failed to dismiss announcement");
+    }
+  };
+
+  const handleUndismissAnnouncement = async (id) => {
+    try {
+      const token = localStorage.getItem('moderator_token');
+      await axios.post(`${API}/announcements/${id}/undismiss`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setDismissedAnnouncements(prev => prev.filter(a => a !== id));
+      toast.success("Announcement restored");
+    } catch (error) {
+      toast.error("Failed to restore announcement");
+    }
+  };
+
+  // Feature request functions
+  const fetchFeatureRequests = async () => {
+    try {
+      const token = localStorage.getItem('moderator_token');
+      const response = await axios.get(`${API}/feature-requests`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setFeatureRequests(response.data);
+    } catch (error) {
+      console.error("Failed to fetch feature requests:", error);
+    }
+  };
+
+  const handleCreateFeatureRequest = async (e) => {
+    e.preventDefault();
+    if (!newFeatureRequest.title || !newFeatureRequest.description) {
+      toast.error("Please fill in title and description");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('moderator_token');
+      await axios.post(`${API}/feature-requests`, newFeatureRequest, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success("Feature request submitted successfully!");
+      setNewFeatureRequest({ title: "", description: "", category: "general" });
+      setShowFeatureForm(false);
+      fetchFeatureRequests();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to submit feature request");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateFeatureRequest = async (id, status, adminNotes = null) => {
+    try {
+      const token = localStorage.getItem('moderator_token');
+      const updateData = { status };
+      if (adminNotes !== null) {
+        updateData.admin_notes = adminNotes;
+      }
+      await axios.patch(`${API}/feature-requests/${id}`, updateData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success("Feature request updated");
+      fetchFeatureRequests();
+    } catch (error) {
+      toast.error("Failed to update feature request");
+    }
+  };
+
+  const handleDeleteFeatureRequest = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this feature request?")) return;
+    
+    try {
+      const token = localStorage.getItem('moderator_token');
+      await axios.delete(`${API}/feature-requests/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success("Feature request deleted");
+      fetchFeatureRequests();
+    } catch (error) {
+      toast.error("Failed to delete feature request");
+    }
+  };
+
   // Poll notification functions
   const checkNewPolls = async () => {
     try {
@@ -165,6 +286,31 @@ export default function ModeratorPortal() {
   }
 
   const canManageAnnouncements = currentUser.role === 'admin' || currentUser.role === 'mmod';
+  const canViewFeatureRequests = currentUser.role === 'admin' || currentUser.role === 'mmod' || currentUser.role === 'developer';
+
+  const getStatusBadge = (status) => {
+    const config = {
+      pending: { color: "bg-slate-500/20 text-slate-400 border-slate-500/50", label: "Pending" },
+      reviewed: { color: "bg-blue-500/20 text-blue-400 border-blue-500/50", label: "Reviewed" },
+      approved: { color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/50", label: "Approved" },
+      rejected: { color: "bg-red-500/20 text-red-400 border-red-500/50", label: "Rejected" },
+      implemented: { color: "bg-purple-500/20 text-purple-400 border-purple-500/50", label: "Implemented" }
+    };
+    const statusConfig = config[status] || config.pending;
+    return <Badge className={`${statusConfig.color} text-xs`}>{statusConfig.label}</Badge>;
+  };
+
+  const getCategoryBadge = (category) => {
+    const config = {
+      general: { color: "bg-slate-600/30 text-slate-400", label: "General" },
+      ui: { color: "bg-cyan-500/20 text-cyan-400", label: "UI" },
+      functionality: { color: "bg-amber-500/20 text-amber-400", label: "Functionality" },
+      bug: { color: "bg-red-500/20 text-red-400", label: "Bug" },
+      other: { color: "bg-slate-600/30 text-slate-400", label: "Other" }
+    };
+    const catConfig = config[category] || config.general;
+    return <Badge className={`${catConfig.color} text-xs`}>{catConfig.label}</Badge>;
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 grid-texture">
@@ -363,24 +509,271 @@ export default function ModeratorPortal() {
                 )}
               </div>
             ) : (
-              // Regular moderators see only active announcements
+              // Regular moderators see only active announcements with dismiss option
               <div className="space-y-4">
-                {announcements.length === 0 ? (
+                {/* Active/Unread Announcements */}
+                {announcements.filter(a => !dismissedAnnouncements.includes(a.id)).length === 0 && 
+                 announcements.filter(a => dismissedAnnouncements.includes(a.id)).length === 0 ? (
                   <p className="text-slate-500 text-center py-8">No announcements</p>
                 ) : (
-                  announcements.map((announcement) => (
-                    <div key={announcement.id} className="p-4 bg-slate-900/50 rounded border border-slate-700">
-                      <h3 className="text-lg font-semibold text-amber-500 mb-2">{announcement.title}</h3>
-                      <p className="text-slate-300 whitespace-pre-wrap">{announcement.message}</p>
-                      <p className="text-xs text-slate-500 mt-2">
-                        Posted by {announcement.created_by} on {new Date(announcement.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  ))
+                  <>
+                    {announcements.filter(a => !dismissedAnnouncements.includes(a.id)).map((announcement) => (
+                      <div key={announcement.id} className="p-4 bg-slate-900/50 rounded border border-amber-500/30 relative">
+                        <div className="absolute top-2 right-2">
+                          <Button
+                            onClick={() => handleDismissAnnouncement(announcement.id)}
+                            size="sm"
+                            variant="ghost"
+                            className="text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10"
+                            title="Mark as read"
+                          >
+                            <Check className="h-4 w-4 mr-1" />
+                            <span className="text-xs">Mark Read</span>
+                          </Button>
+                        </div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/50 text-xs">NEW</Badge>
+                          <h3 className="text-lg font-semibold text-amber-500">{announcement.title}</h3>
+                        </div>
+                        <p className="text-slate-300 whitespace-pre-wrap pr-24">{announcement.message}</p>
+                        <p className="text-xs text-slate-500 mt-2">
+                          Posted by {announcement.created_by} on {new Date(announcement.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))}
+                    
+                    {/* Dismissed/Read Announcements - Collapsible */}
+                    {announcements.filter(a => dismissedAnnouncements.includes(a.id)).length > 0 && (
+                      <div className="mt-4">
+                        <button
+                          onClick={() => setShowDismissed(!showDismissed)}
+                          className="flex items-center gap-2 text-slate-400 hover:text-slate-300 text-sm mb-2"
+                        >
+                          {showDismissed ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                          Read Announcements ({announcements.filter(a => dismissedAnnouncements.includes(a.id)).length})
+                        </button>
+                        
+                        {showDismissed && (
+                          <div className="space-y-2">
+                            {announcements.filter(a => dismissedAnnouncements.includes(a.id)).map((announcement) => (
+                              <div key={announcement.id} className="p-3 bg-slate-900/30 rounded border border-slate-800 opacity-70">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <h3 className="text-base font-semibold text-slate-400">{announcement.title}</h3>
+                                    <p className="text-slate-500 text-sm whitespace-pre-wrap line-clamp-2">{announcement.message}</p>
+                                    <p className="text-xs text-slate-600 mt-1">
+                                      Posted by {announcement.created_by} on {new Date(announcement.created_at).toLocaleDateString()}
+                                    </p>
+                                  </div>
+                                  <Button
+                                    onClick={() => handleUndismissAnnouncement(announcement.id)}
+                                    size="sm"
+                                    variant="ghost"
+                                    className="text-slate-500 hover:text-amber-400"
+                                    title="Mark as unread"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
           </CardContent>
+        </Card>
+
+        {/* Feature Requests Section */}
+        <Card className="glass-card border-slate-700 mb-8">
+          <CardHeader 
+            className="cursor-pointer select-none"
+            onClick={() => setFeatureRequestsExpanded(!featureRequestsExpanded)}
+          >
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl sm:text-2xl font-bold uppercase tracking-wide text-purple-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                <Lightbulb className="inline-block mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+                Feature Requests
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={(e) => { e.stopPropagation(); setShowFeatureForm(!showFeatureForm); }}
+                  className="bg-purple-500 hover:bg-purple-600 text-white rounded-sm text-sm"
+                  size="sm"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Suggest
+                </Button>
+                {featureRequestsExpanded ? (
+                  <ChevronUp className="h-5 w-5 text-slate-400" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-slate-400" />
+                )}
+              </div>
+            </div>
+          </CardHeader>
+          {featureRequestsExpanded && (
+            <CardContent>
+              {/* Create Feature Request Form */}
+              {showFeatureForm && (
+                <form onSubmit={handleCreateFeatureRequest} className="mb-6 p-4 bg-slate-900/50 rounded border border-purple-500/30">
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-slate-300">Title</Label>
+                      <Input
+                        value={newFeatureRequest.title}
+                        onChange={(e) => setNewFeatureRequest(prev => ({ ...prev, title: e.target.value }))}
+                        placeholder="Brief title for your suggestion..."
+                        className="bg-slate-900/50 border-slate-700 text-slate-200 rounded-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-slate-300">Category</Label>
+                      <Select 
+                        value={newFeatureRequest.category} 
+                        onValueChange={(value) => setNewFeatureRequest(prev => ({ ...prev, category: value }))}
+                      >
+                        <SelectTrigger className="bg-slate-900/50 border-slate-700 text-slate-200 rounded-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-800 border-slate-700">
+                          <SelectItem value="general">General</SelectItem>
+                          <SelectItem value="ui">User Interface</SelectItem>
+                          <SelectItem value="functionality">Functionality</SelectItem>
+                          <SelectItem value="bug">Bug Report</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-slate-300">Description</Label>
+                      <Textarea
+                        value={newFeatureRequest.description}
+                        onChange={(e) => setNewFeatureRequest(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Describe your feature request or suggestion in detail..."
+                        className="bg-slate-900/50 border-slate-700 text-slate-200 rounded-sm min-h-[100px]"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button type="submit" disabled={loading} className="bg-purple-500 hover:bg-purple-600 text-white rounded-sm">
+                        {loading ? "Submitting..." : "Submit Request"}
+                      </Button>
+                      <Button type="button" onClick={() => setShowFeatureForm(false)} variant="outline" className="border-slate-600 text-slate-300 rounded-sm">
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                </form>
+              )}
+
+              {/* Feature Requests List */}
+              {canViewFeatureRequests ? (
+                // Admins/MMODs/Developers see all requests with management controls
+                <div className="space-y-4">
+                  {featureRequests.length === 0 ? (
+                    <p className="text-slate-500 text-center py-8">No feature requests yet. Be the first to suggest!</p>
+                  ) : (
+                    featureRequests.map((request) => (
+                      <div key={request.id} className="p-4 bg-slate-900/50 rounded border border-slate-700">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2 flex-wrap">
+                              <h3 className="text-base font-semibold text-purple-400">{request.title}</h3>
+                              {getStatusBadge(request.status)}
+                              {getCategoryBadge(request.category)}
+                            </div>
+                            <p className="text-slate-300 text-sm whitespace-pre-wrap">{request.description}</p>
+                            <p className="text-xs text-slate-500 mt-2">
+                              Submitted by <span className="text-slate-400">{request.submitted_by}</span> on {new Date(request.submitted_at).toLocaleDateString()}
+                            </p>
+                            {request.admin_notes && (
+                              <div className="mt-2 p-2 bg-slate-800/50 rounded border border-slate-700">
+                                <p className="text-xs text-slate-400">
+                                  <MessageSquare className="inline h-3 w-3 mr-1" />
+                                  Admin Note: <span className="text-slate-300">{request.admin_notes}</span>
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <Select 
+                              value={request.status} 
+                              onValueChange={(value) => handleUpdateFeatureRequest(request.id, value)}
+                            >
+                              <SelectTrigger className="bg-slate-800 border-slate-700 text-slate-200 rounded-sm text-xs w-28">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-700">
+                                <SelectItem value="pending">Pending</SelectItem>
+                                <SelectItem value="reviewed">Reviewed</SelectItem>
+                                <SelectItem value="approved">Approved</SelectItem>
+                                <SelectItem value="rejected">Rejected</SelectItem>
+                                <SelectItem value="implemented">Implemented</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              onClick={() => handleDeleteFeatureRequest(request.id)}
+                              size="sm"
+                              className="bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              ) : (
+                // Regular moderators see only their own requests
+                <div className="space-y-4">
+                  {featureRequests.length === 0 ? (
+                    <p className="text-slate-500 text-center py-8">You haven&apos;t submitted any feature requests yet.</p>
+                  ) : (
+                    featureRequests.map((request) => (
+                      <div key={request.id} className="p-4 bg-slate-900/50 rounded border border-slate-700">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2 flex-wrap">
+                              <h3 className="text-base font-semibold text-purple-400">{request.title}</h3>
+                              {getStatusBadge(request.status)}
+                              {getCategoryBadge(request.category)}
+                            </div>
+                            <p className="text-slate-300 text-sm whitespace-pre-wrap">{request.description}</p>
+                            <p className="text-xs text-slate-500 mt-2">
+                              Submitted on {new Date(request.submitted_at).toLocaleDateString()}
+                            </p>
+                            {request.admin_notes && (
+                              <div className="mt-2 p-2 bg-slate-800/50 rounded border border-slate-700">
+                                <p className="text-xs text-slate-400">
+                                  <MessageSquare className="inline h-3 w-3 mr-1" />
+                                  Response: <span className="text-slate-300">{request.admin_notes}</span>
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                          {request.status === 'pending' && (
+                            <Button
+                              onClick={() => handleDeleteFeatureRequest(request.id)}
+                              size="sm"
+                              variant="ghost"
+                              className="text-slate-500 hover:text-red-400"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </CardContent>
+          )}
         </Card>
       </div>
     </div>

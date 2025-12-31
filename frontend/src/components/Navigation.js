@@ -13,7 +13,8 @@ import {
   Menu,
   X,
   Shield,
-  ClipboardList
+  ClipboardList,
+  ArrowLeft
 } from "lucide-react";
 
 // Pages that should show the navigation
@@ -58,6 +59,13 @@ export default function Navigation() {
   const showFullNav = SHOW_NAV_ROUTES.includes(currentPath);
   const showLimitedNav = SHOW_LIMITED_NAV.includes(currentPath);
   
+  // Check if we can go back (has history)
+  const canGoBack = window.history.length > 1;
+  
+  const handleGoBack = () => {
+    navigate(-1);
+  };
+  
   const handleLogout = () => {
     localStorage.removeItem('moderator_token');
     localStorage.removeItem('moderator_role');
@@ -82,15 +90,28 @@ export default function Navigation() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800">
         <div className="max-w-6xl mx-auto px-3 sm:px-6 py-2">
           <div className="flex items-center justify-between">
-            <button 
-              onClick={() => navigate('/')}
-              className="flex items-center gap-2 text-amber-500 hover:text-amber-400 transition-colors"
-            >
-              <Shield className="w-6 h-6" />
-              <span className="font-bold text-sm sm:text-base" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                TW APPLICATIONS
-              </span>
-            </button>
+            <div className="flex items-center gap-2">
+              {/* Mobile Back Button */}
+              {canGoBack && currentPath !== '/' && (
+                <Button
+                  onClick={handleGoBack}
+                  variant="ghost"
+                  size="sm"
+                  className="md:hidden text-slate-400 hover:text-slate-200 p-1"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </Button>
+              )}
+              <button 
+                onClick={() => navigate('/')}
+                className="flex items-center gap-2 text-amber-500 hover:text-amber-400 transition-colors"
+              >
+                <Shield className="w-6 h-6" />
+                <span className="font-bold text-sm sm:text-base" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                  TW APPLICATIONS
+                </span>
+              </button>
+            </div>
             
             <div className="flex items-center gap-2">
               {currentPath !== '/apply' && (
@@ -176,15 +197,28 @@ export default function Navigation() {
         <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800 md:hidden">
           <div className="px-3 py-2">
             <div className="flex items-center justify-between">
-              <button 
-                onClick={() => navigate('/moderator/portal')}
-                className="flex items-center gap-2 text-amber-500"
-              >
-                <Shield className="w-5 h-5" />
-                <span className="font-bold text-sm" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                  TW PORTAL
-                </span>
-              </button>
+              <div className="flex items-center gap-2">
+                {/* Mobile Back Button */}
+                {canGoBack && (
+                  <Button
+                    onClick={handleGoBack}
+                    variant="ghost"
+                    size="sm"
+                    className="text-slate-400 hover:text-slate-200 p-1"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </Button>
+                )}
+                <button 
+                  onClick={() => navigate('/moderator/portal')}
+                  className="flex items-center gap-2 text-amber-500"
+                >
+                  <Shield className="w-5 h-5" />
+                  <span className="font-bold text-sm" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                    TW PORTAL
+                  </span>
+                </button>
+              </div>
               
               <Button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

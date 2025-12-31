@@ -36,36 +36,47 @@ export default function ModeratorLogin() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Easter eggs - secret pages
-    if (credentials.username === "medioCre" && credentials.password === "Password123") {
-      navigate('/secret-proposal');
-      return;
-    }
-    if (credentials.username === "Valentine" && credentials.password === "Iloveyou") {
-      navigate('/secret-valentine');
-      return;
-    }
-    if (credentials.username === "Developer" && credentials.password === "TWDev3") {
-      navigate('/dev-secrets');
-      return;
-    }
-    if (credentials.username === "Troll" && credentials.password === "FunnyGuy") {
-      navigate('/troll-detected');
-      return;
-    }
-    if (credentials.username === "Garuda" && credentials.password === "Talkingbouy") {
-      navigate('/garuda-tribute');
-      return;
-    }
-    
     setLoading(true);
+    
+    // Check for easter egg credentials first
+    try {
+      const easterEggResponse = await axios.post(`${API}/easter-eggs/verify`, null, {
+        params: { username: credentials.username, password: credentials.password }
+      });
+      
+      if (easterEggResponse.data.valid) {
+        const pageKey = easterEggResponse.data.page_key;
+        const content = easterEggResponse.data.content;
+        // Store content in sessionStorage for the easter egg pages to use
+        sessionStorage.setItem('easter_egg_content', JSON.stringify(content));
+        
+        // Navigate to the appropriate page based on page_key
+        const pageRoutes = {
+          'troll': '/troll-detected',
+          'valentine': '/secret-valentine',
+          'mediocre': '/secret-proposal',
+          'developer': '/dev-secrets',
+          'garuda': '/garuda-tribute'
+        };
+        
+        if (pageRoutes[pageKey]) {
+          setLoading(false);
+          navigate(pageRoutes[pageKey]);
+          return;
+        }
+      }
+    } catch (error) {
+      // If easter egg check fails, continue with normal login
+      console.log("Easter egg check failed, continuing with normal login");
+    }
 
     try {
       const response = await axios.post(`${API}/auth/login`, credentials);
       localStorage.setItem('moderator_token', response.data.access_token);
       localStorage.setItem('moderator_role', response.data.role);
       localStorage.setItem('moderator_username', response.data.username);
+      localStorage.setItem('moderator_is_admin', response.data.is_admin ? 'true' : 'false');
+      localStorage.setItem('moderator_is_training_manager', response.data.is_training_manager ? 'true' : 'false');
       
       // Check if password change is required
       if (response.data.must_change_password) {

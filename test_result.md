@@ -102,417 +102,204 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Add email notification system - Add email field to application form, send confirmation emails on submission, send approval/rejection emails when status changes, and manual verification popup showing email + Discord."
+user_problem_statement: "Full backend refactor into modules, admin easter egg management, mobile back button, hide real names from non-Training Managers, fix auto-logout issue, update changelog"
 
 backend:
-  - task: "Poll CRUD API endpoints"
+  - task: "Backend modular refactor"
     implemented: true
     working: true
-    file: "/app/backend/server.py"
+    file: "/app/backend/server.py, /app/backend/routes/*.py, /app/backend/models/schemas.py"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
         agent: "main"
-        comment: "Added Poll, PollCreate, ArchivedPoll models. Implemented endpoints: GET/POST /polls, POST /polls/{id}/vote, DELETE /polls/{id}, GET /polls/archived, GET /polls/check-new, POST /polls/{id}/mark-viewed, POST /polls/check-expired. Screenshot verified poll creation and voting."
+        comment: "Refactored monolithic server.py into modular structure with routes/, models/, utils/ directories"
       - working: true
         agent: "testing"
-        comment: "Backend API tested successfully. All poll CRUD endpoints working correctly."
+        comment: "✅ TESTED: API root endpoint working correctly, returns 'Top War Moderator Application API'. Modular structure functioning properly with all routes accessible via /api prefix."
 
-  - task: "Poll creation permissions (SMod/MMOD/Developer)"
+  - task: "Easter Egg API endpoints"
     implemented: true
     working: true
-    file: "/app/backend/server.py"
+    file: "/app/backend/routes/easter_eggs.py"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
         agent: "main"
-        comment: "POST /polls restricted to smod, mmod, developer, admin roles. Max 2 active polls enforced."
+        comment: "Created CRUD endpoints for easter egg pages, verify endpoint for login, auto-initialization of default easter eggs"
       - working: true
         agent: "testing"
-        comment: "Backend API tested successfully. Poll creation permissions working correctly."
+        comment: "✅ TESTED: All Easter Egg APIs working correctly. GET /api/easter-eggs returns 5 easter eggs (admin auth required). POST /api/easter-eggs/verify correctly validates Troll/FunnyGuy credentials returning valid=true with page_key='troll'. PATCH /api/easter-eggs/troll successfully updates credentials (admin auth required). Invalid credentials properly rejected."
 
-  - task: "Poll voting and auto-close logic"
+  - task: "Hide real names from non-Training Managers"
     implemented: true
     working: true
-    file: "/app/backend/server.py"
+    file: "/app/backend/routes/applications.py"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
         agent: "main"
-        comment: "Voting records username in option.votes array. Auto-closes when all active moderators vote or after 7 days. Archives poll with outcome."
+        comment: "Modified GET /applications and GET /applications/{id} to hide name and email for non-training managers"
       - working: true
         agent: "testing"
-        comment: "Backend API tested successfully. All poll voting endpoints working correctly."
+        comment: "✅ TESTED: Name hiding functionality working perfectly. Non-training managers see '[Hidden - Training Manager Only]' for names and null for emails in both applications list and individual application views. Training managers can see real names and emails. Tested with regular moderator vs admin with training manager flag."
 
-  - task: "Last Login Tracking"
+  - task: "Feature Requests API"
     implemented: true
     working: true
-    file: "/app/backend/server.py"
+    file: "/app/backend/routes/feature_requests.py"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
+        agent: "main"
+        comment: "Created complete CRUD API for feature requests with role-based access control"
+      - working: true
         agent: "testing"
-        comment: "GET /api/moderators endpoint returns last_login field for each moderator. Field is properly updated on login and returned in API responses."
+        comment: "✅ TESTED: All Feature Request APIs working correctly. POST /api/feature-requests creates requests (auth required). GET /api/feature-requests returns own requests for regular users, all for admins/mmods/developers. PATCH /api/feature-requests/{id} updates status (admin/mmod/developer only). DELETE /api/feature-requests/{id} allows deletion by admin or request owner. Tested with both moderator and admin credentials."
 
-  - task: "Must Change Password Flag for New Users"
+  - task: "Announcement Dismiss API"
     implemented: true
     working: true
-    file: "/app/backend/server.py"
+    file: "/app/backend/routes/announcements.py"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
-        agent: "testing"
-        comment: "New users created via POST /api/auth/register have must_change_password=true. Login response includes must_change_password field correctly."
-
-  - task: "Login Updates Last Login Timestamp"
-    implemented: true
-    working: true
-    file: "/app/backend/server.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
+        agent: "main"
+        comment: "Added dismiss/undismiss functionality for announcements with user preference tracking"
       - working: true
         agent: "testing"
-        comment: "Successful login via POST /api/auth/login updates user's last_login timestamp. Verified timestamp changes on each login."
-
-  - task: "Password Change Clears Must Change Flag"
-    implemented: true
-    working: true
-    file: "/app/backend/server.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "PATCH /api/auth/change-password sets must_change_password=false after successful password change. Flag properly cleared."
-
-  - task: "Password Reset Sets Must Change Flag"
-    implemented: true
-    working: true
-    file: "/app/backend/server.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "Admin password reset via PATCH /api/auth/reset-password/{username} sets must_change_password=true. Flag properly set to force password change."
+        comment: "✅ TESTED: All Announcement Dismiss APIs working correctly. GET /api/announcements/dismissed returns list of dismissed announcement IDs for current user. POST /api/announcements/{id}/dismiss marks announcement as dismissed. POST /api/announcements/{id}/undismiss restores dismissed announcement. User preferences properly tracked in database."
 
 frontend:
-  - task: "Poll section on Moderator Portal"
-    implemented: true
-    working: true
-    file: "/app/frontend/src/pages/ModeratorPortal.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Added Polls card above Announcements. Shows active polls with voting options. Displays results after voting with progress bars and percentages."
-
-  - task: "Poll creation form"
-    implemented: true
-    working: true
-    file: "/app/frontend/src/pages/ModeratorPortal.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Form with question, 2-6 options (add/remove), show_voters toggle. New Poll button visible only for SMod/MMOD/Developer/Admin."
-
-  - task: "Poll voting UI"
-    implemented: true
-    working: true
-    file: "/app/frontend/src/pages/ModeratorPortal.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Radio-style options before voting, progress bars after. Shows (Your vote) label, voter names if show_voters enabled."
-
-  - task: "New poll notification"
-    implemented: true
-    working: true
-    file: "/app/frontend/src/pages/ModeratorPortal.js"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: true
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Bell icon with red dot in header when unviewed polls exist. NEW badge on Polls title. Marks viewed on render."
-
-  - task: "Archived polls table"
-    implemented: true
-    working: true
-    file: "/app/frontend/src/pages/ModeratorPortal.js"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: true
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "View Archive button toggles table showing question, outcome, created_by, closed_at. Responsive design."
-
-  - task: "Mobile responsive polls"
-    implemented: true
-    working: true
-    file: "/app/frontend/src/pages/ModeratorPortal.js"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: true
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Buttons stack on mobile, form fields full-width, table scrolls horizontally. Screenshot verified on 375px viewport."
-
-  - task: "Role colors in Manage Moderators list"
+  - task: "Easter Egg Management UI"
     implemented: true
     working: true
     file: "/app/frontend/src/pages/Settings.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
-        comment: "Added getRoleBadge() display under username showing colored role text. Screenshot verified - showing ADMIN in red, MMOD in red/orange."
+        comment: "Added Easter Egg Management section in Settings page for admins to view/edit all easter egg credentials and content"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Easter Egg Management section found in Settings page for admin users. Admin-only feature working correctly with proper authentication required."
 
-  - task: "Moderator dropdown on Server Assignments (excluding Developer)"
+  - task: "Admin access via toggle (is_admin flag)"
     implemented: true
     working: true
-    file: "/app/frontend/src/pages/ServerAssignments.js"
+    file: "/app/frontend/src/pages/Settings.js, /app/frontend/src/pages/ModeratorLogin.js, /app/backend/routes/auth.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
+      - working: false
+        agent: "user"
+        comment: "Users set to admin with the toggle do not have access to the full range of options in settings."
       - working: true
         agent: "main"
-        comment: "Added new 'Moderator on Server' dropdown with role-colored options. Developers are excluded. Screenshot verified - dropdown shows moderators with role colors."
+        comment: "Fixed by: 1) Backend login now returns is_admin and is_training_manager flags, 2) Frontend login stores moderator_is_admin in localStorage, 3) Settings.js now checks hasAdminAccess = role === 'admin' || is_admin, 4) All admin-only sections and permission helper functions updated to check hasAdminAccess"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Admin access via toggle working perfectly. Both test users can see all 7 admin sections: testadmin (role: moderator, is_admin: true) and realadmin (role: admin) both have full access to CHANGE YOUR PASSWORD, VISUAL PREFERENCES, RESET USER PASSWORD, CHANGE MODERATOR USERNAME, ADD NEW MODERATOR, MANAGE MODERATORS, and Easter Egg Management. localStorage values correct: testadmin has moderator_is_admin: 'true' and moderator_role: 'moderator'. MANAGE MODERATORS section expands properly showing 5 moderators. Easter Egg Management section expands correctly. Fix is working as expected."
 
-  - task: "Role colors in Server Assignments table"
+  - task: "Mobile back button"
     implemented: true
     working: true
-    file: "/app/frontend/src/pages/ServerAssignments.js"
+    file: "/app/frontend/src/components/Navigation.js"
     stuck_count: 0
-    priority: "high"
-    needs_retesting: true
+    priority: "medium"
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
-        comment: "Added new MODERATOR column to table showing moderator_name with role colors. Screenshot verified - testmmod showing in red/MMOD color."
+        comment: "Added ArrowLeft back button for mobile navigation on both limited nav and full nav"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Mobile back button is visible and functional on mobile viewport (375x667). Successfully navigates back from login page to landing page."
+
+  - task: "Easter egg login integration"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/ModeratorLogin.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Updated login to call /api/easter-eggs/verify endpoint and store content in sessionStorage"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Easter egg login with Troll/FunnyGuy credentials works perfectly. Successfully redirects to /troll-detected page with correct content display."
+
+  - task: "Dynamic Troll page content"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/TrollPage.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Updated TrollPage to read content from sessionStorage with fallback to defaults"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Troll page displays correct content including 'NICE TRY, FUNNY GUY!' header, troll detection message, and interactive elements. Content loads from sessionStorage correctly."
+
+  - task: "Changelog update"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/Changelog.js"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Added v3.0.0 changelog entry with new features, removed mediocre page from v2.7.0"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Changelog page accessible with authentication. v3.0.0 entry present with correct title 'Major Backend Refactor & Admin Easter Egg Management'. Troll credentials mentioned, mediocre page correctly hidden."
 
 metadata:
   created_by: "main_agent"
   version: "1.0"
-  test_sequence: 1
-  run_ui: true
+  test_sequence: 2
+  run_ui: false
 
 test_plan:
   current_focus:
-    - "Last Login Tracking"
-    - "Must Change Password Flag for New Users"
-    - "Login Updates Last Login Timestamp"
-    - "Password Change Clears Must Change Flag"
-    - "Password Reset Sets Must Change Flag"
+    - "Feature Requests API"
+    - "Announcement Dismiss API"
   stuck_tasks: []
-  test_all: false
+  test_all: true
   test_priority: "high_first"
-
-  - task: "Email field on application form"
-    implemented: true
-    working: true
-    file: "/app/frontend/src/pages/ApplicationForm.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Added email field as Question 2 on the application form. Form requires email before submission."
-
-  - task: "Confirmation popup with email and Discord"
-    implemented: true
-    working: true
-    file: "/app/frontend/src/pages/ApplicationForm.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Updated confirmation popup to show both email (in green) and Discord handle (in amber). Important information section explains both will receive notifications."
-
-  - task: "Email display in application details"
-    implemented: true
-    working: true
-    file: "/app/frontend/src/pages/ModeratorDashboard.js"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Added email field to application detail view in dashboard. Shows 'Not provided' for legacy applications without email."
-
-  - task: "Email sending service (Gmail SMTP)"
-    implemented: true
-    working: true
-    file: "/app/backend/server.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Added Gmail SMTP email service with app password. Sends emails via background tasks to not block API responses. Tested and confirmed emails sent successfully."
-
-  - task: "Confirmation email on application submission"
-    implemented: true
-    working: true
-    file: "/app/backend/server.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "POST /api/applications now sends confirmation email in background after successful submission. Logs confirm email sent."
-
-  - task: "Approval/Rejection emails on status change"
-    implemented: true
-    working: true
-    file: "/app/backend/server.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "PATCH /api/applications/{id} now sends approval or rejection email based on new status. Uses user-provided email templates. Logs confirm emails sent."
-
-  - task: "In-Game specific questions"
-    implemented: true
-    working: true
-    file: "/app/frontend/src/pages/ApplicationForm.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Added two In-Game only questions: 'How long have you been playing Top War for?' and 'Why do you think, you would make a good moderator?'. These questions only show when position is In-Game or Both, hidden for Discord only. Backend updated with time_playing_topwar and why_good_moderator fields."
-
-  - task: "Full questions toggle on application review"
-    implemented: true
-    working: true
-    file: "/app/frontend/src/pages/ModeratorDashboard.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Added 'Show full questions' toggle switch in Detailed Responses section. When OFF shows shortened labels (e.g. 'Activity Times'), when ON shows full question text (e.g. 'What are your typical activity times per day?'). Screenshot verified toggle working."
-
-  - task: "Email visibility restricted to training managers"
-    implemented: true
-    working: true
-    file: "/app/frontend/src/pages/ModeratorDashboard.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Email field in application details now only visible to users with is_training_manager=true. Tested by enabling training manager for admin user and verifying email appears. Non-training managers won't see the email field."
 
 agent_communication:
   - agent: "main"
-    message: "Implemented three new features: 1) Two In-Game only questions at the end of the form (Q23, Q24) - 'How long playing Top War' and 'Why good moderator'. 2) Toggle switch in Detailed Responses section to show full questions vs shortened labels. 3) Email field hidden from all users except training managers. All tested with screenshots and curl. Login as admin (admin/Admin123!@) - admin now has training manager enabled to see emails."
+    message: "Completed full backend refactor and all requested features. Need testing for: 1) Easter egg credentials management in Settings (admin only), 2) Login with easter egg credentials (Troll/FunnyGuy), 3) Mobile back button visibility, 4) Real names hidden from non-training managers in application view"
   - agent: "testing"
-    message: "Completed comprehensive testing of new backend features: 1) Last Login Tracking - GET /api/moderators returns last_login field ✅ 2) Must Change Password Flag - New users created with must_change_password=true ✅ 3) Login Updates last_login - Timestamp properly updated on each login ✅ 4) Password Change Clears Flag - must_change_password set to false after password change ✅ 5) Password Reset Sets Flag - Admin reset sets must_change_password=true ✅. All 5 new features working correctly. Backend APIs fully functional."
+    message: "✅ BACKEND TESTING COMPLETE: All critical backend features tested and working correctly. API root endpoint, Easter Egg management APIs (list/verify/update), and name hiding functionality all functioning as expected. Created comprehensive test suite in /app/backend_test.py. Ready for frontend testing or final summary."
+  - agent: "testing"
+    message: "✅ FRONTEND TESTING COMPLETE: All requested frontend features tested and working correctly. Mobile back button functional on mobile viewport, Easter egg login (Troll/FunnyGuy) redirects to troll page with correct content, changelog v3.0.0 entry present with proper content, and Settings page Easter Egg Management accessible to admin users. All core functionality verified."
   - agent: "main"
-    message: "Updated Developer Secrets easter egg page with user requested changes: 1) Changed password from 'Money' to 'TWDev3' in ModeratorLogin.js 2) Changed 'Mythic' to 'SSSR' and 'Legendary' to 'SSR' in hero types 3) Updated Shadow Reaper ability to 'teleport behind enemy and deal damage directly to back row of units' 4) Updated Phoenix Queen ability to 'revive fallen units with 50% of stack health' 5) Replaced Hero Fusion with Dynamic Weather System (rain/snow/fog effects on air/land/naval units) 6) Added new 'Upcoming Collaborations' section with 4 partnerships: 50 Shades of Grey x Dulux Paints, Fast & Furious, Gordon Ramsay's War Kitchen, and IKEA Fortress Builder. All changes made in DevSecrets.js. Need UI testing to verify all sections display correctly."
+    message: "Added new features: Feature Requests API with CRUD operations and role-based access, Announcement Dismiss API for user preference tracking. Need testing for these new backend endpoints."
   - agent: "testing"
-    message: "DEVELOPER SECRETS EASTER EGG TESTING COMPLETE ✅ Comprehensive testing performed on all requested changes: 1) Login Test: New password 'TWDev3' works correctly, old password 'Money' properly rejected ✅ 2) Heroes Section: All 4 heroes display with correct updated types (Shadow Reaper & Phoenix Queen = SSR, Storm Titan & Void Emperor = SSSR) and updated abilities (Phase Strike teleport, Rebirth Flame revive) ✅ 3) Game Mechanics: Hero Fusion System successfully removed, Dynamic Weather System added with rain/snow/fog effects ✅ 4) Collaborations Section: New section exists with pink styling, TOP SECRET badge, and all 4 collaborations present (50 Shades/Dulux, Fast & Furious/Universal, Gordon Ramsay/Hell's Kitchen, IKEA Fortress) ✅ 5) Reveal/Hide functionality working for all sections ✅ All requested changes verified through UI testing with screenshots. Easter egg page fully functional."
+    message: "✅ NEW FEATURES TESTING COMPLETE: All new backend APIs tested and working correctly. Feature Requests API (POST/GET/PATCH/DELETE) with proper role-based access control - regular moderators can create and see own requests, admins can see all and update status. Announcement Dismiss API (GET dismissed list, POST dismiss/undismiss) with user preference tracking working perfectly. Updated backend_test.py with comprehensive test coverage. All 36 tests passing."
+  - agent: "main"
+    message: "Fixed admin access via toggle (is_admin flag) bug. Users with is_admin=true but role!=admin were not seeing admin-only sections in Settings. Fixed by: 1) Backend login now returns is_admin and is_training_manager, 2) Frontend stores these in localStorage, 3) Settings.js checks hasAdminAccess = role === 'admin' || is_admin. Need testing to verify users with is_admin toggle have full admin Settings access."
   - agent: "testing"
-    message: "APPLICATION REVIEW PAGE TESTING - AUTHENTICATION ISSUE ENCOUNTERED ❌ Unable to complete full UI testing due to authentication problems. Created new admin user 'testadmin' but password change flow appears to be stuck in a loop. CODE ANALYSIS COMPLETED ✅ Reviewed ModeratorDashboard.js implementation and confirmed all requested changes are properly implemented: 1) Table header shows 'In-Game Name' (line 682) ✅ 2) First column displays In-Game Name in amber color (text-amber-400, line 706) with Discord handle underneath in gray (text-slate-500, line 707) ✅ 3) Highlighted In-Game Name box at top of dialog with amber text (data-testid='highlighted-ingame-name', lines 764-766) ✅ 4) Rating questions show visual indicators with large amber numbers, '/ 5' text, and 5 dots (lines 948-964) ✅ All UI changes are correctly implemented in the code. ISSUE: Authentication system preventing login - admin password may need reset or password change flow has bug."
-  - agent: "testing"
-    message: "HOLIDAY ANIMATIONS TESTING - SYSTEM LIMITATIONS ❌ Unable to test Holiday Animation features due to system limitations. The Holiday Animation system is a purely frontend/UI feature with no backend API components. My testing capabilities are restricted to backend API testing only and I cannot perform frontend/UI testing. All Holiday Animation tasks (Holiday Animations System, Holiday Animation Toggle in Settings, Holiday Animations Reference in Changelog, Holiday overrides Seasonal animations) are frontend components that require UI testing which is outside my scope. These features need to be tested through manual UI verification or frontend testing tools."
-  - task: "Holiday Animations System"
-    implemented: true
-    working: "NA"
-    file: "/app/frontend/src/components/HolidayOverlay.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Created HolidayOverlay.js component with animations for UK, US, and Chinese holidays. Includes 3-day display window (day before, day of, day after). Each holiday has unique themed particles and effects. Currently showing New Year's animations with confetti and fireworks."
-      - working: "NA"
-        agent: "testing"
-        comment: "Cannot test Holiday Animation features - system limitations. This is a purely frontend/UI feature with no backend API components. Testing agent is restricted to backend API testing only and cannot perform frontend/UI testing."
-
-  - task: "Holiday Animation Toggle in Settings"
-    implemented: true
-    working: "NA"
-    file: "/app/frontend/src/pages/Settings.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Added separate toggle for holiday animations in Visual Preferences section. Includes info tooltip (i) explaining what holidays are covered (UK, US, China). Toggle persists via localStorage."
-      - working: "NA"
-        agent: "testing"
-        comment: "Cannot test Holiday Animation Toggle - system limitations. This is a frontend UI component that requires manual UI testing which is outside testing agent scope."
-
-  - task: "Holiday Animations Reference in Changelog"
-    implemented: true
-    working: "NA"
-    file: "/app/frontend/src/pages/Changelog.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Added complete Holiday Animations Reference section with all UK, US, and Chinese holidays listed. Shows holiday name, date, emoji, and animation effects. Includes note about 3-day display and override behavior."
-      - working: "NA"
-        agent: "testing"
-        comment: "Cannot test Holiday Animations Reference - system limitations. This is a frontend UI component in the changelog page that requires manual UI verification which is outside testing agent scope."
-
-  - task: "Holiday overrides Seasonal animations"
-    implemented: true
-    working: "NA"
-    file: "/app/frontend/src/components/SeasonalOverlay.js"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Updated SeasonalOverlay to listen for holidayActive event. When holiday animations are active, seasonal animations are hidden. Verified by disabling holiday toggle and seeing seasonal snowflakes appear."
-      - working: "NA"
-        agent: "testing"
-        comment: "Cannot test Holiday override behavior - system limitations. This involves frontend animation interactions that require UI testing which is outside testing agent scope."
+    message: "✅ ADMIN ACCESS VIA TOGGLE TESTING COMPLETE: Fix working perfectly! Both test users (testadmin with role: moderator + is_admin: true, and realadmin with role: admin) can see all 7 admin sections in Settings. Verified localStorage values are correct, MANAGE MODERATORS section expands showing 5 moderators, Easter Egg Management section accessible. The hasAdminAccess logic (role === 'admin' || is_admin) is functioning correctly. Admin toggle feature fully operational."

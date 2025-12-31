@@ -8,8 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ArrowLeft, Lock, Users, Shield, UserPlus, UserX, UserCheck, AlertCircle, Snowflake, Clock, PartyPopper, Info } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ArrowLeft, Lock, Users, Shield, UserPlus, UserX, UserCheck, AlertCircle, Snowflake, Clock, ChevronDown, ChevronUp } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -26,12 +25,12 @@ const ROLE_HIERARCHY = {
 };
 
 // Get roles that a user can assign based on their role
-const getAssignableRoles = (currentUserRole, targetUserRole) => {
+const getAssignableRoles = (currentUserRole, targetUserRole, hasAdminAccess = false) => {
   const currentRank = ROLE_HIERARCHY[currentUserRole] || 0;
   const targetRank = ROLE_HIERARCHY[targetUserRole] || 0;
   
-  // Admin can assign any role
-  if (currentUserRole === 'admin') {
+  // Admin or users with admin access can assign any role
+  if (currentUserRole === 'admin' || hasAdminAccess) {
     return ['admin', 'developer', 'mmod', 'smod', 'lmod', 'moderator'];
   }
   
@@ -47,9 +46,9 @@ const getAssignableRoles = (currentUserRole, targetUserRole) => {
 };
 
 // Check if current user can modify target user's role
-const canModifyRole = (currentUserRole, targetUserRole, isSelf) => {
-  // Admin can change their own role
-  if (currentUserRole === 'admin' && isSelf) {
+const canModifyRole = (currentUserRole, targetUserRole, isSelf, hasAdminAccess = false) => {
+  // Admin or admin-access users can change their own role
+  if ((currentUserRole === 'admin' || hasAdminAccess) && isSelf) {
     return true;
   }
   
@@ -61,8 +60,8 @@ const canModifyRole = (currentUserRole, targetUserRole, isSelf) => {
   const currentRank = ROLE_HIERARCHY[currentUserRole] || 0;
   const targetRank = ROLE_HIERARCHY[targetUserRole] || 0;
   
-  // Admin can modify anyone
-  if (currentUserRole === 'admin') {
+  // Admin or admin-access users can modify anyone
+  if (currentUserRole === 'admin' || hasAdminAccess) {
     return true;
   }
   
@@ -71,16 +70,16 @@ const canModifyRole = (currentUserRole, targetUserRole, isSelf) => {
 };
 
 // Check if current user can modify permissions (checkboxes)
-const canModifyPermissions = (currentUserRole) => {
-  return currentUserRole === 'admin';
+const canModifyPermissions = (currentUserRole, hasAdminAccess = false) => {
+  return currentUserRole === 'admin' || hasAdminAccess;
 };
 
 // Check if current user can deactivate accounts (Admin and MMOD)
-const canDeactivateAccounts = (currentUserRole, targetUserRole, isSelf) => {
+const canDeactivateAccounts = (currentUserRole, targetUserRole, isSelf, hasAdminAccess = false) => {
   if (isSelf) return false;
   
-  // Admin can deactivate anyone
-  if (currentUserRole === 'admin') return true;
+  // Admin or admin-access users can deactivate anyone
+  if (currentUserRole === 'admin' || hasAdminAccess) return true;
   
   // MMOD can deactivate users with lower rank
   if (currentUserRole === 'mmod') {
@@ -119,26 +118,57 @@ export default function Settings() {
     const stored = localStorage.getItem('seasonal_animation_enabled');
     return stored !== 'false'; // Default to true if not set
   });
-  const [holidayAnimationEnabled, setHolidayAnimationEnabled] = useState(() => {
-    const stored = localStorage.getItem('holiday_animation_enabled');
-    return stored !== 'false'; // Default to true if not set
+  const [easterEggs, setEasterEggs] = useState([]);
+  const [selectedEasterEgg, setSelectedEasterEgg] = useState(null);
+  const [easterEggForm, setEasterEggForm] = useState({
+    username: "",
+    password: "",
+    title: "",
+    content: {}
   });
+  
+  // Collapsible section states
+  const [expandedSections, setExpandedSections] = useState({
+    changePassword: true,
+    resetPassword: false,
+    addModerator: false,
+    changeUsername: false,
+    preferences: false,
+    moderatorList: false,
+    easterEggs: false
+  });
+
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('moderator_token');
     const role = localStorage.getItem('moderator_role');
     const username = localStorage.getItem('moderator_username');
+    const isAdmin = localStorage.getItem('moderator_is_admin') === 'true';
     
     if (!token) {
       navigate('/moderator/login');
       return;
     }
     
-    setCurrentUser({ role, username });
+    // User has admin access if role is 'admin' OR is_admin flag is true
+    const hasAdminAccess = role === 'admin' || isAdmin;
+    
+    setCurrentUser({ role, username, isAdmin, hasAdminAccess });
     
     // All roles with hierarchy access can see moderators list
-    if (['admin', 'developer', 'mmod', 'smod', 'lmod'].includes(role)) {
+    if (['admin', 'developer', 'mmod', 'smod', 'lmod'].includes(role) || hasAdminAccess) {
       fetchModerators();
+    }
+    
+    // Admin access users can see easter eggs
+    if (hasAdminAccess) {
+      fetchEasterEggs();
     }
   }, [navigate]);
 
@@ -155,6 +185,51 @@ export default function Settings() {
         localStorage.clear();
         navigate('/moderator/login');
       }
+    }
+  };
+
+  const fetchEasterEggs = async () => {
+    try {
+      const token = localStorage.getItem('moderator_token');
+      const response = await axios.get(`${API}/easter-eggs`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setEasterEggs(response.data);
+    } catch (error) {
+      console.error(error);
+      // Don't redirect on 403, just don't show easter eggs
+    }
+  };
+
+  const handleEasterEggSelect = (egg) => {
+    setSelectedEasterEgg(egg);
+    setEasterEggForm({
+      username: egg.username,
+      password: egg.password,
+      title: egg.title,
+      content: egg.content || {}
+    });
+  };
+
+  const handleEasterEggUpdate = async () => {
+    if (!selectedEasterEgg) return;
+    
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('moderator_token');
+      await axios.patch(
+        `${API}/easter-eggs/${selectedEasterEgg.page_key}`,
+        easterEggForm,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`Easter egg "${selectedEasterEgg.page_key}" updated successfully!`);
+      fetchEasterEggs();
+      setSelectedEasterEgg(null);
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.detail || "Failed to update easter egg");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -436,13 +511,6 @@ export default function Settings() {
     window.dispatchEvent(new CustomEvent('seasonalAnimationToggle', { detail: { enabled } }));
   };
 
-  const handleHolidayAnimationToggle = (enabled) => {
-    setHolidayAnimationEnabled(enabled);
-    localStorage.setItem('holiday_animation_enabled', String(enabled));
-    // Dispatch event so other components can react
-    window.dispatchEvent(new CustomEvent('holidayAnimationToggle', { detail: { enabled } }));
-  };
-
   const getStatusBadge = (status) => {
     if (status === "active") {
       return <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/50">ACTIVE</Badge>;
@@ -497,43 +565,56 @@ export default function Settings() {
         </h1>
 
         {/* Change Own Password */}
-        <Card className="glass-card border-slate-700 mb-8">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold uppercase tracking-wide text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-              <Lock className="inline-block mr-2 h-6 w-6" />
-              Change Your Password
-            </CardTitle>
-            <CardDescription className="text-slate-400">
-              Update your account password
-            </CardDescription>
+        <Card className="glass-card border-slate-700 mb-4">
+          <CardHeader 
+            className="cursor-pointer select-none"
+            onClick={() => toggleSection('changePassword')}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-xl sm:text-2xl font-bold uppercase tracking-wide text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                  <Lock className="inline-block mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+                  Change Your Password
+                </CardTitle>
+                <CardDescription className="text-slate-400 text-sm">
+                  Update your account password
+                </CardDescription>
+              </div>
+              {expandedSections.changePassword ? (
+                <ChevronUp className="h-5 w-5 text-slate-400" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-slate-400" />
+              )}
+            </div>
           </CardHeader>
-          <CardContent>
-            {/* Password Requirements */}
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded p-4 mb-4">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-semibold text-blue-400 mb-1">Password Requirements:</p>
-                  <ul className="text-xs text-slate-300 space-y-1">
-                    <li>• At least 8 characters long</li>
-                    <li>• At least one uppercase letter (A-Z)</li>
-                    <li>• At least one lowercase letter (a-z)</li>
-                    <li>• At least one number (0-9)</li>
-                    <li>• At least one special character (!@#$%^&*)</li>
-                    <li>• Cannot reuse your last 10 passwords</li>
-                  </ul>
+          {expandedSections.changePassword && (
+            <CardContent>
+              {/* Password Requirements */}
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded p-4 mb-4">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-blue-400 mb-1">Password Requirements:</p>
+                    <ul className="text-xs text-slate-300 space-y-1">
+                      <li>• At least 8 characters long</li>
+                      <li>• At least one uppercase letter (A-Z)</li>
+                      <li>• At least one lowercase letter (a-z)</li>
+                      <li>• At least one number (0-9)</li>
+                      <li>• At least one special character (!@#$%^&*)</li>
+                      <li>• Cannot reuse your last 10 passwords</li>
+                    </ul>
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <form onSubmit={handlePasswordChange} className="space-y-4" data-testid="change-password-form">
-              <div className="space-y-2">
-                <Label htmlFor="old_password" className="text-slate-300">Current Password</Label>
-                <Input
-                  id="old_password"
-                  data-testid="old-password-input"
-                  type="password"
-                  value={passwordForm.old_password}
+              
+              <form onSubmit={handlePasswordChange} className="space-y-4" data-testid="change-password-form">
+                <div className="space-y-2">
+                  <Label htmlFor="old_password" className="text-slate-300">Current Password</Label>
+                  <Input
+                    id="old_password"
+                    data-testid="old-password-input"
+                    type="password"
+                    value={passwordForm.old_password}
                   onChange={(e) => setPasswordForm(prev => ({ ...prev, old_password: e.target.value }))}
                   required
                   className="bg-slate-900/50 border-slate-700 focus:border-amber-500 text-slate-200 rounded-sm"
@@ -573,109 +654,79 @@ export default function Settings() {
               </Button>
             </form>
           </CardContent>
+          )}
         </Card>
 
         {/* Seasonal Animation Toggle */}
-        <Card className="glass-card border-slate-700 mb-8">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold uppercase tracking-wide text-cyan-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-              <Snowflake className="inline-block mr-2 h-6 w-6" />
-              Visual Preferences
-            </CardTitle>
-            <CardDescription className="text-slate-400">
-              Customize your visual experience
-            </CardDescription>
+        <Card className="glass-card border-slate-700 mb-4">
+          <CardHeader 
+            className="cursor-pointer select-none"
+            onClick={() => toggleSection('preferences')}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-xl sm:text-2xl font-bold uppercase tracking-wide text-cyan-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                  <Snowflake className="inline-block mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+                  Visual Preferences
+                </CardTitle>
+                <CardDescription className="text-slate-400 text-sm">
+                  Customize your visual experience
+                </CardDescription>
+              </div>
+              {expandedSections.preferences ? (
+                <ChevronUp className="h-5 w-5 text-slate-400" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-slate-400" />
+              )}
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Seasonal Animation Toggle */}
-            <div className="flex items-center justify-between p-3 bg-slate-900/50 rounded border border-slate-800">
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
+          {expandedSections.preferences && (
+            <CardContent>
+              <div className="flex items-center justify-between p-3 bg-slate-900/50 rounded border border-slate-800">
+                <div className="flex-1">
                   <p className="font-semibold text-slate-200">Seasonal Animation</p>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="h-4 w-4 text-slate-400 cursor-help hover:text-cyan-400 transition-colors" />
-                      </TooltipTrigger>
-                      <TooltipContent className="bg-slate-800 border-slate-700 text-slate-200 max-w-xs">
-                        <p className="text-sm">
-                          <strong>Seasonal effects change throughout the year:</strong><br/>
-                          ❄️ Winter: Snowflakes (Dec-Feb)<br/>
-                          🌸 Spring: Cherry blossoms (Mar-May)<br/>
-                          ✨ Summer: Fireflies (Jun-Aug)<br/>
-                          🍂 Autumn: Falling leaves (Sep-Nov)
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <p className="text-sm text-slate-400">
+                    Show falling snowflakes, leaves, or other seasonal effects on the landing page and portal
+                  </p>
                 </div>
-                <p className="text-sm text-slate-400">
-                  Show falling snowflakes, leaves, or other seasonal effects
-                </p>
+                <Switch
+                  data-testid="seasonal-animation-toggle"
+                  checked={seasonalAnimationEnabled}
+                  onCheckedChange={handleSeasonalAnimationToggle}
+                  className="ml-4"
+                />
               </div>
-              <Switch
-                data-testid="seasonal-animation-toggle"
-                checked={seasonalAnimationEnabled}
-                onCheckedChange={handleSeasonalAnimationToggle}
-                className="ml-4"
-              />
-            </div>
-
-            {/* Holiday Animation Toggle */}
-            <div className="flex items-center justify-between p-3 bg-slate-900/50 rounded border border-slate-800">
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <PartyPopper className="h-4 w-4 text-amber-400" />
-                  <p className="font-semibold text-slate-200">Holiday Animations</p>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="h-4 w-4 text-slate-400 cursor-help hover:text-amber-400 transition-colors" />
-                      </TooltipTrigger>
-                      <TooltipContent className="bg-slate-800 border-slate-700 text-slate-200 max-w-sm">
-                        <p className="text-sm mb-2">
-                          <strong>Special animations for major holidays:</strong>
-                        </p>
-                        <div className="text-xs space-y-1">
-                          <p>🇬🇧 <strong>UK:</strong> New Year, Easter, Bank Holidays, Christmas</p>
-                          <p>🇺🇸 <strong>US:</strong> July 4th, Thanksgiving, Memorial Day, Christmas</p>
-                          <p>🇨🇳 <strong>China:</strong> Chinese New Year, Dragon Boat, Mid-Autumn</p>
-                        </div>
-                        <p className="text-xs mt-2 text-slate-400">
-                          Displays day before, day of, and day after each holiday. Overrides seasonal effects when active.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-                <p className="text-sm text-slate-400">
-                  Show festive effects on UK, US, and Chinese holidays (3-day display)
-                </p>
-              </div>
-              <Switch
-                data-testid="holiday-animation-toggle"
-                checked={holidayAnimationEnabled}
-                onCheckedChange={handleHolidayAnimationToggle}
-                className="ml-4"
-              />
-            </div>
-          </CardContent>
+            </CardContent>
+          )}
         </Card>
 
         {/* Admin Only Sections */}
-        {currentUser && currentUser.role === 'admin' && (
+        {currentUser && currentUser.hasAdminAccess && (
           <>
             {/* Reset Password - Admin Only */}
-            <Card className="glass-card border-slate-700 mb-8">
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold uppercase tracking-wide text-red-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                  <Lock className="inline-block mr-2 h-6 w-6" />
-                  Reset User Password
-                </CardTitle>
-                <CardDescription className="text-slate-400">
-                  Reset password for any moderator
-                </CardDescription>
+            <Card className="glass-card border-slate-700 mb-4">
+              <CardHeader 
+                className="cursor-pointer select-none"
+                onClick={() => toggleSection('resetPassword')}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-xl sm:text-2xl font-bold uppercase tracking-wide text-red-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                      <Lock className="inline-block mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+                      Reset User Password
+                    </CardTitle>
+                    <CardDescription className="text-slate-400 text-sm">
+                      Reset password for any moderator
+                    </CardDescription>
+                  </div>
+                  {expandedSections.resetPassword ? (
+                    <ChevronUp className="h-5 w-5 text-slate-400" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5 text-slate-400" />
+                  )}
+                </div>
               </CardHeader>
+              {expandedSections.resetPassword && (
               <CardContent>
                 <form onSubmit={handlePasswordReset} className="space-y-4" data-testid="reset-password-form">
                   <div className="space-y-2">
@@ -714,70 +765,98 @@ export default function Settings() {
                   </Button>
                 </form>
               </CardContent>
+              )}
             </Card>
 
             {/* Change Username - Admin Only */}
-            <Card className="glass-card border-slate-700 mb-8">
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold uppercase tracking-wide text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                  <UserPlus className="inline-block mr-2 h-6 w-6" />
-                  Change Moderator Username
-                </CardTitle>
-                <CardDescription className="text-slate-400">
-                  Change any moderator&apos;s username
-                </CardDescription>
+            <Card className="glass-card border-slate-700 mb-4">
+              <CardHeader 
+                className="cursor-pointer select-none"
+                onClick={() => toggleSection('changeUsername')}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-xl sm:text-2xl font-bold uppercase tracking-wide text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                      <UserPlus className="inline-block mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+                      Change Moderator Username
+                    </CardTitle>
+                    <CardDescription className="text-slate-400 text-sm">
+                      Change any moderator&apos;s username
+                    </CardDescription>
+                  </div>
+                  {expandedSections.changeUsername ? (
+                    <ChevronUp className="h-5 w-5 text-slate-400" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5 text-slate-400" />
+                  )}
+                </div>
               </CardHeader>
-              <CardContent>
-                <form onSubmit={handleChangeUsername} className="space-y-4" data-testid="change-username-form">
-                  <div className="space-y-2">
-                    <Label htmlFor="old_username" className="text-slate-300">Current Username</Label>
-                    <Input
-                      id="old_username"
-                      data-testid="old-username-input"
-                      type="text"
-                      value={changeUsernameForm.old_username}
-                      onChange={(e) => setChangeUsernameForm(prev => ({ ...prev, old_username: e.target.value }))}
-                      required
-                      className="bg-slate-900/50 border-slate-700 focus:border-amber-500 text-slate-200 rounded-sm"
-                      placeholder="Enter current username"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="new_username_change" className="text-slate-300">New Username</Label>
-                    <Input
-                      id="new_username_change"
-                      data-testid="new-username-input"
-                      type="text"
-                      value={changeUsernameForm.new_username}
-                      onChange={(e) => setChangeUsernameForm(prev => ({ ...prev, new_username: e.target.value }))}
-                      required
-                      className="bg-slate-900/50 border-slate-700 focus:border-amber-500 text-slate-200 rounded-sm"
-                      placeholder="Enter new username"
-                    />
-                  </div>
-                  <Button
-                    data-testid="change-username-btn"
-                    type="submit"
-                    disabled={loading}
-                    className="bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide rounded-sm"
-                  >
-                    {loading ? "Changing..." : "Change Username"}
-                  </Button>
-                </form>
-              </CardContent>
+              {expandedSections.changeUsername && (
+                <CardContent>
+                  <form onSubmit={handleChangeUsername} className="space-y-4" data-testid="change-username-form">
+                    <div className="space-y-2">
+                      <Label htmlFor="old_username" className="text-slate-300">Current Username</Label>
+                      <Input
+                        id="old_username"
+                        data-testid="old-username-input"
+                        type="text"
+                        value={changeUsernameForm.old_username}
+                        onChange={(e) => setChangeUsernameForm(prev => ({ ...prev, old_username: e.target.value }))}
+                        required
+                        className="bg-slate-900/50 border-slate-700 focus:border-amber-500 text-slate-200 rounded-sm"
+                        placeholder="Enter current username"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="new_username_change" className="text-slate-300">New Username</Label>
+                      <Input
+                        id="new_username_change"
+                        data-testid="new-username-input"
+                        type="text"
+                        value={changeUsernameForm.new_username}
+                        onChange={(e) => setChangeUsernameForm(prev => ({ ...prev, new_username: e.target.value }))}
+                        required
+                        className="bg-slate-900/50 border-slate-700 focus:border-amber-500 text-slate-200 rounded-sm"
+                        placeholder="Enter new username"
+                      />
+                    </div>
+                    <Button
+                      data-testid="change-username-btn"
+                      type="submit"
+                      disabled={loading}
+                      className="bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide rounded-sm"
+                    >
+                      {loading ? "Changing..." : "Change Username"}
+                    </Button>
+                  </form>
+                </CardContent>
+              )}
             </Card>
 
             {/* Add Moderator - Admin Only */}
-            <Card className="glass-card border-slate-700 mb-8">
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold uppercase tracking-wide text-emerald-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                  <UserPlus className="inline-block mr-2 h-6 w-6" />
-                  Add New Moderator
-                </CardTitle>
-                <CardDescription className="text-slate-400">
-                  Create a new moderator account
-                </CardDescription>
+            <Card className="glass-card border-slate-700 mb-4">
+              <CardHeader 
+                className="cursor-pointer select-none"
+                onClick={() => toggleSection('addModerator')}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-xl sm:text-2xl font-bold uppercase tracking-wide text-emerald-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                      <UserPlus className="inline-block mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+                      Add New Moderator
+                    </CardTitle>
+                    <CardDescription className="text-slate-400 text-sm">
+                      Create a new moderator account
+                    </CardDescription>
+                  </div>
+                  {expandedSections.addModerator ? (
+                    <ChevronUp className="h-5 w-5 text-slate-400" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5 text-slate-400" />
+                  )}
+                </div>
               </CardHeader>
+              {expandedSections.addModerator && (
               <CardContent>
                 <form onSubmit={handleAddModerator} className="space-y-4" data-testid="add-moderator-form">
                   <div className="space-y-2">
@@ -835,24 +914,38 @@ export default function Settings() {
                   </Button>
                 </form>
               </CardContent>
+              )}
             </Card>
           </>
         )}
 
         {/* User Management - Available to roles in hierarchy */}
-        {currentUser && ['admin', 'developer', 'mmod', 'smod', 'lmod'].includes(currentUser.role) && (
+        {currentUser && (['admin', 'developer', 'mmod', 'smod', 'lmod'].includes(currentUser.role) || currentUser.hasAdminAccess) && (
           <>
             {/* Manage Moderators */}
-            <Card className="glass-card border-slate-700">
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold uppercase tracking-wide text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                  <Users className="inline-block mr-2 h-6 w-6" />
-                  Manage Moderators
-                </CardTitle>
-                <CardDescription className="text-slate-400">
-                  View, enable/disable, or delete moderator accounts
-                </CardDescription>
+            <Card className="glass-card border-slate-700 mb-4">
+              <CardHeader 
+                className="cursor-pointer select-none"
+                onClick={() => toggleSection('moderatorList')}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-xl sm:text-2xl font-bold uppercase tracking-wide text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                      <Users className="inline-block mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+                      Manage Moderators
+                    </CardTitle>
+                    <CardDescription className="text-slate-400 text-sm">
+                      View, enable/disable, or delete moderator accounts
+                    </CardDescription>
+                  </div>
+                  {expandedSections.moderatorList ? (
+                    <ChevronUp className="h-5 w-5 text-slate-400" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5 text-slate-400" />
+                  )}
+                </div>
               </CardHeader>
+              {expandedSections.moderatorList && (
               <CardContent>
                 <div className="space-y-3" data-testid="moderator-list">
                   {moderators.map((mod) => (
@@ -887,10 +980,10 @@ export default function Settings() {
                       {/* Show controls based on hierarchy */}
                       {(() => {
                         const isSelf = mod.username === currentUser.username;
-                        const canChangeRole = canModifyRole(currentUser.role, mod.role, isSelf);
-                        const canChangePerms = canModifyPermissions(currentUser.role);
-                        const canDeactivate = canDeactivateAccounts(currentUser.role, mod.role, isSelf);
-                        const assignableRoles = getAssignableRoles(currentUser.role, mod.role);
+                        const canChangeRole = canModifyRole(currentUser.role, mod.role, isSelf, currentUser.hasAdminAccess);
+                        const canChangePerms = canModifyPermissions(currentUser.role, currentUser.hasAdminAccess);
+                        const canDeactivate = canDeactivateAccounts(currentUser.role, mod.role, isSelf, currentUser.hasAdminAccess);
+                        const assignableRoles = getAssignableRoles(currentUser.role, mod.role, currentUser.hasAdminAccess);
                         
                         // Determine what to show
                         const showRoleDropdown = canChangeRole && assignableRoles.length > 0;
@@ -1019,8 +1112,121 @@ export default function Settings() {
                   ))}
                 </div>
               </CardContent>
+              )}
             </Card>
           </>
+        )}
+        
+        {/* Easter Egg Management - Admin Only */}
+        {currentUser?.hasAdminAccess && (
+          <Card className="bg-slate-800/50 border-slate-700 rounded-sm mt-4">
+            <CardHeader 
+              className="cursor-pointer select-none"
+              onClick={() => toggleSection('easterEggs')}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-slate-200 text-lg flex items-center gap-2" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                    <span className="text-2xl">🥚</span> Easter Egg Management
+                  </CardTitle>
+                  <CardDescription className="text-slate-400 text-sm">
+                    Manage credentials and content for secret joke pages
+                  </CardDescription>
+                </div>
+                {expandedSections.easterEggs ? (
+                  <ChevronUp className="h-5 w-5 text-slate-400" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-slate-400" />
+                )}
+              </div>
+            </CardHeader>
+            {expandedSections.easterEggs && (
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {easterEggs.map((egg) => (
+                  <button
+                    key={egg.page_key}
+                    onClick={(e) => { e.stopPropagation(); handleEasterEggSelect(egg); }}
+                    className={`p-3 rounded-sm border text-left transition-all ${
+                      selectedEasterEgg?.page_key === egg.page_key
+                        ? 'bg-amber-500/20 border-amber-500'
+                        : 'bg-slate-900/50 border-slate-700 hover:border-slate-600'
+                    }`}
+                  >
+                    <p className="text-slate-200 font-medium capitalize">{egg.page_key}</p>
+                    <p className="text-slate-400 text-xs">User: {egg.username}</p>
+                    <p className="text-slate-500 text-xs">Pass: {egg.password}</p>
+                  </button>
+                ))}
+              </div>
+              
+              {selectedEasterEgg && (
+                <div className="mt-4 p-4 bg-slate-900/50 rounded-sm border border-slate-700">
+                  <h4 className="text-slate-200 font-medium mb-3" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                    Edit: {selectedEasterEgg.title}
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-slate-400 text-xs uppercase">Username</Label>
+                      <Input
+                        value={easterEggForm.username}
+                        onChange={(e) => setEasterEggForm({ ...easterEggForm, username: e.target.value })}
+                        className="bg-slate-900/50 border-slate-700 text-slate-200 rounded-sm mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-slate-400 text-xs uppercase">Password</Label>
+                      <Input
+                        value={easterEggForm.password}
+                        onChange={(e) => setEasterEggForm({ ...easterEggForm, password: e.target.value })}
+                        className="bg-slate-900/50 border-slate-700 text-slate-200 rounded-sm mt-1"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label className="text-slate-400 text-xs uppercase">Title</Label>
+                      <Input
+                        value={easterEggForm.title}
+                        onChange={(e) => setEasterEggForm({ ...easterEggForm, title: e.target.value })}
+                        className="bg-slate-900/50 border-slate-700 text-slate-200 rounded-sm mt-1"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label className="text-slate-400 text-xs uppercase">Content (JSON)</Label>
+                      <textarea
+                        value={JSON.stringify(easterEggForm.content, null, 2)}
+                        onChange={(e) => {
+                          try {
+                            const parsed = JSON.parse(e.target.value);
+                            setEasterEggForm({ ...easterEggForm, content: parsed });
+                          } catch {
+                            // Invalid JSON, keep old value
+                          }
+                        }}
+                        className="w-full h-48 bg-slate-900/50 border border-slate-700 text-slate-200 rounded-sm mt-1 p-2 font-mono text-xs"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-4">
+                    <Button
+                      onClick={handleEasterEggUpdate}
+                      disabled={loading}
+                      className="bg-amber-500 hover:bg-amber-600 text-slate-900 rounded-sm"
+                    >
+                      Save Changes
+                    </Button>
+                    <Button
+                      onClick={() => setSelectedEasterEgg(null)}
+                      variant="outline"
+                      className="border-slate-600 text-slate-400 hover:bg-slate-700 rounded-sm"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+            )}
+          </Card>
         )}
       </div>
     </div>

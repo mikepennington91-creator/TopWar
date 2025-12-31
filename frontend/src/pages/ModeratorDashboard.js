@@ -873,10 +873,9 @@ export default function ModeratorDashboard() {
                         isRating: true
                       },
                       { 
-                        shortLabel: "Guidelines Rating (1-5)", 
-                        fullLabel: "Rate your understanding of community guidelines enforcement and conflict resolution. (Be honest, you will be tested) (1 = Poor, 5 = Excellent)",
-                        value: selectedApp.guidelines_rating,
-                        isRating: true
+                        shortLabel: "Guidelines Understanding", 
+                        fullLabel: "Rate your understanding of community guidelines enforcement and conflict resolution. (Be honest, you will be tested)",
+                        value: selectedApp.guidelines_rating
                       },
                       { 
                         shortLabel: "Complex Game Mechanic", 

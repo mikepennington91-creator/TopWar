@@ -320,7 +320,6 @@ function usageIsCompositePortal({
 // Babel plugin for JSX transformation - adds metadata to all elements
 const babelMetadataPlugin = ({ types: t }) => {
   const fileNameCache = new Map();
-  const processedNodes = new WeakSet(); // Track processed nodes to prevent infinite loops
 
   const ARRAY_METHODS = new Set([
     "map",
@@ -437,17 +436,26 @@ const babelMetadataPlugin = ({ types: t }) => {
 
   // Check if a JSX element is inside an array iteration callback
   function isJSXDynamic(jsxPath) {
-    let currentPath = jsxPath.parentPath;
-    while (currentPath) {
-      if (currentPath.isCallExpression()) {
-        const { callee } = currentPath.node;
-        if (t.isMemberExpression(callee) && t.isIdentifier(callee.property)) {
-          if (ARRAY_METHODS.has(callee.property.name)) return true;
-        }
+    // Use findParent to reliably check if we're inside a function callback to an array method
+    return !!jsxPath.findParent((path) => {
+      // Look for ArrowFunctionExpression or FunctionExpression
+      if (!path.isArrowFunctionExpression() && !path.isFunctionExpression()) {
+        return false;
       }
-      currentPath = currentPath.parentPath;
-    }
-    return false;
+
+      // Check if parent is a CallExpression with an array method
+      const parentCall = path.parentPath;
+      if (!parentCall || !parentCall.isCallExpression()) {
+        return false;
+      }
+
+      const { callee } = parentCall.node;
+      if (!t.isMemberExpression(callee) || !t.isIdentifier(callee.property)) {
+        return false;
+      }
+
+      return ARRAY_METHODS.has(callee.property.name);
+    });
   }
 
   // Check if JSX element has any expressions (data dependencies)
@@ -758,11 +766,8 @@ const babelMetadataPlugin = ({ types: t }) => {
   return {
     name: "element-metadata-plugin",
     visitor: {
-      // Wrap React components (capitalized JSX) with metadata divs,
-      // or stamp attributes when wrapping would break Radix/Floating-UI.
+      // Add metadata attributes to React components (capitalized JSX)
       JSXElement(jsxPath, state) {
-        if (processedNodes.has(jsxPath.node)) return;
-
         const openingElement = jsxPath.node.openingElement;
         if (!openingElement?.name) return;
         const elementName = getName(openingElement);
@@ -891,10 +896,18 @@ const babelMetadataPlugin = ({ types: t }) => {
         // Detect dynamic
         let isDynamic = isJSXDynamic(jsxPath) || hasAnyExpression(jsxPath.node);
 
+        // Only check component definition if there are NO static text children.
+        // If there ARE text children (like <Label>Habit Name</Label>), their editability
+        // depends on whether they're static strings, not on the component's internal implementation.
         if (!isDynamic) {
-          const binding = jsxPath.scope.getBinding(elementName);
-          if (binding) {
-            isDynamic = componentBindingIsDynamic({ binding, state });
+          const hasStaticTextChildren = jsxPath.node.children.some(
+            (child) => t.isJSXText(child) && child.value.trim()
+          );
+          if (!hasStaticTextChildren) {
+            const binding = jsxPath.scope.getBinding(elementName);
+            if (binding) {
+              isDynamic = componentBindingIsDynamic({ binding, state });
+            }
           }
         }
 
@@ -947,7 +960,7 @@ const babelMetadataPlugin = ({ types: t }) => {
         });
 
         if (compositePortal) {
-          // Treat like a primitive/root: don't wrap; stamp + mark excluded
+          // Composite portal: stamp + mark excluded
           pushMetaAttrs(
             openingElement,
             { normalizedPath, lineNumber, elementName, isDynamic },
@@ -956,67 +969,11 @@ const babelMetadataPlugin = ({ types: t }) => {
           return;
         }
 
-        // ✅ Normal case: wrap with display: contents and preserve an existing key
-        processedNodes.add(jsxPath.node);
-
-        const keyAttr = openingElement.attributes?.find(
-          (a) =>
-            t.isJSXAttribute(a) &&
-            t.isJSXIdentifier(a.name) &&
-            a.name.name === "key",
+        // ✅ Normal case: add metadata attributes directly
+        pushMetaAttrs(
+          openingElement,
+          { normalizedPath, lineNumber, elementName, isDynamic },
         );
-
-        const wrapperAttrs = [
-          t.jsxAttribute(
-            t.jsxIdentifier("x-file-name"),
-            t.stringLiteral(normalizedPath),
-          ),
-          t.jsxAttribute(
-            t.jsxIdentifier("x-line-number"),
-            t.stringLiteral(String(lineNumber)),
-          ),
-          t.jsxAttribute(
-            t.jsxIdentifier("x-component"),
-            t.stringLiteral(elementName),
-          ),
-          t.jsxAttribute(
-            t.jsxIdentifier("x-id"),
-            t.stringLiteral(`${normalizedPath}_${lineNumber}`),
-          ),
-          t.jsxAttribute(
-            t.jsxIdentifier("x-dynamic"),
-            t.stringLiteral(isDynamic ? "true" : "false"),
-          ),
-          t.jsxAttribute(
-            t.jsxIdentifier("data-debug-wrapper"),
-            t.stringLiteral("true"),
-          ),
-          t.jsxAttribute(
-            t.jsxIdentifier("style"),
-            t.jsxExpressionContainer(
-              t.objectExpression([
-                t.objectProperty(
-                  t.identifier("display"),
-                  t.stringLiteral("contents"),
-                ),
-              ]),
-            ),
-          ),
-        ];
-        if (keyAttr?.value) {
-          wrapperAttrs.push(
-            t.jsxAttribute(t.jsxIdentifier("key"), t.cloneNode(keyAttr.value)),
-          );
-        }
-
-        const wrapper = t.jsxElement(
-          t.jsxOpeningElement(t.jsxIdentifier("div"), wrapperAttrs, false),
-          t.jsxClosingElement(t.jsxIdentifier("div")),
-          [jsxPath.node],
-          false,
-        );
-
-        jsxPath.replaceWith(wrapper);
       },
 
       // Add metadata to native HTML elements (lowercase JSX)
@@ -1062,12 +1019,13 @@ const babelMetadataPlugin = ({ types: t }) => {
         }
         const normalizedPath = fileNameCache.get(filename) || "unknown";
 
-        // Detect if native element is inside an array iteration or has expressions
-        const parentJSXElement = jsxPath.findParent((p) => p.isJSXElement());
-        const isDynamic = parentJSXElement
-          ? isJSXDynamic(parentJSXElement) ||
-            hasAnyExpression(parentJSXElement.node)
-          : false;
+        // Detect if native element is dynamic:
+        // 1. Inside an array iteration (.map(), etc.)
+        // 2. Has expression children (like {variable} or {obj.prop})
+        const parentElement = jsxPath.parentPath; // JSXElement containing this opening element
+        const isInArrayMethod = parentElement ? isJSXDynamic(parentElement) : false;
+        const hasExpressions = parentElement && parentElement.node ? hasAnyExpression(parentElement.node) : false;
+        const isDynamic = isInArrayMethod || hasExpressions;
 
         // Add metadata attributes
         insertMetaAttributes(jsxPath.node, [

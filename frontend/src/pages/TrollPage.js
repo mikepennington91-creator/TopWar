@@ -3,6 +3,27 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Frown, ThumbsDown, AlertCircle, Sparkles } from "lucide-react";
 
+// Default content
+const DEFAULT_CONTENT = {
+  header_text: "NICE TRY, FUNNY GUY!",
+  sub_header: "We see what you did there... 👀",
+  status_text: "Application Status: TROLL DETECTED 🚨",
+  message: "We regret to inform you that your \"application\" will not be considered for the prestigious position of Top War Moderator.",
+  funny_reasons: [
+    "Your application contained 47 uses of the word 'lol'",
+    "We noticed you listed 'Professional Troll' as previous experience",
+    "Your Discord handle was 'xX_TrollMaster_Xx'",
+    "You answered every question with 'ur mom'",
+    "Your essay was just the bee movie script",
+    "You claimed to be 420 years old",
+    "Your server number was '69420'",
+    "You attached a picture of a potato as your ID"
+  ],
+  roast_text: "Your troll attempt was slightly less funny than you thought it was 😬",
+  encouragement: "But hey, at least you found our secret page! That's gotta count for something, right? ...Right? 🦗",
+  troll_score: "3/10 - needs work 📝"
+};
+
 // Troll emoji component with bounce animation
 const BouncingEmoji = ({ emoji, delay }) => (
   <span 
@@ -20,21 +41,31 @@ export default function TrollPage() {
   const navigate = useNavigate();
   const [showRealMessage, setShowRealMessage] = useState(false);
   const [clickCount, setClickCount] = useState(0);
+  
+  // Initialize content from sessionStorage or use default
+  const [content] = useState(() => {
+    const storedContent = sessionStorage.getItem('easter_egg_content');
+    if (storedContent) {
+      try {
+        return { ...DEFAULT_CONTENT, ...JSON.parse(storedContent) };
+      } catch {
+        return DEFAULT_CONTENT;
+      }
+    }
+    return DEFAULT_CONTENT;
+  });
 
-  const funnyReasons = [
-    "Your application contained 47 uses of the word 'lol'",
-    "We noticed you listed 'Professional Troll' as previous experience",
-    "Your Discord handle was 'xX_TrollMaster_Xx'",
-    "You answered every question with 'ur mom'",
-    "Your essay was just the bee movie script",
-    "You claimed to be 420 years old",
-    "Your server number was '69420'",
-    "You attached a picture of a potato as your ID"
-  ];
-
-  const [randomReason] = useState(() => 
-    funnyReasons[Math.floor(Math.random() * funnyReasons.length)]
-  );
+  useEffect(() => {
+    // Cleanup on unmount
+    return () => {
+      sessionStorage.removeItem('easter_egg_content');
+    };
+  }, []);
+  
+  const [randomReason] = useState(() => {
+    const reasons = content.funny_reasons || DEFAULT_CONTENT.funny_reasons;
+    return reasons[Math.floor(Math.random() * reasons.length)];
+  });
 
   const handleButtonClick = () => {
     setClickCount(prev => prev + 1);
@@ -118,11 +149,11 @@ export default function TrollPage() {
             </div>
             
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 rainbow-text">
-              NICE TRY, FUNNY GUY!
+              {content.header_text}
             </h1>
             
             <p className="text-purple-200 text-lg">
-              We see what you did there... 👀
+              {content.sub_header}
             </p>
           </div>
 
@@ -132,18 +163,17 @@ export default function TrollPage() {
               <AlertCircle className="w-6 h-6 text-yellow-400 flex-shrink-0 mt-1 wiggle" />
               <div>
                 <h2 className="text-xl font-bold text-yellow-400 mb-2">
-                  Application Status: TROLL DETECTED 🚨
+                  {content.status_text}
                 </h2>
                 <p className="text-purple-100 leading-relaxed">
-                  We regret to inform you that your "application" will <span className="font-bold text-pink-400">not</span> be considered 
-                  for the prestigious position of Top War Moderator.
+                  {content.message}
                 </p>
               </div>
             </div>
             
             <div className="mt-4 p-4 bg-purple-900/50 rounded-xl">
               <p className="text-sm text-purple-300 mb-2">📋 Reason for rejection:</p>
-              <p className="text-white italic">"{randomReason}"</p>
+              <p className="text-white italic">&ldquo;{randomReason}&rdquo;</p>
             </div>
           </div>
 
@@ -155,8 +185,7 @@ export default function TrollPage() {
                 We have to be honest with you...
               </p>
               <p className="text-xl font-bold text-pink-300">
-                Your troll attempt was <span className="wiggle inline-block">slightly</span> less funny 
-                than you thought it was 😬
+                {content.roast_text}
               </p>
             </div>
           </div>
@@ -165,9 +194,7 @@ export default function TrollPage() {
           <div className="text-center mb-8 p-4 bg-green-500/10 rounded-xl border border-green-500/30">
             <Sparkles className="w-8 h-8 mx-auto text-green-400 mb-2" />
             <p className="text-green-300">
-              But hey, at least you found our secret page! 
-              <br />
-              <span className="text-sm text-green-400/70">That's gotta count for something, right? ...Right? 🦗</span>
+              {content.encouragement}
             </p>
           </div>
 
@@ -196,7 +223,7 @@ export default function TrollPage() {
               <p className="text-yellow-300 text-sm">
                 Okay okay, we appreciate the persistence! 😄
                 <br />
-                If you're actually interested in moderating, feel free to submit a <span className="underline">real</span> application!
+                If you&rsquo;re actually interested in moderating, feel free to submit a <span className="underline">real</span> application!
               </p>
             </div>
           )}
@@ -210,7 +237,7 @@ export default function TrollPage() {
                 <span className="text-purple-400">/</span>
                 <span className="text-green-400">10</span>
               </p>
-              <p className="text-xs text-purple-500">needs work 📝</p>
+              <p className="text-xs text-purple-500">{content.troll_score}</p>
             </div>
           </div>
 
@@ -220,7 +247,7 @@ export default function TrollPage() {
               onClick={() => navigate('/moderator/login')}
               className="text-purple-400/60 hover:text-purple-300 text-sm underline underline-offset-4 transition-colors"
             >
-              🚪 Fine, I'll leave...
+              🚪 Fine, I&rsquo;ll leave...
             </button>
           </div>
 

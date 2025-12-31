@@ -1,645 +1,778 @@
+#!/usr/bin/env python3
+"""
+Backend API Testing Script for Top War Moderator Application
+Tests the refactored backend with modular structure and new features.
+"""
+
 import requests
-import sys
 import json
+import os
 from datetime import datetime
 
-class TopWarModeratorAPITester:
-    def __init__(self, base_url="https://mod-interface-fix.preview.emergentagent.com"):
-        self.base_url = base_url
-        self.api_url = f"{base_url}/api"
-        self.token = None
-        self.tests_run = 0
-        self.tests_passed = 0
-        self.test_results = []
+# Get backend URL from environment
+BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://topwar-portal.preview.emergentagent.com')
+API_BASE = f"{BACKEND_URL}/api"
 
-    def log_test(self, name, success, details=""):
-        """Log test result"""
-        self.tests_run += 1
-        if success:
-            self.tests_passed += 1
+class BackendTester:
+    def __init__(self):
+        self.session = requests.Session()
+        self.admin_token = None
+        self.test_results = []
         
+    def log_test(self, test_name, success, message="", details=None):
+        """Log test result."""
         result = {
-            "test": name,
+            "test": test_name,
             "success": success,
-            "details": details
+            "message": message,
+            "details": details,
+            "timestamp": datetime.now().isoformat()
         }
         self.test_results.append(result)
-        
         status = "✅ PASS" if success else "❌ FAIL"
-        print(f"{status} - {name}")
-        if details:
+        print(f"{status}: {test_name}")
+        if message:
+            print(f"    {message}")
+        if details and not success:
             print(f"    Details: {details}")
+        print()
 
-    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
-        """Run a single API test"""
-        url = f"{self.api_url}/{endpoint}"
-        test_headers = {'Content-Type': 'application/json'}
-        
-        if self.token:
-            test_headers['Authorization'] = f'Bearer {self.token}'
-        
-        if headers:
-            test_headers.update(headers)
-
+    def test_api_root(self):
+        """Test API root endpoint."""
         try:
-            if method == 'GET':
-                response = requests.get(url, headers=test_headers, timeout=10)
-            elif method == 'POST':
-                response = requests.post(url, json=data, headers=test_headers, timeout=10)
-            elif method == 'PATCH':
-                response = requests.patch(url, json=data, headers=test_headers, timeout=10)
-
-            success = response.status_code == expected_status
-            details = f"Status: {response.status_code}"
-            
-            if not success:
-                details += f" (Expected: {expected_status})"
-                try:
-                    error_data = response.json()
-                    details += f" - {error_data.get('detail', 'No error details')}"
-                except:
-                    details += f" - Response: {response.text[:100]}"
-
-            self.log_test(name, success, details)
-            return success, response.json() if success and response.text else {}
-
+            response = self.session.get(f"{API_BASE}/")
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("message") == "Top War Moderator Application API":
+                    self.log_test("API Root Endpoint", True, "Returns correct message")
+                else:
+                    self.log_test("API Root Endpoint", False, f"Unexpected message: {data}")
+            else:
+                self.log_test("API Root Endpoint", False, f"Status: {response.status_code}", response.text)
         except Exception as e:
-            self.log_test(name, False, f"Error: {str(e)}")
-            return False, {}
+            self.log_test("API Root Endpoint", False, f"Exception: {str(e)}")
 
-    def test_root_endpoint(self):
-        """Test API root endpoint"""
-        return self.run_test("API Root", "GET", "", 200)
-
-    def test_moderator_registration(self):
-        """Test moderator registration"""
-        test_username = f"test_mod_{datetime.now().strftime('%H%M%S')}"
-        success, response = self.run_test(
-            "Moderator Registration",
-            "POST",
-            "auth/register",
-            200,
-            data={"username": test_username, "password": "TestPass123!"}
-        )
-        return success, test_username if success else None
-
-    def test_moderator_login(self, username, password):
-        """Test moderator login"""
-        success, response = self.run_test(
-            "Moderator Login",
-            "POST",
-            "auth/login",
-            200,
-            data={"username": username, "password": password}
-        )
-        if success and 'access_token' in response:
-            self.token = response['access_token']
-            return True
-        return False
-
-    def test_existing_moderator_login(self):
-        """Test login with existing moderator credentials"""
-        return self.test_moderator_login("admin", "Admin123!@")
-
-    def test_invalid_login(self):
-        """Test login with invalid credentials"""
-        success, _ = self.run_test(
-            "Invalid Login (Should Fail)",
-            "POST",
-            "auth/login",
-            401,
-            data={"username": "invalid", "password": "wrong"}
-        )
-        return success
-
-    def test_submit_application(self):
-        """Test application submission"""
-        test_data = {
-            "name": "John Test Applicant",
-            "email": "john.test@example.com",
-            "position": "Community Moderator",
-            "discord_handle": "johntester#1234",
-            "ingame_name": "TestWarrior",
-            "age": 25,
-            "country": "United States",
-            "activity_times": "Reset - 5 to reset",
-            "server": "Server 123",
-            "native_language": "English",
-            "other_languages": "Spanish, French",
-            "previous_experience": "I have moderated Discord servers for 2 years",
-            "basic_qualities": "Patience, fairness, and good communication",
-            "favourite_event": "Alliance War because of strategy",
-            "free_gems": "Daily login, events, achievements",
-            "heroes_mutated": "6",
-            "discord_tools_comfort": "Very comfortable with bots and moderation tools",
-            "guidelines_rating": "8/10 - I understand most guidelines well",
-            "complex_mechanic": "Hero mutation system and stat calculations",
-            "unknown_question": "Research the answer and ask senior moderators",
-            "hero_development": "Focus on one hero at a time, prioritize skills",
-            "racist_r4": "Report to higher authorities immediately",
-            "moderator_swearing": "Remind them privately about professional conduct"
-        }
-        
-        success, response = self.run_test(
-            "Submit Application",
-            "POST",
-            "applications",
-            200,
-            data=test_data
-        )
-        return success, response.get('id') if success else None
-
-    def test_get_applications_unauthorized(self):
-        """Test getting applications without token"""
-        old_token = self.token
-        self.token = None
-        success, _ = self.run_test(
-            "Get Applications (Unauthorized - Should Fail)",
-            "GET",
-            "applications",
-            401
-        )
-        self.token = old_token
-        return success
-
-    def test_get_applications(self):
-        """Test getting applications with valid token"""
-        success, response = self.run_test(
-            "Get Applications",
-            "GET",
-            "applications",
-            200
-        )
-        return success, response if success else []
-
-    def test_search_applications(self):
-        """Test searching applications"""
-        success, response = self.run_test(
-            "Search Applications",
-            "GET",
-            "applications?search=John",
-            200
-        )
-        return success
-
-    def test_get_single_application(self, app_id):
-        """Test getting a single application"""
-        if not app_id:
-            self.log_test("Get Single Application", False, "No application ID provided")
-            return False
+    def register_admin_user(self):
+        """Register a test admin user."""
+        try:
+            admin_data = {
+                "username": "testadmin",
+                "password": "Test@1234",
+                "role": "admin"
+            }
             
-        success, response = self.run_test(
-            "Get Single Application",
-            "GET",
-            f"applications/{app_id}",
-            200
-        )
-        return success
-
-    def test_approve_application(self, app_id):
-        """Test approving an application"""
-        if not app_id:
-            self.log_test("Approve Application", False, "No application ID provided")
-            return False
-            
-        success, response = self.run_test(
-            "Approve Application",
-            "PATCH",
-            f"applications/{app_id}",
-            200,
-            data={"status": "approved", "comment": "Application approved after review"}
-        )
-        return success
-
-    def test_reject_application(self, app_id):
-        """Test rejecting an application"""
-        if not app_id:
-            self.log_test("Reject Application", False, "No application ID provided")
-            return False
-            
-        success, response = self.run_test(
-            "Reject Application",
-            "PATCH",
-            f"applications/{app_id}",
-            200,
-            data={"status": "rejected", "comment": "Application rejected after review"}
-        )
-        return success
-
-    def test_invalid_status_update(self, app_id):
-        """Test updating application with invalid status"""
-        if not app_id:
-            self.log_test("Invalid Status Update", False, "No application ID provided")
-            return False
-            
-        success, response = self.run_test(
-            "Invalid Status Update (Should Fail)",
-            "PATCH",
-            f"applications/{app_id}",
-            400,
-            data={"status": "invalid_status", "comment": "Test comment"}
-        )
-        return success
-
-    def test_vote_on_application(self, app_id, vote_type="approve"):
-        """Test voting on an application"""
-        if not app_id:
-            self.log_test("Vote on Application", False, "No application ID provided")
-            return False
-            
-        success, response = self.run_test(
-            f"Vote {vote_type.title()} on Application",
-            "POST",
-            f"applications/{app_id}/vote",
-            200,
-            data={"vote": vote_type}
-        )
-        return success
-
-    def test_comment_on_application(self, app_id, comment="Test comment from API"):
-        """Test commenting on an application"""
-        if not app_id:
-            self.log_test("Comment on Application", False, "No application ID provided")
-            return False
-            
-        success, response = self.run_test(
-            "Add Comment to Application",
-            "POST",
-            f"applications/{app_id}/comment",
-            200,
-            data={"comment": comment}
-        )
-        return success
-
-    def test_invalid_vote(self, app_id):
-        """Test voting with invalid vote type"""
-        if not app_id:
-            self.log_test("Invalid Vote", False, "No application ID provided")
-            return False
-            
-        success, response = self.run_test(
-            "Invalid Vote Type (Should Fail)",
-            "POST",
-            f"applications/{app_id}/vote",
-            400,
-            data={"vote": "invalid_vote"}
-        )
-        return success
-
-    def test_change_password(self):
-        """Test changing own password"""
-        success, response = self.run_test(
-            "Change Own Password",
-            "PATCH",
-            "auth/change-password",
-            200,
-            data={"old_password": "Admin123!@", "new_password": "NewAdmin123!@"}
-        )
-        
-        # Change it back for other tests
-        if success:
-            self.run_test(
-                "Restore Original Password",
-                "PATCH",
-                "auth/change-password",
-                200,
-                data={"old_password": "NewAdmin123!@", "new_password": "Admin123!@"}
-            )
-        
-        return success
-
-    def test_reset_password(self, target_username="admin"):
-        """Test resetting another user's password (admin only)"""
-        success, response = self.run_test(
-            "Reset User Password (Admin)",
-            "PATCH",
-            f"auth/reset-password/{target_username}",
-            200,
-            data={"new_password": "Admin123!@"}
-        )
-        return success
-
-    def test_get_moderators(self):
-        """Test getting moderator list (admin only)"""
-        success, response = self.run_test(
-            "Get Moderators List (Admin)",
-            "GET",
-            "moderators",
-            200
-        )
-        return success, response if success else []
-
-    def test_unauthorized_admin_actions(self):
-        """Test admin-only actions without proper role"""
-        # This would need a regular moderator token, but for now we'll skip
-        # since we're using admin token
-        self.log_test("Unauthorized Admin Actions", True, "Skipped - using admin token")
-        return True
-
-    def test_last_login_tracking(self):
-        """Test that GET /api/moderators returns last_login field"""
-        success, response = self.run_test(
-            "Last Login Tracking - Get Moderators",
-            "GET",
-            "moderators",
-            200
-        )
-        
-        if success and response:
-            # Check if moderators have last_login field
-            has_last_login = False
-            for moderator in response:
-                if 'last_login' in moderator:
-                    has_last_login = True
-                    break
-            
-            if has_last_login:
-                self.log_test("Last Login Field Present", True, "last_login field found in moderator data")
+            response = self.session.post(f"{API_BASE}/auth/register", json=admin_data)
+            if response.status_code == 200:
+                self.log_test("Admin Registration", True, "Test admin user registered successfully")
+                return True
+            elif response.status_code == 400 and "already registered" in response.text:
+                self.log_test("Admin Registration", True, "Test admin user already exists")
                 return True
             else:
-                self.log_test("Last Login Field Present", False, "last_login field not found in moderator data")
+                self.log_test("Admin Registration", False, f"Status: {response.status_code}", response.text)
                 return False
-        
-        return False
-
-    def test_new_user_must_change_password(self):
-        """Test that new users are created with must_change_password=true"""
-        test_username = f"newuser_{datetime.now().strftime('%H%M%S')}"
-        
-        # Register new user
-        success, response = self.run_test(
-            "Register New User for Password Test",
-            "POST",
-            "auth/register",
-            200,
-            data={"username": test_username, "password": "TestUser1!@#"}
-        )
-        
-        if not success:
-            return False, None
-        
-        # Login with new user to check must_change_password flag
-        success, login_response = self.run_test(
-            "Login New User - Check must_change_password",
-            "POST",
-            "auth/login",
-            200,
-            data={"username": test_username, "password": "TestUser1!@#"}
-        )
-        
-        if success and login_response:
-            must_change = login_response.get('must_change_password', False)
-            if must_change:
-                self.log_test("New User Must Change Password", True, "must_change_password=true for new user")
-                return True, test_username
-            else:
-                self.log_test("New User Must Change Password", False, f"must_change_password={must_change} (expected True)")
-                return False, test_username
-        
-        return False, test_username
-
-    def test_login_updates_last_login(self):
-        """Test that login updates the last_login timestamp"""
-        # Get current moderators list to check last_login before
-        success, moderators_before = self.run_test(
-            "Get Moderators Before Login",
-            "GET",
-            "moderators",
-            200
-        )
-        
-        if not success:
+        except Exception as e:
+            self.log_test("Admin Registration", False, f"Exception: {str(e)}")
             return False
-        
-        # Find admin user's last_login before
-        admin_before = None
-        for mod in moderators_before:
-            if mod.get('username') == 'admin':
-                admin_before = mod.get('last_login')
-                break
-        
-        # Login again
-        success = self.test_moderator_login("admin", "Admin123!@")
-        if not success:
-            return False
-        
-        # Get moderators list again to check last_login after
-        success, moderators_after = self.run_test(
-            "Get Moderators After Login",
-            "GET",
-            "moderators",
-            200
-        )
-        
-        if success:
-            # Find admin user's last_login after
-            admin_after = None
-            for mod in moderators_after:
-                if mod.get('username') == 'admin':
-                    admin_after = mod.get('last_login')
-                    break
+
+    def login_admin_user(self):
+        """Login as admin user and get token."""
+        try:
+            login_data = {
+                "username": "testadmin",
+                "password": "Test@1234"
+            }
             
-            if admin_after and admin_after != admin_before:
-                self.log_test("Login Updates last_login", True, f"last_login updated from {admin_before} to {admin_after}")
-                return True
+            response = self.session.post(f"{API_BASE}/auth/login", json=login_data)
+            if response.status_code == 200:
+                data = response.json()
+                self.admin_token = data.get("access_token")
+                if self.admin_token:
+                    self.session.headers.update({"Authorization": f"Bearer {self.admin_token}"})
+                    self.log_test("Admin Login", True, f"Logged in as {data.get('username')} with role {data.get('role')}")
+                    return True
+                else:
+                    self.log_test("Admin Login", False, "No access token in response", data)
+                    return False
             else:
-                self.log_test("Login Updates last_login", False, f"last_login not updated: before={admin_before}, after={admin_after}")
+                self.log_test("Admin Login", False, f"Status: {response.status_code}", response.text)
                 return False
-        
-        return False
+        except Exception as e:
+            self.log_test("Admin Login", False, f"Exception: {str(e)}")
+            return False
 
-    def test_password_change_clears_flag(self, username):
-        """Test that changing password clears must_change_password flag"""
-        if not username:
-            self.log_test("Password Change Clears Flag", False, "No username provided")
-            return False
-        
-        # Login with the test user first
-        success, login_response = self.run_test(
-            "Login Test User Before Password Change",
-            "POST",
-            "auth/login",
-            200,
-            data={"username": username, "password": "TestUser1!@#"}
-        )
-        
-        if not success:
-            return False
-        
-        # Store the token for this user
-        old_token = self.token
-        if 'access_token' in login_response:
-            self.token = login_response['access_token']
-        
-        # Change password
-        success, response = self.run_test(
-            "Change Password to Clear Flag",
-            "PATCH",
-            "auth/change-password",
-            200,
-            data={"old_password": "TestUser1!@#", "new_password": "NewPass123!@#"}
-        )
-        
-        if not success:
-            self.token = old_token
-            return False
-        
-        # Login again to check if must_change_password is now false
-        success, login_response = self.run_test(
-            "Login After Password Change",
-            "POST",
-            "auth/login",
-            200,
-            data={"username": username, "password": "NewPass123!@#"}
-        )
-        
-        # Restore original token
-        self.token = old_token
-        
-        if success and login_response:
-            must_change = login_response.get('must_change_password', True)
-            if not must_change:
-                self.log_test("Password Change Clears Flag", True, "must_change_password=false after password change")
-                return True
+    def test_easter_eggs_list(self):
+        """Test GET /api/easter-eggs - requires admin auth."""
+        try:
+            response = self.session.get(f"{API_BASE}/easter-eggs")
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list) and len(data) > 0:
+                    # Check if troll easter egg exists
+                    troll_egg = next((egg for egg in data if egg.get("page_key") == "troll"), None)
+                    if troll_egg:
+                        self.log_test("Easter Eggs List", True, f"Retrieved {len(data)} easter eggs including troll page")
+                    else:
+                        self.log_test("Easter Eggs List", False, "Troll easter egg not found in list")
+                else:
+                    self.log_test("Easter Eggs List", False, "Empty or invalid response", data)
             else:
-                self.log_test("Password Change Clears Flag", False, f"must_change_password={must_change} (expected False)")
-                return False
-        
-        return False
+                self.log_test("Easter Eggs List", False, f"Status: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Easter Eggs List", False, f"Exception: {str(e)}")
 
-    def test_password_reset_sets_flag(self, target_username):
-        """Test that admin password reset sets must_change_password=true"""
-        if not target_username:
-            self.log_test("Password Reset Sets Flag", False, "No target username provided")
-            return False
-        
-        # Reset password as admin
-        success, response = self.run_test(
-            "Admin Reset User Password",
-            "PATCH",
-            f"auth/reset-password/{target_username}",
-            200,
-            data={"new_password": "ResetPass123!@#"}
-        )
-        
-        if not success:
-            return False
-        
-        # Login with reset password to check must_change_password flag
-        success, login_response = self.run_test(
-            "Login After Password Reset",
-            "POST",
-            "auth/login",
-            200,
-            data={"username": target_username, "password": "ResetPass123!@#"}
-        )
-        
-        if success and login_response:
-            must_change = login_response.get('must_change_password', False)
-            if must_change:
-                self.log_test("Password Reset Sets Flag", True, "must_change_password=true after admin reset")
-                return True
+    def test_easter_egg_verify(self):
+        """Test POST /api/easter-eggs/verify with Troll/FunnyGuy credentials."""
+        try:
+            # Test with correct credentials
+            response = self.session.post(f"{API_BASE}/easter-eggs/verify?username=Troll&password=FunnyGuy")
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("valid") is True and data.get("page_key") == "troll":
+                    self.log_test("Easter Egg Verify (Valid)", True, "Troll/FunnyGuy credentials verified successfully")
+                else:
+                    self.log_test("Easter Egg Verify (Valid)", False, f"Unexpected response: {data}")
             else:
-                self.log_test("Password Reset Sets Flag", False, f"must_change_password={must_change} (expected True)")
-                return False
-        
-        return False
+                self.log_test("Easter Egg Verify (Valid)", False, f"Status: {response.status_code}", response.text)
+            
+            # Test with invalid credentials
+            response = self.session.post(f"{API_BASE}/easter-eggs/verify?username=Invalid&password=Wrong")
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("valid") is False:
+                    self.log_test("Easter Egg Verify (Invalid)", True, "Invalid credentials correctly rejected")
+                else:
+                    self.log_test("Easter Egg Verify (Invalid)", False, f"Should reject invalid credentials: {data}")
+            else:
+                self.log_test("Easter Egg Verify (Invalid)", False, f"Status: {response.status_code}", response.text)
+                
+        except Exception as e:
+            self.log_test("Easter Egg Verify", False, f"Exception: {str(e)}")
 
-def main():
-    print("🚀 Starting Top War Moderator API Tests")
-    print("=" * 50)
-    
-    tester = TopWarModeratorAPITester()
-    
-    # Test API root
-    tester.test_root_endpoint()
-    
-    # Test moderator registration
-    reg_success, test_username = tester.test_moderator_registration()
-    
-    # Test invalid login
-    tester.test_invalid_login()
-    
-    # Test existing moderator login
-    login_success = tester.test_existing_moderator_login()
-    
-    if not login_success:
-        # Try with the correct admin password
-        login_success = tester.test_moderator_login("admin", "Admin123!@")
-    
-    if not login_success:
-        print("❌ Cannot proceed with authenticated tests - login failed")
-        print(f"\n📊 Final Results: {tester.tests_passed}/{tester.tests_run} tests passed")
-        return 1
-    
-    # Test unauthorized access
-    tester.test_get_applications_unauthorized()
-    
-    # Test application submission
-    app_success, app_id = tester.test_submit_application()
-    
-    # Test getting applications
-    tester.test_get_applications()
-    
-    # Test search functionality
-    tester.test_search_applications()
-    
-    # Test single application operations (if we have an app ID)
-    if app_id:
-        tester.test_get_single_application(app_id)
-        tester.test_invalid_status_update(app_id)
+    def test_easter_egg_update(self):
+        """Test PATCH /api/easter-eggs/troll - requires admin auth."""
+        try:
+            update_data = {
+                "username": "TrollUpdated",
+                "password": "FunnyGuyUpdated"
+            }
+            
+            response = self.session.patch(f"{API_BASE}/easter-eggs/troll", json=update_data)
+            if response.status_code == 200:
+                data = response.json()
+                if "updated successfully" in data.get("message", ""):
+                    self.log_test("Easter Egg Update", True, "Troll easter egg updated successfully")
+                    
+                    # Verify the update worked
+                    verify_response = self.session.post(f"{API_BASE}/easter-eggs/verify?username=TrollUpdated&password=FunnyGuyUpdated")
+                    if verify_response.status_code == 200:
+                        verify_data = verify_response.json()
+                        if verify_data.get("valid") is True:
+                            self.log_test("Easter Egg Update Verification", True, "Updated credentials work correctly")
+                        else:
+                            self.log_test("Easter Egg Update Verification", False, "Updated credentials don't work")
+                    
+                    # Restore original credentials
+                    restore_data = {"username": "Troll", "password": "FunnyGuy"}
+                    self.session.patch(f"{API_BASE}/easter-eggs/troll", json=restore_data)
+                    
+                else:
+                    self.log_test("Easter Egg Update", False, f"Unexpected response: {data}")
+            else:
+                self.log_test("Easter Egg Update", False, f"Status: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Easter Egg Update", False, f"Exception: {str(e)}")
+
+    def create_test_application(self):
+        """Create a test application for name hiding tests."""
+        try:
+            app_data = {
+                "name": "John Smith",
+                "email": "john.smith@example.com",
+                "position": "Discord Moderator",
+                "discord_handle": "JohnSmith#1234",
+                "ingame_name": "JohnTheGreat",
+                "age": 25,
+                "country": "United States",
+                "activity_times": "6 PM - 12 AM EST",
+                "server": "Server 123",
+                "native_language": "English",
+                "other_languages": "Spanish",
+                "previous_experience": "Moderated gaming communities for 2 years",
+                "basic_qualities": "Patient, fair, and communicative",
+                "favourite_event": "Alliance Wars",
+                "free_gems": "Save them for special events",
+                "heroes_mutated": "Focus on tank heroes first",
+                "discord_tools_comfort": "Very comfortable",
+                "guidelines_rating": "9/10",
+                "complex_mechanic": "Would research and ask for guidance",
+                "unknown_question": "Would escalate to senior moderators",
+                "hero_development": "Balance offense and defense",
+                "racist_r4": "Immediate warning and escalation",
+                "moderator_swearing": "Professional discussion about conduct"
+            }
+            
+            # Remove auth header temporarily for application submission
+            auth_header = self.session.headers.pop("Authorization", None)
+            response = self.session.post(f"{API_BASE}/applications", json=app_data)
+            
+            # Restore auth header
+            if auth_header:
+                self.session.headers["Authorization"] = auth_header
+            
+            if response.status_code == 200:
+                data = response.json()
+                app_id = data.get("id")
+                self.log_test("Test Application Creation", True, f"Created test application with ID: {app_id}")
+                return app_id
+            else:
+                self.log_test("Test Application Creation", False, f"Status: {response.status_code}", response.text)
+                return None
+        except Exception as e:
+            self.log_test("Test Application Creation", False, f"Exception: {str(e)}")
+            return None
+
+    def create_non_training_manager_user(self):
+        """Create and login as a non-training manager user."""
+        try:
+            # Register regular moderator
+            user_data = {
+                "username": "regularmod",
+                "password": "Regular@123",
+                "role": "moderator"
+            }
+            
+            # Remove auth header temporarily
+            auth_header = self.session.headers.pop("Authorization", None)
+            
+            response = self.session.post(f"{API_BASE}/auth/register", json=user_data)
+            if response.status_code == 200 or (response.status_code == 400 and "already registered" in response.text):
+                # Login as regular moderator
+                login_data = {
+                    "username": "regularmod",
+                    "password": "Regular@123"
+                }
+                
+                login_response = self.session.post(f"{API_BASE}/auth/login", json=login_data)
+                if login_response.status_code == 200:
+                    data = login_response.json()
+                    regular_token = data.get("access_token")
+                    if regular_token:
+                        self.log_test("Regular Moderator Setup", True, "Regular moderator user ready for testing")
+                        return regular_token
+                    else:
+                        self.log_test("Regular Moderator Setup", False, "No access token in login response")
+                        return None
+                else:
+                    self.log_test("Regular Moderator Setup", False, f"Login failed: {login_response.status_code}")
+                    return None
+            else:
+                self.log_test("Regular Moderator Setup", False, f"Registration failed: {response.status_code}")
+                return None
+                
+        except Exception as e:
+            self.log_test("Regular Moderator Setup", False, f"Exception: {str(e)}")
+            return None
+        finally:
+            # Restore admin auth header
+            if auth_header:
+                self.session.headers["Authorization"] = auth_header
+
+    def test_name_hiding_applications_list(self):
+        """Test that real names are hidden from non-training managers in applications list."""
+        try:
+            # First create a test application
+            app_id = self.create_test_application()
+            if not app_id:
+                self.log_test("Name Hiding - Applications List", False, "Could not create test application")
+                return
+            
+            # Get regular moderator token
+            regular_token = self.create_non_training_manager_user()
+            if not regular_token:
+                self.log_test("Name Hiding - Applications List", False, "Could not setup regular moderator")
+                return
+            
+            # Test with regular moderator (should hide names)
+            original_auth = self.session.headers.get("Authorization")
+            self.session.headers["Authorization"] = f"Bearer {regular_token}"
+            
+            response = self.session.get(f"{API_BASE}/applications")
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list) and len(data) > 0:
+                    # Check if names are hidden
+                    hidden_names = [app for app in data if app.get("name") == "[Hidden - Training Manager Only]"]
+                    if len(hidden_names) > 0:
+                        self.log_test("Name Hiding - Applications List", True, f"Names properly hidden for non-training manager ({len(hidden_names)} applications)")
+                    else:
+                        self.log_test("Name Hiding - Applications List", False, "Names not hidden for non-training manager")
+                else:
+                    self.log_test("Name Hiding - Applications List", False, "No applications found to test name hiding")
+            else:
+                self.log_test("Name Hiding - Applications List", False, f"Status: {response.status_code}", response.text)
+            
+            # Restore admin auth
+            self.session.headers["Authorization"] = original_auth
+            
+        except Exception as e:
+            self.log_test("Name Hiding - Applications List", False, f"Exception: {str(e)}")
+
+    def test_name_hiding_single_application(self):
+        """Test that real names are hidden from non-training managers in single application view."""
+        try:
+            # Create a test application
+            app_id = self.create_test_application()
+            if not app_id:
+                self.log_test("Name Hiding - Single Application", False, "Could not create test application")
+                return
+            
+            # Get regular moderator token
+            regular_token = self.create_non_training_manager_user()
+            if not regular_token:
+                self.log_test("Name Hiding - Single Application", False, "Could not setup regular moderator")
+                return
+            
+            # Test with regular moderator (should hide names)
+            original_auth = self.session.headers.get("Authorization")
+            self.session.headers["Authorization"] = f"Bearer {regular_token}"
+            
+            response = self.session.get(f"{API_BASE}/applications/{app_id}")
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("name") == "[Hidden - Training Manager Only]" and data.get("email") is None:
+                    self.log_test("Name Hiding - Single Application", True, "Name and email properly hidden for non-training manager")
+                else:
+                    self.log_test("Name Hiding - Single Application", False, f"Name/email not properly hidden: name={data.get('name')}, email={data.get('email')}")
+            else:
+                self.log_test("Name Hiding - Single Application", False, f"Status: {response.status_code}", response.text)
+            
+            # Test with admin (should show real names)
+            self.session.headers["Authorization"] = original_auth
+            
+            response = self.session.get(f"{API_BASE}/applications/{app_id}")
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("name") != "[Hidden - Training Manager Only]" and data.get("email") is not None:
+                    self.log_test("Name Visibility - Admin Access", True, "Admin can see real names and emails")
+                else:
+                    self.log_test("Name Visibility - Admin Access", False, "Admin cannot see real names/emails")
+            else:
+                self.log_test("Name Visibility - Admin Access", False, f"Admin access failed: {response.status_code}")
+            
+        except Exception as e:
+            self.log_test("Name Hiding - Single Application", False, f"Exception: {str(e)}")
+
+    def login_test_users(self):
+        """Login with the provided test credentials."""
+        try:
+            # Login as admin (portaltest / Portal@123)
+            admin_login = {
+                "username": "portaltest",
+                "password": "Portal@123"
+            }
+            
+            response = self.session.post(f"{API_BASE}/auth/login", json=admin_login)
+            if response.status_code == 200:
+                data = response.json()
+                self.admin_token = data.get("access_token")
+                if self.admin_token:
+                    self.session.headers.update({"Authorization": f"Bearer {self.admin_token}"})
+                    self.log_test("Test Admin Login", True, f"Logged in as {data.get('username')} with role {data.get('role')}")
+                    return True
+                else:
+                    self.log_test("Test Admin Login", False, "No access token in response", data)
+                    return False
+            else:
+                self.log_test("Test Admin Login", False, f"Status: {response.status_code}", response.text)
+                return False
+        except Exception as e:
+            self.log_test("Test Admin Login", False, f"Exception: {str(e)}")
+            return False
+
+    def login_moderator_user(self):
+        """Login as moderator user and return token."""
+        try:
+            # Login as moderator (modtest / Mod@12345)
+            mod_login = {
+                "username": "modtest",
+                "password": "Mod@12345"
+            }
+            
+            response = self.session.post(f"{API_BASE}/auth/login", json=mod_login)
+            if response.status_code == 200:
+                data = response.json()
+                mod_token = data.get("access_token")
+                if mod_token:
+                    self.log_test("Test Moderator Login", True, f"Logged in as {data.get('username')} with role {data.get('role')}")
+                    return mod_token
+                else:
+                    self.log_test("Test Moderator Login", False, "No access token in response", data)
+                    return None
+            else:
+                self.log_test("Test Moderator Login", False, f"Status: {response.status_code}", response.text)
+                return None
+        except Exception as e:
+            self.log_test("Test Moderator Login", False, f"Exception: {str(e)}")
+            return None
+
+    def test_feature_requests_create(self):
+        """Test POST /api/feature-requests - Create a feature request."""
+        try:
+            # Test with moderator credentials
+            mod_token = self.login_moderator_user()
+            if not mod_token:
+                self.log_test("Feature Request Creation", False, "Could not login as moderator")
+                return None
+            
+            # Save current auth and switch to moderator
+            original_auth = self.session.headers.get("Authorization")
+            self.session.headers["Authorization"] = f"Bearer {mod_token}"
+            
+            feature_request_data = {
+                "title": "Improved Dashboard Navigation",
+                "description": "Add breadcrumb navigation to make it easier to navigate between different sections of the dashboard",
+                "category": "ui"
+            }
+            
+            response = self.session.post(f"{API_BASE}/feature-requests", json=feature_request_data)
+            if response.status_code == 200:
+                data = response.json()
+                request_id = data.get("id")
+                if request_id and "successfully" in data.get("message", ""):
+                    self.log_test("Feature Request Creation", True, f"Feature request created successfully with ID: {request_id}")
+                    # Restore admin auth
+                    self.session.headers["Authorization"] = original_auth
+                    return request_id
+                else:
+                    self.log_test("Feature Request Creation", False, f"Unexpected response: {data}")
+            else:
+                self.log_test("Feature Request Creation", False, f"Status: {response.status_code}", response.text)
+            
+            # Restore admin auth
+            self.session.headers["Authorization"] = original_auth
+            return None
+            
+        except Exception as e:
+            self.log_test("Feature Request Creation", False, f"Exception: {str(e)}")
+            return None
+
+    def test_feature_requests_get_own(self):
+        """Test GET /api/feature-requests - Regular moderator sees only their own requests."""
+        try:
+            # Create a feature request first
+            request_id = self.test_feature_requests_create()
+            if not request_id:
+                self.log_test("Feature Requests - Get Own", False, "Could not create test feature request")
+                return
+            
+            # Login as moderator and get their requests
+            mod_token = self.login_moderator_user()
+            if not mod_token:
+                self.log_test("Feature Requests - Get Own", False, "Could not login as moderator")
+                return
+            
+            original_auth = self.session.headers.get("Authorization")
+            self.session.headers["Authorization"] = f"Bearer {mod_token}"
+            
+            response = self.session.get(f"{API_BASE}/feature-requests")
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list):
+                    # Check if the created request is in the list
+                    own_request = next((req for req in data if req.get("id") == request_id), None)
+                    if own_request and own_request.get("submitted_by") == "modtest":
+                        self.log_test("Feature Requests - Get Own", True, f"Moderator can see their own requests ({len(data)} total)")
+                    else:
+                        self.log_test("Feature Requests - Get Own", False, "Moderator cannot see their own request")
+                else:
+                    self.log_test("Feature Requests - Get Own", False, f"Unexpected response format: {data}")
+            else:
+                self.log_test("Feature Requests - Get Own", False, f"Status: {response.status_code}", response.text)
+            
+            # Restore admin auth
+            self.session.headers["Authorization"] = original_auth
+            
+        except Exception as e:
+            self.log_test("Feature Requests - Get Own", False, f"Exception: {str(e)}")
+
+    def test_feature_requests_get_all_admin(self):
+        """Test GET /api/feature-requests - Admin sees all requests."""
+        try:
+            # Ensure we're logged in as admin
+            if not self.admin_token:
+                self.log_test("Feature Requests - Admin View All", False, "No admin token available")
+                return
+            
+            response = self.session.get(f"{API_BASE}/feature-requests")
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list):
+                    # Admin should see all requests from different users
+                    self.log_test("Feature Requests - Admin View All", True, f"Admin can see all feature requests ({len(data)} total)")
+                else:
+                    self.log_test("Feature Requests - Admin View All", False, f"Unexpected response format: {data}")
+            else:
+                self.log_test("Feature Requests - Admin View All", False, f"Status: {response.status_code}", response.text)
+            
+        except Exception as e:
+            self.log_test("Feature Requests - Admin View All", False, f"Exception: {str(e)}")
+
+    def test_feature_requests_update_status(self):
+        """Test PATCH /api/feature-requests/{id} - Update status (admin only)."""
+        try:
+            # Create a feature request first
+            request_id = self.test_feature_requests_create()
+            if not request_id:
+                self.log_test("Feature Request Status Update", False, "Could not create test feature request")
+                return
+            
+            # Ensure we're logged in as admin
+            if not self.admin_token:
+                self.log_test("Feature Request Status Update", False, "No admin token available")
+                return
+            
+            update_data = {
+                "status": "reviewed",
+                "admin_notes": "This is a good suggestion, will consider for next release"
+            }
+            
+            response = self.session.patch(f"{API_BASE}/feature-requests/{request_id}", json=update_data)
+            if response.status_code == 200:
+                data = response.json()
+                if "successfully" in data.get("message", ""):
+                    self.log_test("Feature Request Status Update", True, "Admin successfully updated feature request status")
+                else:
+                    self.log_test("Feature Request Status Update", False, f"Unexpected response: {data}")
+            else:
+                self.log_test("Feature Request Status Update", False, f"Status: {response.status_code}", response.text)
+            
+        except Exception as e:
+            self.log_test("Feature Request Status Update", False, f"Exception: {str(e)}")
+
+    def test_feature_requests_delete(self):
+        """Test DELETE /api/feature-requests/{id} - Delete (admin or own request)."""
+        try:
+            # Create a feature request first
+            request_id = self.test_feature_requests_create()
+            if not request_id:
+                self.log_test("Feature Request Deletion", False, "Could not create test feature request")
+                return
+            
+            # Test deletion as admin
+            if not self.admin_token:
+                self.log_test("Feature Request Deletion", False, "No admin token available")
+                return
+            
+            response = self.session.delete(f"{API_BASE}/feature-requests/{request_id}")
+            if response.status_code == 200:
+                data = response.json()
+                if "successfully" in data.get("message", ""):
+                    self.log_test("Feature Request Deletion", True, "Admin successfully deleted feature request")
+                else:
+                    self.log_test("Feature Request Deletion", False, f"Unexpected response: {data}")
+            else:
+                self.log_test("Feature Request Deletion", False, f"Status: {response.status_code}", response.text)
+            
+        except Exception as e:
+            self.log_test("Feature Request Deletion", False, f"Exception: {str(e)}")
+
+    def create_test_announcement(self):
+        """Create a test announcement for dismiss testing."""
+        try:
+            announcement_data = {
+                "title": "Test Announcement for Dismiss Feature",
+                "message": "This is a test announcement to verify the dismiss functionality works correctly."
+            }
+            
+            response = self.session.post(f"{API_BASE}/announcements", json=announcement_data)
+            if response.status_code == 200:
+                data = response.json()
+                announcement_id = data.get("id")
+                if announcement_id:
+                    self.log_test("Test Announcement Creation", True, f"Created test announcement with ID: {announcement_id}")
+                    return announcement_id
+                else:
+                    self.log_test("Test Announcement Creation", False, "No ID in response")
+                    return None
+            else:
+                self.log_test("Test Announcement Creation", False, f"Status: {response.status_code}", response.text)
+                return None
+        except Exception as e:
+            self.log_test("Test Announcement Creation", False, f"Exception: {str(e)}")
+            return None
+
+    def test_announcements_dismiss(self):
+        """Test POST /api/announcements/{id}/dismiss - Mark announcement as dismissed."""
+        try:
+            # Create a test announcement
+            announcement_id = self.create_test_announcement()
+            if not announcement_id:
+                self.log_test("Announcement Dismiss", False, "Could not create test announcement")
+                return announcement_id
+            
+            # Test dismissing as moderator
+            mod_token = self.login_moderator_user()
+            if not mod_token:
+                self.log_test("Announcement Dismiss", False, "Could not login as moderator")
+                return announcement_id
+            
+            original_auth = self.session.headers.get("Authorization")
+            self.session.headers["Authorization"] = f"Bearer {mod_token}"
+            
+            response = self.session.post(f"{API_BASE}/announcements/{announcement_id}/dismiss")
+            if response.status_code == 200:
+                data = response.json()
+                if "dismissed" in data.get("message", ""):
+                    self.log_test("Announcement Dismiss", True, "Announcement successfully dismissed")
+                else:
+                    self.log_test("Announcement Dismiss", False, f"Unexpected response: {data}")
+            else:
+                self.log_test("Announcement Dismiss", False, f"Status: {response.status_code}", response.text)
+            
+            # Restore admin auth
+            self.session.headers["Authorization"] = original_auth
+            return announcement_id
+            
+        except Exception as e:
+            self.log_test("Announcement Dismiss", False, f"Exception: {str(e)}")
+            return None
+
+    def test_announcements_get_dismissed(self):
+        """Test GET /api/announcements/dismissed - Get dismissed announcement IDs."""
+        try:
+            # First dismiss an announcement
+            announcement_id = self.test_announcements_dismiss()
+            if not announcement_id:
+                self.log_test("Get Dismissed Announcements", False, "Could not dismiss test announcement")
+                return
+            
+            # Login as moderator and get dismissed list
+            mod_token = self.login_moderator_user()
+            if not mod_token:
+                self.log_test("Get Dismissed Announcements", False, "Could not login as moderator")
+                return
+            
+            original_auth = self.session.headers.get("Authorization")
+            self.session.headers["Authorization"] = f"Bearer {mod_token}"
+            
+            response = self.session.get(f"{API_BASE}/announcements/dismissed")
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list) and announcement_id in data:
+                    self.log_test("Get Dismissed Announcements", True, f"Retrieved dismissed announcements list ({len(data)} dismissed)")
+                else:
+                    self.log_test("Get Dismissed Announcements", False, f"Dismissed announcement not found in list: {data}")
+            else:
+                self.log_test("Get Dismissed Announcements", False, f"Status: {response.status_code}", response.text)
+            
+            # Restore admin auth
+            self.session.headers["Authorization"] = original_auth
+            
+        except Exception as e:
+            self.log_test("Get Dismissed Announcements", False, f"Exception: {str(e)}")
+
+    def test_announcements_undismiss(self):
+        """Test POST /api/announcements/{id}/undismiss - Restore dismissed announcement."""
+        try:
+            # First dismiss an announcement
+            announcement_id = self.test_announcements_dismiss()
+            if not announcement_id:
+                self.log_test("Announcement Undismiss", False, "Could not dismiss test announcement")
+                return
+            
+            # Login as moderator and undismiss
+            mod_token = self.login_moderator_user()
+            if not mod_token:
+                self.log_test("Announcement Undismiss", False, "Could not login as moderator")
+                return
+            
+            original_auth = self.session.headers.get("Authorization")
+            self.session.headers["Authorization"] = f"Bearer {mod_token}"
+            
+            response = self.session.post(f"{API_BASE}/announcements/{announcement_id}/undismiss")
+            if response.status_code == 200:
+                data = response.json()
+                if "restored" in data.get("message", ""):
+                    self.log_test("Announcement Undismiss", True, "Announcement successfully restored")
+                    
+                    # Verify it's no longer in dismissed list
+                    dismissed_response = self.session.get(f"{API_BASE}/announcements/dismissed")
+                    if dismissed_response.status_code == 200:
+                        dismissed_data = dismissed_response.json()
+                        if announcement_id not in dismissed_data:
+                            self.log_test("Announcement Undismiss Verification", True, "Announcement removed from dismissed list")
+                        else:
+                            self.log_test("Announcement Undismiss Verification", False, "Announcement still in dismissed list")
+                else:
+                    self.log_test("Announcement Undismiss", False, f"Unexpected response: {data}")
+            else:
+                self.log_test("Announcement Undismiss", False, f"Status: {response.status_code}", response.text)
+            
+            # Restore admin auth
+            self.session.headers["Authorization"] = original_auth
+            
+        except Exception as e:
+            self.log_test("Announcement Undismiss", False, f"Exception: {str(e)}")
+
+    def run_all_tests(self):
+        """Run all backend tests."""
+        print("🚀 Starting Backend API Tests")
+        print("=" * 50)
         
-        # Test NEW voting system features
-        tester.test_vote_on_application(app_id, "approve")
-        tester.test_vote_on_application(app_id, "reject")  # Test vote update
-        tester.test_invalid_vote(app_id)
-        tester.test_comment_on_application(app_id, "This is a test comment from the API")
+        # Basic API tests
+        self.test_api_root()
         
-        # Test password management
-        tester.test_change_password()
-        tester.test_reset_password("admin")
-        tester.test_get_moderators()
+        # Authentication setup with test credentials
+        if self.login_test_users():
+            print("\n🔧 Testing New Features")
+            print("-" * 30)
+            
+            # Feature Requests API tests
+            self.test_feature_requests_get_own()
+            self.test_feature_requests_get_all_admin()
+            self.test_feature_requests_update_status()
+            self.test_feature_requests_delete()
+            
+            # Announcement Dismiss API tests
+            self.test_announcements_get_dismissed()
+            self.test_announcements_undismiss()
+            
+            print("\n🔧 Testing Previous Features")
+            print("-" * 30)
+            
+            # Easter egg tests
+            self.test_easter_eggs_list()
+            self.test_easter_egg_verify()
+            self.test_easter_egg_update()
+            
+            # Name hiding tests
+            self.test_name_hiding_applications_list()
+            self.test_name_hiding_single_application()
+        else:
+            print("❌ Could not setup authentication with test credentials - skipping protected endpoint tests")
         
-        tester.test_approve_application(app_id)
+        # Summary
+        print("=" * 50)
+        print("📊 Test Summary")
+        print("=" * 50)
         
-        # Submit another application to test rejection
-        app_success2, app_id2 = tester.test_submit_application()
-        if app_id2:
-            tester.test_vote_on_application(app_id2, "reject")
-            tester.test_comment_on_application(app_id2, "Rejecting this application")
-            tester.test_reject_application(app_id2)
-    
-    # Test NEW FEATURES for last login tracking and password management
-    print("\n🔍 Testing New Features:")
-    print("-" * 30)
-    
-    # Test 1: Last login tracking in moderators endpoint
-    tester.test_last_login_tracking()
-    
-    # Test 2: New user must change password flag
-    new_user_success, new_username = tester.test_new_user_must_change_password()
-    
-    # Test 3: Login updates last_login timestamp
-    tester.test_login_updates_last_login()
-    
-    # Test 4: Password change clears must_change_password flag
-    if new_username:
-        tester.test_password_change_clears_flag(new_username)
-    
-    # Test 5: Password reset sets must_change_password flag
-    if new_username:
-        tester.test_password_reset_sets_flag(new_username)
-    
-    # Print final results
-    print("\n" + "=" * 50)
-    print(f"📊 Final Results: {tester.tests_passed}/{tester.tests_run} tests passed")
-    
-    if tester.tests_passed == tester.tests_run:
-        print("🎉 All tests passed!")
-        return 0
-    else:
-        print("⚠️  Some tests failed. Check the details above.")
-        return 1
+        passed = sum(1 for result in self.test_results if result["success"])
+        failed = len(self.test_results) - passed
+        
+        print(f"Total Tests: {len(self.test_results)}")
+        print(f"✅ Passed: {passed}")
+        print(f"❌ Failed: {failed}")
+        
+        if failed > 0:
+            print("\n🔍 Failed Tests:")
+            for result in self.test_results:
+                if not result["success"]:
+                    print(f"  - {result['test']}: {result['message']}")
+        
+        return failed == 0
 
 if __name__ == "__main__":
-    sys.exit(main())
+    tester = BackendTester()
+    success = tester.run_all_tests()
+    exit(0 if success else 1)
