@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Shield, Users, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import HolidayOverlay from "@/components/HolidayOverlay";
 import SeasonalOverlay from "@/components/SeasonalOverlay";
 
 export default function Landing() {
@@ -8,6 +9,8 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 grid-texture pt-12">
+      {/* Holiday Animation Overlay (overrides seasonal when active) */}
+      <HolidayOverlay />
       {/* Seasonal Animation Overlay */}
       <SeasonalOverlay />
       
