@@ -444,16 +444,20 @@ export default function HolidayOverlay() {
     };
     window.addEventListener('holidayAnimationToggle', handleAnimationToggle);
 
-    // Dispatch event to notify seasonal overlay that holiday is active
-    if (currentHoliday) {
-      window.dispatchEvent(new CustomEvent('holidayActive', { detail: { active: true, holiday: currentHoliday } }));
-    }
-
     return () => {
       mediaQuery.removeEventListener('change', handleChange);
       window.removeEventListener('holidayAnimationToggle', handleAnimationToggle);
     };
-  }, [currentHoliday]);
+  }, []);
+
+  // Dispatch holiday active state whenever relevant state changes
+  useEffect(() => {
+    // Holiday is "active" only if there's a current holiday AND animations are enabled
+    const isHolidayActive = currentHoliday && animationEnabled && !prefersReducedMotion;
+    window.dispatchEvent(new CustomEvent('holidayActive', { 
+      detail: { active: isHolidayActive, holiday: currentHoliday } 
+    }));
+  }, [currentHoliday, animationEnabled, prefersReducedMotion]);
 
   // Don't render if no holiday, reduced motion, or disabled
   if (!currentHoliday || prefersReducedMotion || !animationEnabled) return null;
