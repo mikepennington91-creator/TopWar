@@ -62,6 +62,8 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <FaviconHandler />
+        <HolidayOverlay />
+        <SeasonalOverlay />
         <Navigation />
         <Routes>
           <Route path="/" element={<Landing />} />
