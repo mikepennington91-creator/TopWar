@@ -410,13 +410,27 @@ const checkReducedMotion = () => {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 };
 
+// Get initial holiday and particles (lazy initialization)
+const getInitialHolidayState = () => {
+  const holiday = getCurrentHoliday();
+  return holiday;
+};
+
+const getInitialParticles = () => {
+  const holiday = getCurrentHoliday();
+  if (holiday && HOLIDAY_ANIMATIONS[holiday.type]) {
+    return generateHolidayParticles(HOLIDAY_ANIMATIONS[holiday.type]);
+  }
+  return [];
+};
+
 // ==================== COMPONENT ====================
 
 export default function HolidayOverlay() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(checkReducedMotion);
   const [animationEnabled, setAnimationEnabled] = useState(checkHolidayAnimationEnabled);
-  const [currentHoliday, setCurrentHoliday] = useState(null);
-  const [particles, setParticles] = useState([]);
+  const [currentHoliday] = useState(getInitialHolidayState);
+  const [particles] = useState(getInitialParticles);
 
   useEffect(() => {
     // Check for current holiday
