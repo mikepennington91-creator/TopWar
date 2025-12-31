@@ -88,7 +88,7 @@ const checkHolidayActive = () => {
 export default function SeasonalOverlay() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(checkReducedMotion);
   const [animationEnabled, setAnimationEnabled] = useState(checkAnimationEnabled);
-  const [holidayActive, setHolidayActive] = useState(false);
+  const [holidayActive, setHolidayActive] = useState(checkHolidayActive);
   const [particles] = useState(generateParticles);
   const [season] = useState(getCurrentSeason);
   
