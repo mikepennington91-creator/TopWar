@@ -151,9 +151,16 @@ export default function SeasonalOverlay() {
     };
     window.addEventListener('seasonalAnimationToggle', handleAnimationToggle);
     
+    // Listen for holiday active events
+    const handleHolidayActive = (e) => {
+      setHolidayActive(e.detail.active);
+    };
+    window.addEventListener('holidayActive', handleHolidayActive);
+    
     return () => {
       mediaQuery.removeEventListener('change', handleChange);
       window.removeEventListener('seasonalAnimationToggle', handleAnimationToggle);
+      window.removeEventListener('holidayActive', handleHolidayActive);
     };
   }, []);
 
