@@ -436,6 +436,13 @@ export default function Settings() {
     window.dispatchEvent(new CustomEvent('seasonalAnimationToggle', { detail: { enabled } }));
   };
 
+  const handleHolidayAnimationToggle = (enabled) => {
+    setHolidayAnimationEnabled(enabled);
+    localStorage.setItem('holiday_animation_enabled', String(enabled));
+    // Dispatch event so other components can react
+    window.dispatchEvent(new CustomEvent('holidayAnimationToggle', { detail: { enabled } }));
+  };
+
   const getStatusBadge = (status) => {
     if (status === "active") {
       return <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/50">ACTIVE</Badge>;
