@@ -455,3 +455,50 @@ agent_communication:
     message: "DEVELOPER SECRETS EASTER EGG TESTING COMPLETE ✅ Comprehensive testing performed on all requested changes: 1) Login Test: New password 'TWDev3' works correctly, old password 'Money' properly rejected ✅ 2) Heroes Section: All 4 heroes display with correct updated types (Shadow Reaper & Phoenix Queen = SSR, Storm Titan & Void Emperor = SSSR) and updated abilities (Phase Strike teleport, Rebirth Flame revive) ✅ 3) Game Mechanics: Hero Fusion System successfully removed, Dynamic Weather System added with rain/snow/fog effects ✅ 4) Collaborations Section: New section exists with pink styling, TOP SECRET badge, and all 4 collaborations present (50 Shades/Dulux, Fast & Furious/Universal, Gordon Ramsay/Hell's Kitchen, IKEA Fortress) ✅ 5) Reveal/Hide functionality working for all sections ✅ All requested changes verified through UI testing with screenshots. Easter egg page fully functional."
   - agent: "testing"
     message: "APPLICATION REVIEW PAGE TESTING - AUTHENTICATION ISSUE ENCOUNTERED ❌ Unable to complete full UI testing due to authentication problems. Created new admin user 'testadmin' but password change flow appears to be stuck in a loop. CODE ANALYSIS COMPLETED ✅ Reviewed ModeratorDashboard.js implementation and confirmed all requested changes are properly implemented: 1) Table header shows 'In-Game Name' (line 682) ✅ 2) First column displays In-Game Name in amber color (text-amber-400, line 706) with Discord handle underneath in gray (text-slate-500, line 707) ✅ 3) Highlighted In-Game Name box at top of dialog with amber text (data-testid='highlighted-ingame-name', lines 764-766) ✅ 4) Rating questions show visual indicators with large amber numbers, '/ 5' text, and 5 dots (lines 948-964) ✅ All UI changes are correctly implemented in the code. ISSUE: Authentication system preventing login - admin password may need reset or password change flow has bug."
+  - task: "Holiday Animations System"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/HolidayOverlay.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Created HolidayOverlay.js component with animations for UK, US, and Chinese holidays. Includes 3-day display window (day before, day of, day after). Each holiday has unique themed particles and effects. Currently showing New Year's animations with confetti and fireworks."
+
+  - task: "Holiday Animation Toggle in Settings"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/Settings.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Added separate toggle for holiday animations in Visual Preferences section. Includes info tooltip (i) explaining what holidays are covered (UK, US, China). Toggle persists via localStorage."
+
+  - task: "Holiday Animations Reference in Changelog"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/Changelog.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Added complete Holiday Animations Reference section with all UK, US, and Chinese holidays listed. Shows holiday name, date, emoji, and animation effects. Includes note about 3-day display and override behavior."
+
+  - task: "Holiday overrides Seasonal animations"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/SeasonalOverlay.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Updated SeasonalOverlay to listen for holidayActive event. When holiday animations are active, seasonal animations are hidden. Verified by disabling holiday toggle and seeing seasonal snowflakes appear."
