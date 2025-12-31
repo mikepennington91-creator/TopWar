@@ -119,6 +119,10 @@ export default function Settings() {
     const stored = localStorage.getItem('seasonal_animation_enabled');
     return stored !== 'false'; // Default to true if not set
   });
+  const [holidayAnimationEnabled, setHolidayAnimationEnabled] = useState(() => {
+    const stored = localStorage.getItem('holiday_animation_enabled');
+    return stored !== 'false'; // Default to true if not set
+  });
 
   useEffect(() => {
     const token = localStorage.getItem('moderator_token');
