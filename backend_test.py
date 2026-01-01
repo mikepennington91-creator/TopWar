@@ -366,10 +366,10 @@ class BackendTester:
     def login_test_users(self):
         """Login with the provided test credentials."""
         try:
-            # Login as admin (portaltest / Portal@123)
+            # Login as admin (admin / Admin123!@)
             admin_login = {
-                "username": "portaltest",
-                "password": "Portal@123"
+                "username": "admin",
+                "password": "Admin123!@"
             }
             
             response = self.session.post(f"{API_BASE}/auth/login", json=admin_login)
