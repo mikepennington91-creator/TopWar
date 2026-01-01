@@ -229,7 +229,8 @@ async def update_application_status(application_id: str, update: ApplicationUpda
     applicant_name = existing_app.get('name', 'Applicant')
     if applicant_email:
         if update.status == "approved":
-            background_tasks.add_task(send_application_approved_email, applicant_email, applicant_name)
+            # Include the manager's comment in the approval email
+            background_tasks.add_task(send_application_approved_email, applicant_email, applicant_name, update.comment)
         elif update.status == "rejected":
             background_tasks.add_task(send_application_rejected_email, applicant_email, applicant_name)
     

@@ -47,16 +47,26 @@ Top War Moderation Team"""
     send_email(to_email, subject, body)
 
 
-def send_application_approved_email(to_email: str, name: str):
+def send_application_approved_email(to_email: str, name: str, manager_comment: str = ""):
     """Send email when application is approved."""
     subject = "Top War Moderator Application – Congratulations!"
+    
+    # Build the comment section if a comment is provided
+    comment_section = ""
+    if manager_comment and manager_comment.strip():
+        comment_section = f"""
+Message from the Training Team:
+{manager_comment.strip()}
+
+"""
+    
     body = f"""Hi {name},
 
 Congratulations! We're pleased to let you know that your application to become a Top War Moderator has been successful.
 
-Please check your Discord DMs, where we've sent you the next steps and onboarding information.
+The next stage is an interview with the training team.
 
-Welcome to the team, we're excited to have you with us!
+{comment_section}We look forward to hearing from you shortly.
 
 Kind regards,
 Top War Moderation Team"""
