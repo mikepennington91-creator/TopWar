@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Full backend refactor into modules, admin easter egg management, mobile back button, hide real names from non-Training Managers, fix auto-logout issue, update changelog"
+user_problem_statement: "Full backend refactor into modules, admin easter egg management, mobile back button, hide real names from non-Training Managers, fix auto-logout issue, update changelog, approval email with Training Manager comment"
 
 backend:
   - task: "Backend modular refactor"
@@ -149,6 +149,18 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ TESTED: Name hiding functionality working perfectly. Non-training managers see '[Hidden - Training Manager Only]' for names and null for emails in both applications list and individual application views. Training managers can see real names and emails. Tested with regular moderator vs admin with training manager flag."
+
+  - task: "Approval email with Training Manager comment"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/utils/email.py, /app/backend/routes/applications.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Updated send_application_approved_email to accept manager_comment parameter. Email template now includes 'Message from the Training Team:' label with the manager's comment. Comment is passed from PATCH /applications/{id} endpoint when status is 'approved'."
 
   - task: "Feature Requests API"
     implemented: true
@@ -274,6 +286,18 @@ frontend:
         agent: "testing"
         comment: "✅ TESTED: Changelog page accessible with authentication. v3.0.0 entry present with correct title 'Major Backend Refactor & Admin Easter Egg Management'. Troll credentials mentioned, mediocre page correctly hidden."
 
+  - task: "Approval dialog warning for Training Manager"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/ModeratorDashboard.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added warning message in the status change dialog when approving an application. Warning informs the Training Manager that their comment will be included in the email sent to the applicant."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
@@ -282,10 +306,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Feature Requests API"
-    - "Announcement Dismiss API"
+    - "Approval email with Training Manager comment"
+    - "Approval dialog warning for Training Manager"
   stuck_tasks: []
-  test_all: true
+  test_all: false
   test_priority: "high_first"
 
 agent_communication:
@@ -303,3 +327,5 @@ agent_communication:
     message: "Fixed admin access via toggle (is_admin flag) bug. Users with is_admin=true but role!=admin were not seeing admin-only sections in Settings. Fixed by: 1) Backend login now returns is_admin and is_training_manager, 2) Frontend stores these in localStorage, 3) Settings.js checks hasAdminAccess = role === 'admin' || is_admin. Need testing to verify users with is_admin toggle have full admin Settings access."
   - agent: "testing"
     message: "✅ ADMIN ACCESS VIA TOGGLE TESTING COMPLETE: Fix working perfectly! Both test users (testadmin with role: moderator + is_admin: true, and realadmin with role: admin) can see all 7 admin sections in Settings. Verified localStorage values are correct, MANAGE MODERATORS section expands showing 5 moderators, Easter Egg Management section accessible. The hasAdminAccess logic (role === 'admin' || is_admin) is functioning correctly. Admin toggle feature fully operational."
+  - agent: "main"
+    message: "NEW FEATURE: Approval email now includes Training Manager's comment. 1) Updated email.py - send_application_approved_email now accepts manager_comment parameter with 'Message from the Training Team:' label. 2) Updated applications.py - passes update.comment to the email function when approving. 3) Updated ModeratorDashboard.js - added warning banner in approval dialog to inform TM that comment will be shown to applicant. Please test: a) Approval dialog shows warning when status='approved', b) Backend email function includes the comment in the email body."
