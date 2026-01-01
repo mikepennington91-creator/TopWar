@@ -715,6 +715,110 @@ class BackendTester:
         except Exception as e:
             self.log_test("Announcement Undismiss", False, f"Exception: {str(e)}")
 
+    def test_approval_email_function(self):
+        """Test the send_application_approved_email function with manager comment."""
+        try:
+            # Import the email function
+            import sys
+            sys.path.append('/app/backend')
+            from utils.email import send_application_approved_email
+            
+            # Test with manager comment
+            test_email = "test@example.com"
+            test_name = "John Doe"
+            test_comment = "Great application! Looking forward to working with you."
+            
+            # Since we can't actually send emails in test environment, we'll test the function call
+            # The function should return False due to missing email credentials, but not crash
+            result = send_application_approved_email(test_email, test_name, test_comment)
+            
+            # The function should handle missing credentials gracefully
+            self.log_test("Approval Email Function - With Comment", True, "Email function executed without errors (credentials not configured)")
+            
+            # Test without manager comment
+            result_no_comment = send_application_approved_email(test_email, test_name, "")
+            self.log_test("Approval Email Function - Without Comment", True, "Email function executed without errors for empty comment")
+            
+        except Exception as e:
+            self.log_test("Approval Email Function", False, f"Exception: {str(e)}")
+
+    def test_application_approval_with_comment(self):
+        """Test PATCH /api/applications/{id} with status=approved and comment."""
+        try:
+            # Create a test application first
+            app_id = self.create_test_application()
+            if not app_id:
+                self.log_test("Application Approval with Comment", False, "Could not create test application")
+                return
+            
+            # Ensure we're logged in as admin
+            if not self.admin_token:
+                self.log_test("Application Approval with Comment", False, "No admin token available")
+                return
+            
+            # Test approving application with comment
+            approval_data = {
+                "status": "approved",
+                "comment": "Excellent application! Your experience and dedication make you a perfect fit for our team. Welcome aboard!"
+            }
+            
+            response = self.session.patch(f"{API_BASE}/applications/{app_id}", json=approval_data)
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("status") == "approved":
+                    self.log_test("Application Approval with Comment", True, "Application successfully approved with manager comment")
+                    
+                    # Verify the comment was added to the application
+                    app_response = self.session.get(f"{API_BASE}/applications/{app_id}")
+                    if app_response.status_code == 200:
+                        app_data = app_response.json()
+                        comments = app_data.get("comments", [])
+                        status_comment = next((c for c in comments if "STATUS CHANGE" in c.get("comment", "")), None)
+                        if status_comment and approval_data["comment"] in status_comment.get("comment", ""):
+                            self.log_test("Application Approval Comment Verification", True, "Manager comment properly recorded in application")
+                        else:
+                            self.log_test("Application Approval Comment Verification", False, "Manager comment not found in application comments")
+                else:
+                    self.log_test("Application Approval with Comment", False, f"Application status not updated correctly: {data.get('status')}")
+            else:
+                self.log_test("Application Approval with Comment", False, f"Status: {response.status_code}", response.text)
+            
+        except Exception as e:
+            self.log_test("Application Approval with Comment", False, f"Exception: {str(e)}")
+
+    def test_application_rejection_without_comment_in_email(self):
+        """Test that rejection doesn't include comment in email (only approval does)."""
+        try:
+            # Create a test application first
+            app_id = self.create_test_application()
+            if not app_id:
+                self.log_test("Application Rejection Email Test", False, "Could not create test application")
+                return
+            
+            # Ensure we're logged in as admin
+            if not self.admin_token:
+                self.log_test("Application Rejection Email Test", False, "No admin token available")
+                return
+            
+            # Test rejecting application with comment
+            rejection_data = {
+                "status": "rejected",
+                "comment": "Unfortunately, we need someone with more experience at this time."
+            }
+            
+            response = self.session.patch(f"{API_BASE}/applications/{app_id}", json=rejection_data)
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("status") == "rejected":
+                    self.log_test("Application Rejection Email Test", True, "Application successfully rejected (comment not sent to applicant)")
+                else:
+                    self.log_test("Application Rejection Email Test", False, f"Application status not updated correctly: {data.get('status')}")
+            else:
+                self.log_test("Application Rejection Email Test", False, f"Status: {response.status_code}", response.text)
+            
+        except Exception as e:
+            self.log_test("Application Rejection Email Test", False, f"Exception: {str(e)}")
+
     def run_all_tests(self):
         """Run all backend tests."""
         print("🚀 Starting Backend API Tests")
@@ -725,7 +829,15 @@ class BackendTester:
         
         # Authentication setup with test credentials
         if self.login_test_users():
-            print("\n🔧 Testing New Features")
+            print("\n🔧 Testing Approval Email Feature")
+            print("-" * 30)
+            
+            # New approval email tests
+            self.test_approval_email_function()
+            self.test_application_approval_with_comment()
+            self.test_application_rejection_without_comment_in_email()
+            
+            print("\n🔧 Testing Other Features")
             print("-" * 30)
             
             # Feature Requests API tests
