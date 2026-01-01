@@ -1,171 +1,191 @@
-<analysis>**original_problem_statement:** The user, after confirming previous deployment issues were resolved, requested a complete application refactor and a series of new features.
+<analysis>**original_problem_statement:**
+The user initially requested a new feature to add holiday-themed animations for major UK, US, and Chinese holidays.
 
 **PRODUCT REQUIREMENTS:**
-1.  **Full Refactor:** Improve the codebase to make it easier to work with.
-2.  **Admin Joke Page Management:** Admins should be able to set usernames and passwords for the joke pages (Troll Page, Mediocre Secret Page) from the admin dashboard.
-3.  **Mobile Back Button:** All users on mobile should have a back button to navigate to the previous screen.
-4.  **Prevent Auto-Logout:** Moderators viewing application questions should not be automatically logged out.
-5.  **Role-Based PII Masking:** Real names on applications should only be visible to Training Manager roles.
-6.  **Changelog Updates:**
-    *   The changelog needs a big update with all new features.
-    *   The Troll Page credentials should be on the changelog, but the Mediocre Secret Page should not.
-7.  **Content Editing:** Admins should be able to edit all content.
-8.  **Collapsible Settings:** The Settings page needs collapsible sections to improve navigation on mobile.
-9.  **Enhanced Animations:** The seasonal animations should be enhanced with extra effects (e.g., snow piling up, a snowman walking across the screen) in addition to the standard falling particles.
-10. **Dismissible Announcements:** Moderators should be able to mark announcements as seen, which should then minimize them.
-11. **Feature Request System:** Add a section for moderators to request new website features. These requests should be visible to MMods, Admins, and Developers.
+1.  **Feature:** Holiday Animation System.
+2.  **Triggers:** Major bank holidays in the UK, US, and China.
+3.  **Duration:** Animations should display for 3 days: the day before, the day of, and the day after the holiday.
+4.  **Display Logic:** Holiday animations must override the existing seasonal animations when active.
+5.  **Scope:** Animations should *only* appear on the landing page () and the moderator portal dashboard (). No other pages should have animations.
+6.  **User Control:** A new, separate toggle switch must be added to the Settings page to allow users to enable or disable holiday animations.
+7.  **UX:** The new setting toggle should have an informational tooltip explaining its function.
+8.  **Documentation:** The Changelog page must be updated with a new section that lists all supported holidays, their specific dates (including calculated dates for 2025), and the animation effects for each.
+9.  **Code Sync:** Before implementation, pull the latest code from the user's GitHub repository  and integrate the new feature into that codebase.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a Top War Portal that has undergone a major refactoring and feature implementation phase. The backend, originally a single  file, is now a modular FastAPI application with separate routers for each resource (, , , , etc.), Pydantic models for data schemas, and a dedicated database connection module.
-
-The React frontend has been significantly enhanced with numerous features, including admin management of joke pages, a mobile back button, collapsible UI sections on the settings page, an enhanced seasonal animation system, and a new feature request system on the moderator portal. The application uses JWT for authentication and connects to a MongoDB database.
+The application is a full-stack moderator management portal. A comprehensive holiday animation system has been successfully implemented and integrated into the user's latest codebase. This includes a new  component, an updated  page with the required toggle, and a detailed reference section in . The animation display has been correctly scoped to only the landing and moderator portal pages. A bug preventing holiday animations from correctly overriding seasonal ones has also been fixed.
 
 **Last working item**:
-*   **Last item agent was working:** Updating the  page to include details about the newly implemented Dismissible Announcements and Feature Request System.
-*   **Status:** FINISHED
-*   **Agent Testing Done:** Y (The agent tested the underlying features using the backend testing agent, which passed. It did not perform dedicated frontend testing for these specific UI additions before updating the changelog).
-*   **Which testing method agent to use?** Frontend testing agent (to verify the UI for dismissing announcements and submitting/viewing feature requests on ).
-*   **User Testing Done:** N
+- **Last item agent was working:** The agent was fixing a bug where seasonal animations (snowflakes) were still rendering alongside the active holiday animations. The user also requested that the holiday list in the changelog be more detailed.
+- **Status:** USER VERIFICATION PENDING
+- **Agent Testing Done:** Y
+- **Which testing method agent to use?** manual testing by user or screenshot tool. The agent has already verified the fix using screenshots. The next agent can re-verify by taking a screenshot of the landing page to confirm only holiday animations (confetti, etc.) are present and no snowflakes.
+- **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-*   **Issue 1:** Auto-logout when viewing applications may not be resolved. (P1)
+- **Issue 1: Recurring Testing Subagent Failure (P0)**
+  - This is a high-priority, recurring issue carried over from previous sessions that blocks all automated frontend testing.
 
 **Issues Detail:**
-*   **Issue 1:**
-    *   **Description:** The user reported that moderators were being logged out when viewing application questions. While the agent performed a full backend refactor which likely stabilized the authentication system, this specific user flow was not explicitly tested or verified after the changes.
-    *   **Attempted fixes:** None directly. The backend was refactored, which might have indirectly solved the issue.
-    *   **Next debug checklist:**
-        1.  Log in as a user with the Moderator role.
-        2.  Navigate to the Moderator Dashboard where applications are listed.
-        3.  Click on several different applications to view their details.
-        4.  After viewing, attempt to navigate to other authenticated pages (e.g., , ).
-        5.  Confirm that the user is not redirected to the login page and the session remains active.
-    *   **Why fix this issue and what will be achieved with the fix?** To ensure a stable and uninterrupted workflow for moderators, which is a core function of the application.
-    *   **Status:** USER VERIFICATION PENDING
-    *   **Is recurring issue?** N
-    *   **Should Test frontend/backend/both after fix?** Frontend (E2E flow).
-    *   **Blocked on other issue:** None.
+- **Issue 1:**
+  - **Description:** The  subagent consistently fails with an  error. This prevents automated regression and feature testing on the frontend.
+  - **Attempted fixes:** None in this session. The agent used manual testing (screenshots) as a workaround.
+  - **Next debug checklist:**
+    - Examine the tool's expected input schema. The error suggests a missing  parameter.
+    - Review the agent's internal calls to the subagent to see what arguments are being passed.
+    - Check the subagent's documentation for its required input format.
+    - Validate the content of  before calling the subagent.
+  - **Why fix this issue and what will be achieved with the fix?** Resolving this will unblock automated frontend testing, enabling faster, more reliable verification of features and preventing regressions.
+  - **Status:** NOT STARTED
+  - **Is recurring issue?** Y
+  - **Should Test frontend/backend/both after fix?** Frontend
+  - **Blocked on other issue:** None
 
 **In progress Task List**:
-(None)
+There are no tasks currently in progress.
 
 **Upcoming and Future Tasks**
-*   **Task 1:** Await user feedback and verification on the large number of completed features before proceeding with new work. (P0)
+
+**Future Tasks:**
+- **Code Refactoring (P1):** The user has previously approved refactoring but deferred it. This should be addressed in the future to improve maintainability.
+  - : Split the monolithic file into a structured format (e.g., routers, models, services).
+  - : Break down the large component into smaller, reusable child components.
 
 **Completed work in this session**
-- **Backend Refactor:** Migrated the monolithic  to a modular structure using FastAPI's  in .
-- **Feature - Admin Easter Egg Management:** Added UI and backend endpoints for admins to manage credentials for joke pages (, ).
-- **Feature - Mobile Back Button:** Implemented a back button in the mobile navigation bar (, ).
-- **Feature - Role-Based Name Masking:** The backend now hides applicant real names for users who are not Training Managers ().
-- **Feature - Collapsible Settings Page:** Rebuilt the  page with collapsible card sections for improved mobile usability.
-- **Feature - Enhanced Seasonal Animations:** Rewrote the  to include more dynamic animations like snow buildup and a walking snowman.
-- **Feature - Dismissible Announcements:** Implemented functionality for moderators to dismiss announcements, hiding them from their view (, ).
-- **Feature - Feature Request System:** Created a full system for users to submit feature ideas and for admins/devs to view them (, ).
-- **Changelog Update:** The changelog () has been comprehensively updated with all the new features implemented in this session.
-- **Testing:** Utilized both backend and frontend testing subagents to verify the major refactor and subsequent feature additions, with all automated tests passing.
+- **Holiday Animation Feature:**
+  - Successfully pulled the latest code from the user's GitHub repo and integrated the new feature.
+  - Created  to manage holiday-specific animations.
+  - Updated  with a new toggle and info tooltip for holiday animations.
+  - Restricted animation displays to  and  only.
+  - Updated  with a new version entry () and a detailed Holiday Animations Reference table, including 2025 dates for variable holidays.
+- **Bug Fix - Animation Override:**
+  - Fixed a race condition where seasonal animations continued to play during a holiday. The fix involved adding a synchronous check in  on mount to ensure it disables itself if a holiday is active.
 
 **Earlier issues found/mentioned but not fixed**
-(The auto-logout issue is the only one, and it is captured in the All Pending/In progress Issue list section.)
+- **Issue 1: Recurring Testing Subagent Failure**
+  - **Debug checklist:** See All Pending/In progress Issue list.
+  - **Why to solve this issue and what will be achieved with this?** Enables automated frontend testing, improving development speed and reliability.
+  - **Should Test frontend/backend/both after fix:** Frontend
+  - **Is recurring issue?** Y
 
 **Known issue recurrence from previous fork**
-(None)
+- **Issue recurrence in previous fork:** The  testing subagent failed with the same  error.
+- **Recurrence count:** 5+
+- **Status:** NOT STARTED
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Backend:** FastAPI, Pydantic, Modular Routing ().
-- **Frontend:** React (Hooks), TailwindCSS, Shadcn UI components (, , , etc.), .
-- **Database:** MongoDB.
-- **Authentication:** JWT (JSON Web Tokens).
+- **Frontend:** React (, ), Tailwind CSS.
+- **Component Communication:** Custom DOM events (, ) are used for communication between the  and  components to manage the override logic.
+- **State Management:**  is used to persist the state of the animation toggles.
+- **Date/Time:**  and  libraries are used to accurately detect holidays across different timezones.
+- **Version Control:** usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
+           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]
+           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--bare]
+           [--git-dir=<path>] [--work-tree=<path>] [--namespace=<name>]
+           [--super-prefix=<path>] [--config-env=<name>=<envvar>]
+           <command> [<args>]
+
+These are common Git commands used in various situations:
+
+start a working area (see also: git help tutorial)
+   clone     Clone a repository into a new directory
+   init      Create an empty Git repository or reinitialize an existing one
+
+work on the current change (see also: git help everyday)
+   add       Add file contents to the index
+   mv        Move or rename a file, a directory, or a symlink
+   restore   Restore working tree files
+   rm        Remove files from the working tree and from the index
+
+examine the history and state (see also: git help revisions)
+   bisect    Use binary search to find the commit that introduced a bug
+   diff      Show changes between commits, commit and working tree, etc
+   grep      Print lines matching a pattern
+   log       Show commit logs
+   show      Show various types of objects
+   status    Show the working tree status
+
+grow, mark and tweak your common history
+   branch    List, create, or delete branches
+   commit    Record changes to the repository
+   merge     Join two or more development histories together
+   rebase    Reapply commits on top of another base tip
+   reset     Reset current HEAD to the specified state
+   switch    Switch branches
+   tag       Create, list, delete or verify a tag object signed with GPG
+
+collaborate (see also: git help workflows)
+   fetch     Download objects and refs from another repository
+   pull      Fetch from and integrate with another repository or a local branch
+   push      Update remote refs along with associated objects
+
+'git help -a' and 'git help -g' list available subcommands and some
+concept guides. See 'git help <command>' or 'git help <concept>'
+to read about a specific subcommand or concept.
+See 'git help git' for an overview of the system. was used to pull the latest codebase from an external repository.
 
 **key DB schema**
--   **moderators**:
-    -   :  (Stores IDs of announcements the user has dismissed).
--   **easter_eggs**: (New Collection)
-    -   :  (e.g., troll_page)
-    -   : 
-    -   : 
-    -   : 
-    -   : 
--   **feature_requests**: (New Collection)
-    -   : 
-    -   : 
-    -   : 
-    -   :  (e.g., 'pending')
-    -   : 
+- No changes were made to the database schema.
 
 **changes in tech stack**
-(None)
+- No new libraries or dependencies were added.
 
 **All files of reference**
-*   **Created/Rewritten:**
-    *    (Rewritten)
-    *   
-    *   
-    *   
-    *    (directory with numerous new route files)
-    *   
-    *    (Rewritten)
-*   **Modified:**
-    *   
-    *   
-    *   
-    *   
-    *   
-    *   
-    *   
-    *   
+- **Created:**
+  - : Contains all logic and effects for holiday animations.
+- **Modified:**
+  - : Updated to listen for holiday events and disable itself.
+  - : Added the holiday animation toggle and tooltip.
+  - : Added the new version entry and holiday reference table.
+  - : Removed global overlays to scope them to specific pages.
+  - : Added  and .
+  - : Added .
 
 **Areas that need refactoring**:
-The agent noted that some frontend components are very large (e.g., , ) and could be broken down into smaller, more manageable components in the future.
+- **/app/backend/server.py:** Remains oversized and should be split into a proper router/service structure.
+- **/app/frontend/src/pages/Settings.js:** A very large component that would benefit from being broken down into smaller child components.
 
 **key api endpoints**
-*   : Update credentials for joke pages.
-*   : Get content for a joke page.
-*   : Mark an announcement as seen.
-*   : Get announcements (now filters out dismissed ones).
-*   : Submit a new feature request.
-*   : Get a list of feature requests.
+- No API endpoints were created or modified.
 
 **Critical Info for New Agent**
-The previous agent completed a massive set of user-requested features, including a full backend refactor and numerous frontend additions. All automated tests passed. The final action was updating the changelog.
-
-Your first priority is to present the completed work to the user and await their feedback and verification. Do not start new work until the user confirms the current implementation meets their expectations.
-
-Pay special attention to the auto-logout issue mentioned in the pending list. This was a user-reported problem that was not explicitly tested after the refactor, so it needs to be verified.
+- **Testing Subagent is Broken:** The top priority for the next session should be to investigate and fix the  subagent. It is a recurring P0 issue. All frontend testing must be done manually with screenshots until it is resolved.
+- **Animation Override Logic:** The holiday override is handled by a combination of a custom DOM event dispatched from  and a synchronous check on mount within . If any bugs reappear, these two files are the primary places to investigate.
+- **Codebase is Synced:** The agent has already pulled the latest code from the user's GitHub repository. The current workspace is up-to-date.
 
 **documents and test reports created in this job**
-- : Updated with results from backend and frontend testing agents.
+- : Was updated to reflect testing plans for the new feature.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Requested to add the latest features (animations, collapsible sections) to the changelog. (Completed)
-2.  **User:** Requested enhanced seasonal animations with extra effects like snow buildup. (Completed)
-3.  **User:** Requested that the Settings page have collapsible sections for easier mobile navigation. (Completed)
-4.  **User:** Replied All changes work. Thank you to the previous major refactor summary.
-5.  **User:** Added a requirement that Admins can edit all content too if they wish. (Completed via Settings page).
-6.  **User:** Initiated the main work with Full refractor please, followed by a long list of new features. (Completed)
-7.  **User:** Asked if the code needed work to be made easier to manage, which prompted the refactor.
-8.  **User:** Confirmed that the initial Vercel deployment issue was fixed and the original bug was resolved.
+1.  **User:** It's still snowing even though the holiday animation is in effect. I also want every holiday animation with dates listed. (Status: Addressed)
+2.  **User:** The animations are only supposed to display on the home page and the portal dashboard. Nowhere else. Holiday animations should disable seasonal animations whilst the holiday ones are in effect. (Status: Addressed)
+3.  **User:** Please pull the latest code from github . Then add in the new code from the above change. (Status: Addressed)
+4.  **User:** Please implement. (Status: Addressed)
+5.  **User:** All major US / UK and Chinese holidays. Display for the holiday and the day before and day after (3 days)... (Feature requirements specified). (Status: Addressed)
+6.  **User:** On key bank holiday events in UK / US and China can we add custom animations to the site. I want all of the animations listed on the change log and the duration they will be displayed for. (Status: Addressed)
 
 **Project Health Check:**
-*   **Healthy:** Application is stable, backend is refactored, and a large number of features have been implemented and tested by the agent. Awaiting final user verification.
+- **Broken:**  subagent.
+- **Mocked:** None.
 
 **3rd Party Integrations**
-*   **Vercel:** Frontend deployment.
-*   **Render:** Backend & DB hosting.
-*   **GitHub:** Source code management.
+- **xlsx:** Frontend library for Excel export.
+- **Gmail SMTP:** Backend integration using Python's  to send emails.
 
 **Testing status**
-*   **Testing agent used after significant changes:** YES (both backend and frontend testing agents were used).
-*   **Troubleshoot agent used after agent stuck in loop:** NO
-*   **Test files created:** Test scenarios were added to  for the testing agents.
-*   **Known regressions:** None.
+- **Testing agent used after significant changes:** NO (The agent is known to be broken). Extensive manual testing via screenshots was performed instead.
+- **Troubleshoot agent used after agent stuck in loop:** NO
+- **Test files created:** None
+- **Known regressions:** None
 
 **Credentials to test flow:**
-New test users can be created via the API. The agent created  (admin) and  (moderator) for testing. Note that new users are created with a  flag set to .
+- **Admin:** , 
+- **MMOD:** , 
 
 **What agent forgot to execute**
-- The agent did not perform a specific end-to-end test to verify that the auto-logout when viewing applications issue was resolved after the backend refactor. This was part of the user's initial list of requirements for the refactor.</analysis>
+- The agent did not investigate or attempt to fix the recurring P0 issue with the  subagent. This was the most critical known issue from the previous handoff and remains unresolved.</analysis>
