@@ -311,9 +311,7 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Approval email with Training Manager comment"
-    - "Approval dialog warning for Training Manager"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
