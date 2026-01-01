@@ -152,15 +152,18 @@ backend:
 
   - task: "Approval email with Training Manager comment"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/utils/email.py, /app/backend/routes/applications.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Updated send_application_approved_email to accept manager_comment parameter. Email template now includes 'Message from the Training Team:' label with the manager's comment. Comment is passed from PATCH /applications/{id} endpoint when status is 'approved'."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Approval email functionality working correctly. Backend email function properly accepts manager_comment parameter and formats email with 'Message from the Training Team:' label. PATCH /api/applications/{id} with status='approved' correctly passes comment to email function. Email function handles both with and without comment scenarios. Application status updates and comment recording working properly."
 
   - task: "Feature Requests API"
     implemented: true
