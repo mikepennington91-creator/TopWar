@@ -5,7 +5,7 @@ from fastapi import FastAPI, APIRouter
 from starlette.middleware.cors import CORSMiddleware
 
 from database import db, close_db_connection
-from routes import auth, moderators, applications, polls, announcements, server_assignments, audit_logs, easter_eggs, feature_requests
+from routes import auth, moderators, applications, polls, announcements, server_assignments, audit_logs, easter_eggs, feature_requests, image_generation
 
 # Create the main app
 app = FastAPI(title="Top War Moderator Application API")
@@ -30,6 +30,7 @@ api_router.include_router(server_assignments.router)
 api_router.include_router(audit_logs.router)
 api_router.include_router(easter_eggs.router)
 api_router.include_router(feature_requests.router)
+api_router.include_router(image_generation.router)
 
 # Include the API router in the main app
 app.include_router(api_router)

@@ -16,6 +16,7 @@ import SecretProposalAlt from "@/pages/SecretProposalAlt";
 import DevSecrets from "@/pages/DevSecrets";
 import TrollPage from "@/pages/TrollPage";
 import GarudaPage from "@/pages/GarudaPage";
+import SianPage from "@/pages/SianPage";
 import { Toaster } from "@/components/ui/sonner";
 import useFavicon from "@/hooks/useFavicon";
 import Navigation from "@/components/Navigation";
@@ -77,6 +78,7 @@ function App() {
           <Route path="/dev-secrets" element={<DevSecrets />} />
           <Route path="/troll-detected" element={<TrollPage />} />
           <Route path="/garuda-tribute" element={<GarudaPage />} />
+          <Route path="/sian-appreciation" element={<SianPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

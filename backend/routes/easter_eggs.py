@@ -188,6 +188,16 @@ DEFAULT_EASTER_EGGS = [
             "tribute_text": "A special tribute page"
         },
         "is_active": True
+    },
+    {
+        "page_key": "sian",
+        "username": "Sianx",
+        "password": "SmileTime",
+        "title": "Sian Appreciation",
+        "content": {
+            "tribute_text": "A fantastic moderator appreciation page"
+        },
+        "is_active": True
     }
 ]
 

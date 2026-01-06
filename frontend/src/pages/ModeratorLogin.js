@@ -56,7 +56,8 @@ export default function ModeratorLogin() {
           'valentine': '/secret-valentine',
           'mediocre': '/secret-proposal',
           'developer': '/dev-secrets',
-          'garuda': '/garuda-tribute'
+          'garuda': '/garuda-tribute',
+          'sian': '/sian-appreciation'
         };
         
         if (pageRoutes[pageKey]) {
