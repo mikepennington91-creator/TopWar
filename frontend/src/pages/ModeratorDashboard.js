@@ -1095,7 +1095,61 @@ export default function ModeratorDashboard() {
                         Approve Application
                       </Button>
                       <Button
+                        data-testid="waiting-btn"
+                        onClick={() => {
+                          setStatusChangeData({ status: "waiting", comment: "" });
+                          setShowStatusChangeDialog(true);
+                        }}
+                        disabled={actionLoading}
+                        className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide py-3 rounded-sm"
+                      >
+                        <Clock className="mr-2 h-4 w-4" />
+                        Waiting List
+                      </Button>
+                      <Button
                         data-testid="reject-btn"
+                        onClick={() => {
+                          setStatusChangeData({ status: "rejected", comment: "" });
+                          setShowStatusChangeDialog(true);
+                        }}
+                        disabled={actionLoading}
+                        className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold uppercase tracking-wide py-3 rounded-sm"
+                      >
+                        <XCircle className="mr-2 h-4 w-4" />
+                        Reject Application
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Convert Waiting to Approved - For waitlisted applications */}
+                {selectedApp.status === 'waiting' && (
+                  currentUser.role === 'admin' || 
+                  currentUser.role === 'senior_moderator' || 
+                  currentUser.is_training_manager
+                ) && (
+                  <div className="border-t border-slate-700 pt-4">
+                    <h3 className="text-lg font-semibold uppercase tracking-wide text-emerald-500 mb-4" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                      Convert Waiting Application
+                    </h3>
+                    <p className="text-sm text-slate-400 mb-4">
+                      A vacancy has opened! Convert this waiting application to fully approved.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Button
+                        data-testid="convert-to-approved-btn"
+                        onClick={() => {
+                          setStatusChangeData({ status: "approved", comment: "" });
+                          setShowStatusChangeDialog(true);
+                        }}
+                        disabled={actionLoading}
+                        className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold uppercase tracking-wide py-3 rounded-sm"
+                      >
+                        <UserCheck className="mr-2 h-4 w-4" />
+                        Approve - Position Available
+                      </Button>
+                      <Button
+                        data-testid="reject-waiting-btn"
                         onClick={() => {
                           setStatusChangeData({ status: "rejected", comment: "" });
                           setShowStatusChangeDialog(true);
