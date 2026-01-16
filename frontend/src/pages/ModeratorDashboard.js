@@ -1228,6 +1228,18 @@ export default function ModeratorDashboard() {
             </div>
           )}
           
+          {/* Info for waiting status */}
+          {statusChangeData.status === "waiting" && (
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-sm p-3 mt-2">
+              <div className="flex items-start gap-2">
+                <Clock className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                <p className="text-blue-400 text-sm">
+                  <strong>Waiting List:</strong> The applicant will receive an email informing them that their application has been accepted but there is currently no vacancy. They will be notified when a position becomes available.
+                </p>
+              </div>
+            </div>
+          )}
+          
           <div className="space-y-4 mt-4">
             {!statusChangeData.status && (
               <div className="space-y-2">
