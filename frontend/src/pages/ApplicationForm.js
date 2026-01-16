@@ -61,6 +61,23 @@ export default function ApplicationForm() {
     why_good_moderator: ""
   });
 
+  useEffect(() => {
+    checkApplicationStatus();
+  }, []);
+
+  const checkApplicationStatus = async () => {
+    try {
+      const response = await axios.get(`${API}/applications/settings/status`);
+      setApplicationsEnabled(response.data.applications_enabled);
+    } catch (error) {
+      console.error(error);
+      // Default to enabled if check fails
+      setApplicationsEnabled(true);
+    } finally {
+      setCheckingStatus(false);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
