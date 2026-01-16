@@ -41,7 +41,7 @@ class TestApplicationSettings:
         # Login as admin
         login_response = requests.post(f"{BASE_URL}/api/auth/login", json=ADMIN_CREDS)
         assert login_response.status_code == 200
-        token = login_response.json()["token"]
+        token = login_response.json()["access_token"]
         
         # Get admin settings
         response = requests.get(
@@ -58,7 +58,7 @@ class TestApplicationSettings:
         # Login as admin
         login_response = requests.post(f"{BASE_URL}/api/auth/login", json=ADMIN_CREDS)
         assert login_response.status_code == 200
-        token = login_response.json()["token"]
+        token = login_response.json()["access_token"]
         
         # Disable applications
         response = requests.patch(
@@ -81,7 +81,7 @@ class TestApplicationSettings:
         """Test that submitting application returns 403 when disabled"""
         # First ensure applications are disabled
         login_response = requests.post(f"{BASE_URL}/api/auth/login", json=ADMIN_CREDS)
-        token = login_response.json()["token"]
+        token = login_response.json()["access_token"]
         requests.patch(
             f"{BASE_URL}/api/applications/settings/admin",
             json={"applications_enabled": False},
@@ -124,7 +124,7 @@ class TestApplicationSettings:
         # Login as admin
         login_response = requests.post(f"{BASE_URL}/api/auth/login", json=ADMIN_CREDS)
         assert login_response.status_code == 200
-        token = login_response.json()["token"]
+        token = login_response.json()["access_token"]
         
         # Enable applications
         response = requests.patch(
