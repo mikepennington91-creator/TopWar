@@ -102,6 +102,21 @@ class ApplicationUpdate(BaseModel):
     comment: str
 
 
+# ============= Application Settings Models =============
+
+class ApplicationSettings(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = "app_settings"
+    applications_enabled: bool = True
+    updated_by: Optional[str] = None
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class ApplicationSettingsUpdate(BaseModel):
+    applications_enabled: bool
+
+
 class VoteCreate(BaseModel):
     vote: str
 

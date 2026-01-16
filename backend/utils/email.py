@@ -89,3 +89,48 @@ Thank you again for your interest in the role and for being part of the Top War 
 Kind regards,
 Top War Moderation Team"""
     send_email(to_email, subject, body)
+
+
+def send_application_waitlist_email(to_email: str, name: str):
+    """Send email when application is placed on waiting list."""
+    subject = "Top War Moderator Application – Waitlist"
+    body = f"""Hi {name},
+
+Thank you for your application to become a Top War Moderator.
+
+We're pleased to inform you that your application has been accepted. However, we currently do not have an open vacancy at this moment in time.
+
+Your application has been placed on our waiting list and we will be in touch as soon as a position becomes available.
+
+Thank you for your patience and continued interest in joining our moderation team.
+
+Kind regards,
+Top War Moderation Team"""
+    send_email(to_email, subject, body)
+
+
+def send_application_waitlist_to_approved_email(to_email: str, name: str, manager_comment: str = ""):
+    """Send email when a waitlisted application is converted to approved."""
+    subject = "Top War Moderator Application – Position Available!"
+    
+    comment_section = ""
+    if manager_comment and manager_comment.strip():
+        comment_section = f"""
+Message from the Training Team:
+{manager_comment.strip()}
+
+"""
+    
+    body = f"""Hi {name},
+
+Great news! A position has become available and we'd like to offer you a place on our moderation team.
+
+Your application, which was previously on our waiting list, has now been fully approved.
+
+The next stage is an interview with the training team.
+
+{comment_section}We look forward to hearing from you shortly.
+
+Kind regards,
+Top War Moderation Team"""
+    send_email(to_email, subject, body)

@@ -12,7 +12,9 @@ from utils.auth import get_current_moderator, require_admin
 from utils.email import (
     send_application_confirmation_email,
     send_application_approved_email,
-    send_application_rejected_email
+    send_application_rejected_email,
+    send_application_waitlist_email,
+    send_application_waitlist_to_approved_email
 )
 
 router = APIRouter(prefix="/applications", tags=["Applications"])
