@@ -810,6 +810,69 @@ export default function Settings() {
         {/* Admin Only Sections */}
         {currentUser && currentUser.hasAdminAccess && (
           <>
+            {/* Application Control - Admin Only */}
+            <Card className="glass-card border-slate-700 mb-4">
+              <CardHeader 
+                className="cursor-pointer select-none"
+                onClick={() => toggleSection('applicationControl')}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-xl sm:text-2xl font-bold uppercase tracking-wide text-orange-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                      <FileX className="inline-block mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+                      Application Control
+                    </CardTitle>
+                    <CardDescription className="text-slate-400 text-sm">
+                      Enable or disable new moderator applications
+                    </CardDescription>
+                  </div>
+                  {expandedSections.applicationControl ? (
+                    <ChevronUp className="h-5 w-5 text-slate-400" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5 text-slate-400" />
+                  )}
+                </div>
+              </CardHeader>
+              {expandedSections.applicationControl && (
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 bg-slate-900/50 rounded border border-slate-800">
+                      <div className="flex-1">
+                        <p className="font-semibold text-slate-200">Accept New Applications</p>
+                        <p className="text-sm text-slate-400">
+                          When disabled, the application form will be replaced with a "No vacancies" message.
+                        </p>
+                      </div>
+                      <Switch
+                        data-testid="applications-enabled-toggle"
+                        checked={applicationsEnabled}
+                        onCheckedChange={handleToggleApplications}
+                        disabled={loadingAppSettings}
+                        className="ml-4"
+                      />
+                    </div>
+                    
+                    {/* Status indicator */}
+                    <div className={`p-4 rounded border ${applicationsEnabled ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-red-500/10 border-red-500/30'}`}>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-3 h-3 rounded-full ${applicationsEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></div>
+                        <div>
+                          <p className={`font-semibold ${applicationsEnabled ? 'text-emerald-400' : 'text-red-400'}`}>
+                            {applicationsEnabled ? 'Applications are OPEN' : 'Applications are CLOSED'}
+                          </p>
+                          <p className="text-sm text-slate-400">
+                            {applicationsEnabled 
+                              ? 'New applicants can submit applications via /apply' 
+                              : 'Applicants will see a "No vacancies" page'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+
             {/* Reset Password - Admin Only */}
             <Card className="glass-card border-slate-700 mb-4">
               <CardHeader 
