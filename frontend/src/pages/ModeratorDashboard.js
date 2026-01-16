@@ -740,6 +740,7 @@ export default function ModeratorDashboard() {
             </table>
           </div>
         </div>
+        </Tabs>
       </div>
 
       {/* Application Detail Dialog */}
