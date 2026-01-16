@@ -1243,6 +1243,7 @@ export default function ModeratorDashboard() {
                     <SelectItem value="awaiting_review" className="text-slate-400">Awaiting Review</SelectItem>
                     <SelectItem value="pending" className="text-blue-400">Pending</SelectItem>
                     <SelectItem value="approved" className="text-emerald-400">Approved</SelectItem>
+                    <SelectItem value="waiting" className="text-amber-400">Waiting (No Vacancy)</SelectItem>
                     <SelectItem value="rejected" className="text-red-400">Rejected</SelectItem>
                   </SelectContent>
                 </Select>
