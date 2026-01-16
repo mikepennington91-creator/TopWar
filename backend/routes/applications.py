@@ -276,3 +276,57 @@ async def delete_application(application_id: str, current_user: dict = Depends(r
         raise HTTPException(status_code=404, detail="Application not found")
     
     return {"message": f"Application from {existing_app.get('name', 'Unknown')} deleted successfully"}
+
+
+# ============= Application Settings Endpoints =============
+
+@router.get("/settings/status")
+async def get_application_settings():
+    """Get application settings (public endpoint for checking if applications are enabled)."""
+    settings = await db.application_settings.find_one({"id": "app_settings"}, {"_id": 0})
+    if not settings:
+        # Return default settings if none exist
+        return {"applications_enabled": True}
+    return {"applications_enabled": settings.get("applications_enabled", True)}
+
+
+@router.get("/settings/admin", response_model=ApplicationSettings)
+async def get_application_settings_admin(current_user: dict = Depends(require_admin)):
+    """Get full application settings (admin only)."""
+    settings = await db.application_settings.find_one({"id": "app_settings"}, {"_id": 0})
+    if not settings:
+        # Create default settings
+        default_settings = ApplicationSettings()
+        doc = default_settings.model_dump()
+        doc['updated_at'] = doc['updated_at'].isoformat()
+        await db.application_settings.insert_one(doc)
+        return default_settings
+    
+    # Convert timestamp if needed
+    if isinstance(settings.get('updated_at'), str):
+        settings['updated_at'] = datetime.fromisoformat(settings['updated_at'])
+    
+    return ApplicationSettings(**settings)
+
+
+@router.patch("/settings/admin")
+async def update_application_settings(update: ApplicationSettingsUpdate, current_user: dict = Depends(require_admin)):
+    """Update application settings (admin only)."""
+    now = datetime.now(timezone.utc)
+    
+    await db.application_settings.update_one(
+        {"id": "app_settings"},
+        {
+            "$set": {
+                "applications_enabled": update.applications_enabled,
+                "updated_by": current_user['username'],
+                "updated_at": now.isoformat()
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "message": f"Applications {'enabled' if update.applications_enabled else 'disabled'} successfully",
+        "applications_enabled": update.applications_enabled
+    }
