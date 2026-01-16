@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Send, AlertCircle } from "lucide-react";
+import { ArrowLeft, Send, AlertCircle, Clock } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -23,6 +23,8 @@ const API = `${BACKEND_URL}/api`;
 export default function ApplicationForm() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [checkingStatus, setCheckingStatus] = useState(true);
+  const [applicationsEnabled, setApplicationsEnabled] = useState(true);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
