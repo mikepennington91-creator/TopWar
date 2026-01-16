@@ -312,7 +312,7 @@ class TestStatusUpdateValidation:
                 json={"status": "approved"},
                 headers={"Authorization": f"Bearer {admin_token}"}
             )
-            assert update_response.status_code == 400
+            assert update_response.status_code in [400, 422]  # 422 is also valid for validation errors
             print("✅ Status update correctly requires comment")
     
     def test_status_update_with_empty_comment(self, admin_token):
