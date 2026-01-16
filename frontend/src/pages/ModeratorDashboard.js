@@ -76,6 +76,18 @@ export default function ModeratorDashboard() {
   useEffect(() => {
     let filtered = [...applications];
     
+    // Apply tab-based filtering first
+    if (activeTab === "pending") {
+      // Pending tab shows: awaiting_review and pending (needs votes)
+      filtered = filtered.filter(app => app.status === 'awaiting_review' || app.status === 'pending');
+    } else if (activeTab === "approved") {
+      filtered = filtered.filter(app => app.status === 'approved');
+    } else if (activeTab === "rejected") {
+      filtered = filtered.filter(app => app.status === 'rejected');
+    } else if (activeTab === "waiting") {
+      filtered = filtered.filter(app => app.status === 'waiting');
+    }
+    
     // Apply search filter
     if (searchQuery.trim() !== "") {
       const query = searchQuery.toLowerCase();
@@ -87,7 +99,7 @@ export default function ModeratorDashboard() {
       );
     }
     
-    // Apply status filter
+    // Apply status filter (within tab)
     if (!statusFilter.includes("all")) {
       filtered = filtered.filter(app => statusFilter.includes(app.status));
     }
@@ -100,7 +112,7 @@ export default function ModeratorDashboard() {
     });
     
     setFilteredApplications(filtered);
-  }, [searchQuery, applications, sortOrder, statusFilter]);
+  }, [searchQuery, applications, sortOrder, statusFilter, activeTab]);
 
   const toggleStatusFilter = (status) => {
     if (status === "all") {
