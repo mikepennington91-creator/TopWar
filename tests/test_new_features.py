@@ -146,7 +146,7 @@ class TestWaitingStatus:
         """Get admin authentication token"""
         login_response = requests.post(f"{BASE_URL}/api/auth/login", json=ADMIN_CREDS)
         assert login_response.status_code == 200
-        return login_response.json()["token"]
+        return login_response.json()["access_token"]
     
     def test_update_application_to_waiting(self, admin_token):
         """Test updating application status to 'waiting'"""
@@ -241,7 +241,7 @@ class TestApplicationStatusFiltering:
         """Get admin authentication token"""
         login_response = requests.post(f"{BASE_URL}/api/auth/login", json=ADMIN_CREDS)
         assert login_response.status_code == 200
-        return login_response.json()["token"]
+        return login_response.json()["access_token"]
     
     def test_get_all_applications(self, admin_token):
         """Test getting all applications and verify status distribution"""
@@ -293,7 +293,7 @@ class TestStatusUpdateValidation:
         """Get admin authentication token"""
         login_response = requests.post(f"{BASE_URL}/api/auth/login", json=ADMIN_CREDS)
         assert login_response.status_code == 200
-        return login_response.json()["token"]
+        return login_response.json()["access_token"]
     
     def test_status_update_requires_comment(self, admin_token):
         """Test that status update requires a comment"""
@@ -362,7 +362,7 @@ class TestEmailFunctionality:
         """Get admin authentication token"""
         login_response = requests.post(f"{BASE_URL}/api/auth/login", json=ADMIN_CREDS)
         assert login_response.status_code == 200
-        return login_response.json()["token"]
+        return login_response.json()["access_token"]
     
     def test_waitlist_email_triggered_on_status_change(self, admin_token):
         """Verify that changing status to 'waiting' triggers email (check logs)"""
