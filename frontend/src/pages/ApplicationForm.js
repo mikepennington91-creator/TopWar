@@ -236,7 +236,7 @@ export default function ApplicationForm() {
             
             <div className="space-y-6 text-slate-300 leading-relaxed max-w-5xl mx-auto">
               <p className="text-lg">
-                Are you passionate about Top War and want to help shape the community? We're looking for motivated, knowledgeable players to join our moderation team and support both the in-game environment and the official Discord server. If you love the game and enjoy helping others, this could be the perfect role for you! 💥
+                Are you passionate about Top War and want to help shape the community? We&apos;re looking for motivated, knowledgeable players to join our moderation team and support both the in-game environment and the official Discord server. If you love the game and enjoy helping others, this could be the perfect role for you! 💥
               </p>
 
               <div>
