@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from database import db
 from models.schemas import (
     Application, ApplicationCreate, ApplicationUpdate,
-    VoteCreate, CommentCreate, AuditLog
+    VoteCreate, CommentCreate, AuditLog, ApplicationSettings, ApplicationSettingsUpdate
 )
 from utils.auth import get_current_moderator, require_admin
 from utils.email import (
@@ -180,8 +180,8 @@ async def comment_on_application(application_id: str, comment_data: CommentCreat
 @router.patch("/{application_id}", response_model=Application)
 async def update_application_status(application_id: str, update: ApplicationUpdate, background_tasks: BackgroundTasks, current_user: dict = Depends(require_admin)):
     """Update application status."""
-    if update.status not in ["approved", "rejected", "pending", "awaiting_review"]:
-        raise HTTPException(status_code=400, detail="Status must be 'approved', 'rejected', 'pending', or 'awaiting_review'")
+    if update.status not in ["approved", "rejected", "pending", "awaiting_review", "waiting"]:
+        raise HTTPException(status_code=400, detail="Status must be 'approved', 'rejected', 'pending', 'awaiting_review', or 'waiting'")
     
     if not update.comment or not update.comment.strip():
         raise HTTPException(status_code=400, detail="A comment is required when changing application status")
@@ -231,10 +231,16 @@ async def update_application_status(application_id: str, update: ApplicationUpda
     applicant_name = existing_app.get('name', 'Applicant')
     if applicant_email:
         if update.status == "approved":
-            # Include the manager's comment in the approval email
-            background_tasks.add_task(send_application_approved_email, applicant_email, applicant_name, update.comment)
+            # Check if coming from waiting list
+            if old_status == "waiting":
+                background_tasks.add_task(send_application_waitlist_to_approved_email, applicant_email, applicant_name, update.comment)
+            else:
+                # Include the manager's comment in the approval email
+                background_tasks.add_task(send_application_approved_email, applicant_email, applicant_name, update.comment)
         elif update.status == "rejected":
             background_tasks.add_task(send_application_rejected_email, applicant_email, applicant_name)
+        elif update.status == "waiting":
+            background_tasks.add_task(send_application_waitlist_email, applicant_email, applicant_name)
     
     # Get updated application
     application = await db.applications.find_one({"id": application_id}, {"_id": 0})
