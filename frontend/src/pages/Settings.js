@@ -862,8 +862,8 @@ export default function Settings() {
                           </p>
                           <p className="text-sm text-slate-400">
                             {applicationsEnabled 
-                              ? 'New applicants can submit applications via /apply' 
-                              : 'Applicants will see a "No vacancies" page'}
+                              ? 'Applicants will see a "No vacancies" page' 
+                              : 'New applicants can submit applications via /apply'}
                           </p>
                         </div>
                       </div>
