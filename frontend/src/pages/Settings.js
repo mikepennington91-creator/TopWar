@@ -177,8 +177,42 @@ export default function Settings() {
     // Admin access users can see easter eggs
     if (hasAdminAccess) {
       fetchEasterEggs();
+      fetchApplicationSettings();
     }
   }, [navigate]);
+
+  const fetchApplicationSettings = async () => {
+    try {
+      const token = localStorage.getItem('moderator_token');
+      const response = await axios.get(`${API}/applications/settings/admin`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setApplicationsEnabled(response.data.applications_enabled);
+    } catch (error) {
+      console.error(error);
+      // Default to enabled if fetch fails
+      setApplicationsEnabled(true);
+    }
+  };
+
+  const handleToggleApplications = async (enabled) => {
+    setLoadingAppSettings(true);
+    try {
+      const token = localStorage.getItem('moderator_token');
+      await axios.patch(
+        `${API}/applications/settings/admin`,
+        { applications_enabled: enabled },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setApplicationsEnabled(enabled);
+      toast.success(`New applications ${enabled ? 'enabled' : 'disabled'} successfully!`);
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.detail || "Failed to update application settings");
+    } finally {
+      setLoadingAppSettings(false);
+    }
+  };
 
   const fetchModerators = async () => {
     try {
