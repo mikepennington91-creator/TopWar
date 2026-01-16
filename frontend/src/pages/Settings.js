@@ -142,7 +142,8 @@ export default function Settings() {
     changeUsername: false,
     preferences: false,
     moderatorList: false,
-    easterEggs: false
+    easterEggs: false,
+    applicationControl: false
   });
 
   const toggleSection = (section) => {
