@@ -547,90 +547,72 @@ export default function ModeratorDashboard() {
               </SelectContent>
             </Select>
           </div>
-          
-          {/* Status Multi-Filter */}
-          <div className="flex items-center gap-2 flex-1">
-            <Filter className="h-4 w-4 text-slate-400 hidden sm:block" />
-            <div className="flex flex-wrap gap-1.5 sm:gap-2">
-              <Button
-                size="sm"
-                variant={statusFilter.includes("all") ? "default" : "outline"}
-                onClick={() => toggleStatusFilter("all")}
-                className={`text-xs px-2 sm:px-3 py-1 h-auto rounded-sm ${
-                  statusFilter.includes("all") 
-                    ? "bg-amber-500 text-white" 
-                    : "border-slate-600 text-slate-400 hover:bg-slate-800"
-                }`}
-              >
-                All
-              </Button>
-              <Button
-                size="sm"
-                variant={statusFilter.includes("awaiting_review") ? "default" : "outline"}
-                onClick={() => toggleStatusFilter("awaiting_review")}
-                className={`text-xs px-2 sm:px-3 py-1 h-auto rounded-sm ${
-                  statusFilter.includes("awaiting_review") 
-                    ? "bg-slate-500 text-white" 
-                    : "border-slate-600 text-slate-400 hover:bg-slate-800"
-                }`}
-              >
-                Awaiting
-              </Button>
-              <Button
-                size="sm"
-                variant={statusFilter.includes("pending") ? "default" : "outline"}
-                onClick={() => toggleStatusFilter("pending")}
-                className={`text-xs px-2 sm:px-3 py-1 h-auto rounded-sm ${
-                  statusFilter.includes("pending") 
-                    ? "bg-blue-500 text-white" 
-                    : "border-slate-600 text-slate-400 hover:bg-slate-800"
-                }`}
-              >
-                Pending
-              </Button>
-              <Button
-                size="sm"
-                variant={statusFilter.includes("approved") ? "default" : "outline"}
-                onClick={() => toggleStatusFilter("approved")}
-                className={`text-xs px-2 sm:px-3 py-1 h-auto rounded-sm ${
-                  statusFilter.includes("approved") 
-                    ? "bg-emerald-500 text-white" 
-                    : "border-slate-600 text-slate-400 hover:bg-slate-800"
-                }`}
-              >
-                Approved
-              </Button>
-              <Button
-                size="sm"
-                variant={statusFilter.includes("rejected") ? "default" : "outline"}
-                onClick={() => toggleStatusFilter("rejected")}
-                className={`text-xs px-2 sm:px-3 py-1 h-auto rounded-sm ${
-                  statusFilter.includes("rejected") 
-                    ? "bg-red-500 text-white" 
-                    : "border-slate-600 text-slate-400 hover:bg-slate-800"
-                }`}
-              >
-                Rejected
-              </Button>
-            </div>
-          </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-6 mb-4 sm:mb-8">
-          <div className="glass-card p-3 sm:p-6 rounded-lg">
-            <p className="text-slate-400 text-xs sm:text-sm uppercase tracking-wide" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Total</p>
-            <p className="text-2xl sm:text-4xl font-bold text-amber-500 mt-1 sm:mt-2" style={{ fontFamily: 'Rajdhani, sans-serif' }}>{applications.length}</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
+          <div className="glass-card p-3 sm:p-4 rounded-lg">
+            <p className="text-slate-400 text-xs uppercase tracking-wide" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Needs Review</p>
+            <p className="text-xl sm:text-3xl font-bold text-blue-400 mt-1" style={{ fontFamily: 'Rajdhani, sans-serif' }}>{applications.filter(a => a.status === 'awaiting_review' || a.status === 'pending').length}</p>
           </div>
-          <div className="glass-card p-3 sm:p-6 rounded-lg">
-            <p className="text-slate-400 text-xs sm:text-sm uppercase tracking-wide" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Pending</p>
-            <p className="text-2xl sm:text-4xl font-bold text-slate-200 mt-1 sm:mt-2" style={{ fontFamily: 'Rajdhani, sans-serif' }}>{applications.filter(a => a.status === 'pending').length}</p>
+          <div className="glass-card p-3 sm:p-4 rounded-lg">
+            <p className="text-slate-400 text-xs uppercase tracking-wide" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Approved</p>
+            <p className="text-xl sm:text-3xl font-bold text-emerald-500 mt-1" style={{ fontFamily: 'Rajdhani, sans-serif' }}>{applications.filter(a => a.status === 'approved').length}</p>
           </div>
-          <div className="glass-card p-3 sm:p-6 rounded-lg">
-            <p className="text-slate-400 text-xs sm:text-sm uppercase tracking-wide" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Approved</p>
-            <p className="text-2xl sm:text-4xl font-bold text-emerald-500 mt-1 sm:mt-2" style={{ fontFamily: 'Rajdhani, sans-serif' }}>{applications.filter(a => a.status === 'approved').length}</p>
+          <div className="glass-card p-3 sm:p-4 rounded-lg">
+            <p className="text-slate-400 text-xs uppercase tracking-wide" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Waiting</p>
+            <p className="text-xl sm:text-3xl font-bold text-amber-400 mt-1" style={{ fontFamily: 'Rajdhani, sans-serif' }}>{applications.filter(a => a.status === 'waiting').length}</p>
+          </div>
+          <div className="glass-card p-3 sm:p-4 rounded-lg">
+            <p className="text-slate-400 text-xs uppercase tracking-wide" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Rejected</p>
+            <p className="text-xl sm:text-3xl font-bold text-red-400 mt-1" style={{ fontFamily: 'Rajdhani, sans-serif' }}>{applications.filter(a => a.status === 'rejected').length}</p>
           </div>
         </div>
+
+        {/* Tabs for Application Categories */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full grid grid-cols-4 bg-slate-900/50 border border-slate-700 rounded-sm mb-4 h-auto p-1">
+            <TabsTrigger 
+              value="pending" 
+              data-testid="tab-pending"
+              className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400 text-slate-400 rounded-sm py-2 text-xs sm:text-sm uppercase tracking-wide font-semibold"
+            >
+              <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Pending</span>
+              <span className="sm:hidden">Vote</span>
+              <Badge className="ml-1 sm:ml-2 bg-blue-500/20 text-blue-400 text-xs h-5 px-1.5">{applications.filter(a => a.status === 'awaiting_review' || a.status === 'pending').length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="approved" 
+              data-testid="tab-approved"
+              className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 text-slate-400 rounded-sm py-2 text-xs sm:text-sm uppercase tracking-wide font-semibold"
+            >
+              <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Approved</span>
+              <span className="sm:hidden">OK</span>
+              <Badge className="ml-1 sm:ml-2 bg-emerald-500/20 text-emerald-400 text-xs h-5 px-1.5">{applications.filter(a => a.status === 'approved').length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="waiting" 
+              data-testid="tab-waiting"
+              className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 text-slate-400 rounded-sm py-2 text-xs sm:text-sm uppercase tracking-wide font-semibold"
+            >
+              <UserCheck className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Waiting</span>
+              <span className="sm:hidden">Wait</span>
+              <Badge className="ml-1 sm:ml-2 bg-amber-500/20 text-amber-400 text-xs h-5 px-1.5">{applications.filter(a => a.status === 'waiting').length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="rejected" 
+              data-testid="tab-rejected"
+              className="data-[state=active]:bg-red-500/20 data-[state=active]:text-red-400 text-slate-400 rounded-sm py-2 text-xs sm:text-sm uppercase tracking-wide font-semibold"
+            >
+              <XCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Rejected</span>
+              <span className="sm:hidden">No</span>
+              <Badge className="ml-1 sm:ml-2 bg-red-500/20 text-red-400 text-xs h-5 px-1.5">{applications.filter(a => a.status === 'rejected').length}</Badge>
+            </TabsTrigger>
+          </TabsList>
 
         {/* Applications - Mobile Card View */}
         <div className="sm:hidden space-y-3" data-testid="applications-mobile">
