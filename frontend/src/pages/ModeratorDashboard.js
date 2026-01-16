@@ -364,6 +364,8 @@ export default function ModeratorDashboard() {
         return <Badge data-testid={`badge-approved`} className="uppercase bg-emerald-500/20 text-emerald-400 border-emerald-500/50 font-semibold">Approved</Badge>;
       case "rejected":
         return <Badge data-testid={`badge-rejected`} className="uppercase bg-red-500/20 text-red-400 border-red-500/50 font-semibold">Rejected</Badge>;
+      case "waiting":
+        return <Badge data-testid={`badge-waiting`} className="uppercase bg-amber-500/20 text-amber-400 border-amber-500/50 font-semibold">Waiting</Badge>;
       default:
         return <Badge variant="outline">Unknown</Badge>;
     }
