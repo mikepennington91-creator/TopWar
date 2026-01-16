@@ -38,6 +38,14 @@ def convert_application_timestamps(app: dict) -> dict:
 @router.post("", response_model=Application)
 async def submit_application(app_data: ApplicationCreate, background_tasks: BackgroundTasks):
     """Submit a new application."""
+    # Check if applications are enabled
+    settings = await db.application_settings.find_one({"id": "app_settings"}, {"_id": 0})
+    if settings and not settings.get("applications_enabled", True):
+        raise HTTPException(
+            status_code=403, 
+            detail="Applications are currently closed. We do not have any open vacancies at this time. Please try again later."
+        )
+    
     app_obj = Application(**app_data.model_dump())
     doc = app_obj.model_dump()
     doc['submitted_at'] = doc['submitted_at'].isoformat()
