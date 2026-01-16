@@ -1,25 +1,13 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="8" failures="4" skipped="0" tests="14" time="3.499" timestamp="2026-01-16T23:20:17.712906+00:00" hostname="agent-env-4b366015-51b2-4bf8-903e-4983b2e6dc4c"><testcase classname="tests.test_new_features.TestApplicationSettings" name="test_get_application_settings_status_public" time="0.084" /><testcase classname="tests.test_new_features.TestApplicationSettings" name="test_get_application_settings_admin_requires_auth" time="0.037" /><testcase classname="tests.test_new_features.TestApplicationSettings" name="test_get_application_settings_admin_with_auth" time="0.267"><failure message="KeyError: 'token'">tests/test_new_features.py:44: in test_get_application_settings_admin_with_auth
-    token = login_response.json()["token"]
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-E   KeyError: 'token'</failure></testcase><testcase classname="tests.test_new_features.TestApplicationSettings" name="test_toggle_applications_off" time="0.267"><failure message="KeyError: 'token'">tests/test_new_features.py:61: in test_toggle_applications_off
-    token = login_response.json()["token"]
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-E   KeyError: 'token'</failure></testcase><testcase classname="tests.test_new_features.TestApplicationSettings" name="test_submit_application_when_disabled" time="0.265"><failure message="KeyError: 'token'">tests/test_new_features.py:84: in test_submit_application_when_disabled
-    token = login_response.json()["token"]
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-E   KeyError: 'token'</failure></testcase><testcase classname="tests.test_new_features.TestApplicationSettings" name="test_toggle_applications_on" time="0.262"><failure message="KeyError: 'token'">tests/test_new_features.py:127: in test_toggle_applications_on
-    token = login_response.json()["token"]
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-E   KeyError: 'token'</failure></testcase><testcase classname="tests.test_new_features.TestWaitingStatus" name="test_update_application_to_waiting" time="0.263"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_new_features.py:149: in admin_token
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="8" failures="0" skipped="0" tests="14" time="3.876" timestamp="2026-01-16T23:20:43.510207+00:00" hostname="agent-env-4b366015-51b2-4bf8-903e-4983b2e6dc4c"><testcase classname="tests.test_new_features.TestApplicationSettings" name="test_get_application_settings_status_public" time="0.139" /><testcase classname="tests.test_new_features.TestApplicationSettings" name="test_get_application_settings_admin_requires_auth" time="0.042" /><testcase classname="tests.test_new_features.TestApplicationSettings" name="test_get_application_settings_admin_with_auth" time="0.346" /><testcase classname="tests.test_new_features.TestApplicationSettings" name="test_toggle_applications_off" time="0.354" /><testcase classname="tests.test_new_features.TestApplicationSettings" name="test_submit_application_when_disabled" time="0.425" /><testcase classname="tests.test_new_features.TestApplicationSettings" name="test_toggle_applications_on" time="0.302" /><testcase classname="tests.test_new_features.TestWaitingStatus" name="test_update_application_to_waiting" time="0.264"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_new_features.py:149: in admin_token
     return login_response.json()["token"]
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-E   KeyError: 'token'</error></testcase><testcase classname="tests.test_new_features.TestWaitingStatus" name="test_convert_waiting_to_approved" time="0.265"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_new_features.py:149: in admin_token
+E   KeyError: 'token'</error></testcase><testcase classname="tests.test_new_features.TestWaitingStatus" name="test_convert_waiting_to_approved" time="0.264"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_new_features.py:149: in admin_token
     return login_response.json()["token"]
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-E   KeyError: 'token'</error></testcase><testcase classname="tests.test_new_features.TestApplicationStatusFiltering" name="test_get_all_applications" time="0.263"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_new_features.py:244: in admin_token
+E   KeyError: 'token'</error></testcase><testcase classname="tests.test_new_features.TestApplicationStatusFiltering" name="test_get_all_applications" time="0.266"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_new_features.py:244: in admin_token
     return login_response.json()["token"]
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-E   KeyError: 'token'</error></testcase><testcase classname="tests.test_new_features.TestApplicationStatusFiltering" name="test_application_has_required_fields" time="0.264"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_new_features.py:244: in admin_token
+E   KeyError: 'token'</error></testcase><testcase classname="tests.test_new_features.TestApplicationStatusFiltering" name="test_application_has_required_fields" time="0.298"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_new_features.py:244: in admin_token
     return login_response.json()["token"]
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 E   KeyError: 'token'</error></testcase><testcase classname="tests.test_new_features.TestStatusUpdateValidation" name="test_status_update_requires_comment" time="0.261"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_new_features.py:296: in admin_token
@@ -28,10 +16,10 @@ E   KeyError: 'token'</error></testcase><testcase classname="tests.test_new_feat
 E   KeyError: 'token'</error></testcase><testcase classname="tests.test_new_features.TestStatusUpdateValidation" name="test_status_update_with_empty_comment" time="0.262"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_new_features.py:296: in admin_token
     return login_response.json()["token"]
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-E   KeyError: 'token'</error></testcase><testcase classname="tests.test_new_features.TestStatusUpdateValidation" name="test_valid_status_values" time="0.264"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_new_features.py:296: in admin_token
+E   KeyError: 'token'</error></testcase><testcase classname="tests.test_new_features.TestStatusUpdateValidation" name="test_valid_status_values" time="0.265"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_new_features.py:296: in admin_token
     return login_response.json()["token"]
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-E   KeyError: 'token'</error></testcase><testcase classname="tests.test_new_features.TestEmailFunctionality" name="test_waitlist_email_triggered_on_status_change" time="0.269"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_new_features.py:365: in admin_token
+E   KeyError: 'token'</error></testcase><testcase classname="tests.test_new_features.TestEmailFunctionality" name="test_waitlist_email_triggered_on_status_change" time="0.263"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_new_features.py:365: in admin_token
     return login_response.json()["token"]
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 E   KeyError: 'token'</error></testcase></testsuite></testsuites>
