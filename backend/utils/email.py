@@ -93,16 +93,21 @@ Top War Moderation Team"""
 
 def send_application_waitlist_email(to_email: str, name: str):
     """Send email when application is placed on waiting list."""
-    subject = "Top War Moderator Application – Waitlist"
+    subject = "Top War Moderator Application – You're On Our Waiting List!"
     body = f"""Hi {name},
 
-Thank you for your application to become a Top War Moderator.
+Great news! After reviewing your application, we're pleased to inform you that you've been accepted to join our moderation team.
 
-We're pleased to inform you that your application has been accepted. However, we currently do not have an open vacancy at this moment in time.
+However, we're currently at full capacity and don't have an open position available right now. But don't worry – we've added you to our priority waiting list!
 
-Your application has been placed on our waiting list and we will be in touch as soon as a position becomes available.
+What happens next?
+• Your application remains active and at the front of our queue
+• As soon as a position becomes available, we'll reach out to you immediately
+• You don't need to reapply – we've got you covered
 
-Thank you for your patience and continued interest in joining our moderation team.
+We were genuinely impressed with your application and are excited about the prospect of having you on the team. Thank you for your patience and continued interest in supporting the Top War community.
+
+We'll be in touch soon!
 
 Kind regards,
 Top War Moderation Team"""
@@ -111,7 +116,7 @@ Top War Moderation Team"""
 
 def send_application_waitlist_to_approved_email(to_email: str, name: str, manager_comment: str = ""):
     """Send email when a waitlisted application is converted to approved."""
-    subject = "Top War Moderator Application – Position Available!"
+    subject = "Top War Moderator Application – A Position Is Now Available! 🎉"
     
     comment_section = ""
     if manager_comment and manager_comment.strip():
@@ -123,13 +128,16 @@ Message from the Training Team:
     
     body = f"""Hi {name},
 
-Great news! A position has become available and we'd like to offer you a place on our moderation team.
+The wait is over – we have fantastic news for you!
 
-Your application, which was previously on our waiting list, has now been fully approved.
+A position has opened up on our moderation team, and we'd love to officially welcome you aboard. Your patience while on our waiting list has been greatly appreciated, and we're thrilled to finally extend this offer to you.
 
-The next stage is an interview with the training team.
+{comment_section}What happens next?
+The next stage is an interview with the training team, where we'll get you set up and ready to start making a difference in the Top War community.
 
-{comment_section}We look forward to hearing from you shortly.
+Please keep an eye on your Discord DMs, as we'll be reaching out to schedule your interview shortly. Make sure you have DMs enabled so we can connect with you!
+
+Welcome to the team – we can't wait to work with you!
 
 Kind regards,
 Top War Moderation Team"""
