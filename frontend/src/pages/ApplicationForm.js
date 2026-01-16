@@ -186,23 +186,33 @@ export default function ApplicationForm() {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-200 pt-14 py-12 px-4 sm:px-6 lg:px-8 grid-texture">
         <div className="max-w-2xl mx-auto">
-          <div className="glass-card rounded-lg p-8 md:p-12 border-2 border-slate-700 text-center">
+          <div className="glass-card rounded-lg p-8 md:p-12 border-2 border-amber-500/30 text-center">
             <div className="mb-6">
               <Clock className="h-16 w-16 text-amber-500 mx-auto mb-4" />
               <h1 className="text-3xl md:text-4xl font-bold uppercase tracking-wider text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                No Open Vacancies
+                Applications Currently Closed
               </h1>
             </div>
             
             <div className="space-y-4 text-slate-300">
               <p className="text-lg">
-                Thank you for your interest in becoming a Top War Moderator!
+                Thank you for your interest in joining the Top War Moderation Team!
               </p>
               <p>
-                We currently do not have any open vacancies at this moment in time.
+                We&apos;re not currently accepting new applications as our team is at full capacity. 
+                However, this is only temporary!
               </p>
-              <p>
-                Please check back later for future opportunities.
+              <div className="bg-slate-800/50 rounded-lg p-4 mt-6 border border-slate-700">
+                <p className="text-amber-400 font-semibold mb-2">💡 What can you do in the meantime?</p>
+                <ul className="text-left text-sm space-y-2 text-slate-400">
+                  <li>• Stay active in the Top War community</li>
+                  <li>• Build your game knowledge and experience</li>
+                  <li>• Check back here regularly for updates</li>
+                  <li>• Follow our official Discord for announcements</li>
+                </ul>
+              </div>
+              <p className="text-slate-400 text-sm mt-4">
+                We appreciate your enthusiasm and hope to see your application when positions open up!
               </p>
             </div>
             
