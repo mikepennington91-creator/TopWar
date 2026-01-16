@@ -37,6 +37,7 @@ export default function ModeratorDashboard() {
   const [showStatusChangeDialog, setShowStatusChangeDialog] = useState(false);
   const [statusChangeData, setStatusChangeData] = useState({ status: "", comment: "" });
   const [showFullQuestions, setShowFullQuestions] = useState(false);
+  const [activeTab, setActiveTab] = useState("pending"); // pending, approved, rejected, waiting
   // Audit log moved to separate page
 
   useEffect(() => {
