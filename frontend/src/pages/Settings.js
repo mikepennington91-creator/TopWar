@@ -840,7 +840,7 @@ export default function Settings() {
                       <div className="flex-1">
                         <p className="font-semibold text-slate-200">Accept New Applications</p>
                         <p className="text-sm text-slate-400">
-                          When disabled, the application form will be replaced with a "No vacancies" message.
+                          When disabled, the application form will be replaced with a &quot;No vacancies&quot; message.
                         </p>
                       </div>
                       <Switch
