@@ -131,6 +131,8 @@ export default function Settings() {
     title: "",
     content: {}
   });
+  const [applicationsEnabled, setApplicationsEnabled] = useState(true);
+  const [loadingAppSettings, setLoadingAppSettings] = useState(false);
   
   // Collapsible section states
   const [expandedSections, setExpandedSections] = useState({
