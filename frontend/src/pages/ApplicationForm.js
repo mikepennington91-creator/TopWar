@@ -169,6 +169,57 @@ export default function ApplicationForm() {
     { name: "why_good_moderator", label: "Why do you think, you would make a good moderator?", type: "textarea", required: true, ingameOnly: true }
   ];
 
+  // Show loading state while checking application status
+  if (checkingStatus) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-200 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show "No Vacancies" page if applications are disabled
+  if (!applicationsEnabled) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-200 pt-14 py-12 px-4 sm:px-6 lg:px-8 grid-texture">
+        <div className="max-w-2xl mx-auto">
+          <div className="glass-card rounded-lg p-8 md:p-12 border-2 border-slate-700 text-center">
+            <div className="mb-6">
+              <Clock className="h-16 w-16 text-amber-500 mx-auto mb-4" />
+              <h1 className="text-3xl md:text-4xl font-bold uppercase tracking-wider text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                No Open Vacancies
+              </h1>
+            </div>
+            
+            <div className="space-y-4 text-slate-300">
+              <p className="text-lg">
+                Thank you for your interest in becoming a Top War Moderator!
+              </p>
+              <p>
+                We currently do not have any open vacancies at this moment in time.
+              </p>
+              <p>
+                Please check back later for future opportunities.
+              </p>
+            </div>
+            
+            <div className="mt-8 pt-6 border-t border-slate-700">
+              <Button
+                onClick={() => navigate('/')}
+                className="bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide rounded-sm"
+              >
+                Return Home
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 pt-14 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
