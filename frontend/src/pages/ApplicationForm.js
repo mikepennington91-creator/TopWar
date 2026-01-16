@@ -258,7 +258,7 @@ export default function ApplicationForm() {
                 <h3 className="text-xl font-bold uppercase tracking-wide mb-3 text-emerald-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
                   ✨ Why Become a Moderator?
                 </h3>
-                <p className="mb-3">Being a moderator isn't just a role, it's a chance to make a real impact. Here's what you can gain:</p>
+                <p className="mb-3">Being a moderator isn&apos;t just a role, it&apos;s a chance to make a real impact. Here&apos;s what you can gain:</p>
                 <div className="space-y-2 pl-4">
                   <p>🌍 Help shape the community by keeping it safe, active, and welcoming</p>
                   <p>🤝 Support fellow players, answer questions, and guide new commanders</p>
