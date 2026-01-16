@@ -33,7 +33,7 @@ async function testApprovalDialogWarning() {
         await page.setViewport({ width: 1280, height: 720 });
         
         // Navigate to the frontend
-        const frontendUrl = process.env.REACT_APP_BACKEND_URL || 'https://approve-comment.preview.emergentagent.com';
+        const frontendUrl = process.env.REACT_APP_BACKEND_URL || 'https://team-gratitude.preview.emergentagent.com';
         await page.goto(`${frontendUrl}/moderator/login`);
         
         // Login as admin

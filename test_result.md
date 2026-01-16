@@ -12,7 +12,7 @@
   3. Enter password: SmileTime  
   4. Click Login
 - **Expected:** User is redirected to /sian-appreciation page
-- **Status:** ✅ WORKING - Successfully redirects to https://approve-comment.preview.emergentagent.com/sian-appreciation
+- **Status:** ✅ WORKING - Successfully redirects to https://team-gratitude.preview.emergentagent.com/sian-appreciation
 - **Test Date:** 2026-01-06 15:55
 - **Notes:** Easter egg authentication working perfectly, immediate redirect to appreciation page
 
