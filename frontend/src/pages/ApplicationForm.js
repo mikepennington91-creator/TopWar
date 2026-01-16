@@ -272,7 +272,7 @@ export default function ApplicationForm() {
 
               <div>
                 <h3 className="text-xl font-bold uppercase tracking-wide mb-3 text-blue-400" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                  🛠️ What You'll Be Doing
+                  🛠️ What You&apos;ll Be Doing
                 </h3>
                 <div className="space-y-2 pl-4">
                   <p>🔎 Monitoring chat and community spaces</p>
