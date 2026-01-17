@@ -179,6 +179,7 @@ export default function Settings() {
       fetchEasterEggs();
       fetchApplicationSettings();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   const fetchApplicationSettings = async () => {

@@ -52,6 +52,7 @@ export default function ModeratorDashboard() {
     
     fetchCurrentUser(token, username, role);
     fetchApplications();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   const fetchCurrentUser = async (token, username, role) => {
