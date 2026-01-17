@@ -7,6 +7,22 @@ import { ArrowLeft, FileText, Sparkles, Bug, Wrench, Plus, PartyPopper, Globe } 
 // Changelog data - newest first
 const CHANGELOG_DATA = [
   {
+    version: "3.5.0",
+    date: "16 January 2026",
+    title: "Application Management Overhaul",
+    changes: [
+      { type: "feature", text: "Dashboard tabs: Pending, Approved, Waiting, Rejected - applications now organized into separate sections" },
+      { type: "feature", text: "New 'Waiting' status for approved applicants when no vacancy available" },
+      { type: "feature", text: "Automatic waitlist email sent when application marked as Waiting" },
+      { type: "feature", text: "'Convert to Approved' button for waiting applications when vacancy opens" },
+      { type: "feature", text: "Application Control toggle in Settings - Admins can enable/disable new applications" },
+      { type: "feature", text: "'No Vacancies' page displays when applications are disabled" },
+      { type: "improvement", text: "Stats cards now show counts for all 4 statuses: Needs Review, Approved, Waiting, Rejected" },
+      { type: "improvement", text: "Final Decision section now includes 'Waiting List' option alongside Approve/Reject" },
+      { type: "improvement", text: "Improved email templates with warmer, more professional messaging" },
+    ]
+  },
+  {
     version: "3.4.0",
     date: "31 December 2025",
     title: "Holiday Animations System",
