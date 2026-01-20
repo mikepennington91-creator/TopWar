@@ -184,7 +184,7 @@ export default function ApplicationForm() {
   // Show "No Vacancies" page if applications are disabled
   if (!applicationsEnabled) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-200 pt-14 py-12 px-4 sm:px-6 lg:px-8 grid-texture">
+      <div className="min-h-screen bg-slate-950 text-slate-200 py-12 px-4 sm:px-6 lg:px-8 grid-texture">
         <div className="max-w-2xl mx-auto">
           <div className="glass-card rounded-lg p-8 md:p-12 border-2 border-amber-500/30 text-center">
             <div className="mb-6">
@@ -231,7 +231,7 @@ export default function ApplicationForm() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 pt-14 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-950 text-slate-200 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         {/* Recruitment Information */}
         <div className="glass-card rounded-lg p-8 md:p-12 mb-8 border-2 border-amber-500/30">
