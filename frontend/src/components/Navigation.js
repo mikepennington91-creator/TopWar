@@ -30,9 +30,13 @@ const SHOW_NAV_ROUTES = [
 
 // Pages that should show limited navigation (back to home only)
 const SHOW_LIMITED_NAV = [
+  '/moderator/login',
+];
+
+// Pages with no navigation at all
+const NO_NAV_PAGES = [
   '/',
   '/apply',
-  '/moderator/login',
 ];
 
 // Hidden pages (Easter eggs) - no nav
@@ -41,6 +45,7 @@ const HIDDEN_PAGES = [
   '/secret-valentine',
   '/dev-secrets',
   '/troll-detected',
+  '/sian-appreciation',
 ];
 
 export default function Navigation() {
