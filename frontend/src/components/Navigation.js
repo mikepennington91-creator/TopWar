@@ -55,8 +55,8 @@ export default function Navigation() {
   
   const currentPath = location.pathname;
   
-  // Don't show nav on Easter egg pages
-  if (HIDDEN_PAGES.includes(currentPath)) {
+  // Don't show nav on Easter egg pages or no-nav pages
+  if (HIDDEN_PAGES.includes(currentPath) || NO_NAV_PAGES.includes(currentPath)) {
     return null;
   }
   
