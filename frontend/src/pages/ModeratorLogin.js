@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Shield, ArrowLeft, AlertTriangle } from "lucide-react";
+import { Shield, ArrowLeft, AlertTriangle, Mail } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -17,6 +18,9 @@ export default function ModeratorLogin() {
     username: "",
     password: ""
   });
+  const [emailPromptOpen, setEmailPromptOpen] = useState(false);
+  const [emailPromptValue, setEmailPromptValue] = useState("");
+  const [emailPromptLoading, setEmailPromptLoading] = useState(false);
   const [mustChangePassword, setMustChangePassword] = useState(false);
   const [passwordChangeForm, setPasswordChangeForm] = useState({
     old_password: "",
@@ -87,7 +91,13 @@ export default function ModeratorLogin() {
         setLoading(false);
         return;
       }
-      
+
+      if (response.data.needs_email) {
+        setEmailPromptOpen(true);
+        setLoading(false);
+        return;
+      }
+
       toast.success("Login successful!");
       navigate('/moderator/portal');
     } catch (error) {
@@ -95,6 +105,27 @@ export default function ModeratorLogin() {
       toast.error(error.response?.data?.detail || "Invalid credentials");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEmailPromptSubmit = async (e) => {
+    e.preventDefault();
+    setEmailPromptLoading(true);
+    try {
+      const token = localStorage.getItem('moderator_token');
+      await axios.post(
+        `${API}/auth/set-email`,
+        { email: emailPromptValue },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Email saved successfully!");
+      setEmailPromptOpen(false);
+      navigate('/moderator/portal');
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.detail || "Failed to save email");
+    } finally {
+      setEmailPromptLoading(false);
     }
   };
 
@@ -207,7 +238,43 @@ export default function ModeratorLogin() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 flex items-center justify-center px-3 sm:px-4 pt-14 py-6 grid-texture">
       <div className="w-full max-w-md">
-
+        <Dialog open={emailPromptOpen}>
+          <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 sm:max-w-md" data-testid="email-confirmation-dialog">
+            <DialogHeader>
+              <DialogTitle className="text-amber-400 flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                Confirm your email
+              </DialogTitle>
+              <DialogDescription className="text-slate-400">
+                Please enter a valid email address. We only use this to help you reset your password in the future.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleEmailPromptSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email-prompt" className="text-slate-300 font-medium">
+                  Email Address
+                </Label>
+                <Input
+                  id="email-prompt"
+                  name="email-prompt"
+                  type="email"
+                  value={emailPromptValue}
+                  onChange={(e) => setEmailPromptValue(e.target.value)}
+                  required
+                  className="bg-slate-950/60 border-slate-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-slate-200 rounded-sm"
+                  placeholder="Enter your email address"
+                />
+              </div>
+              <Button
+                type="submit"
+                disabled={emailPromptLoading}
+                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide py-5 text-base rounded-sm btn-glow"
+              >
+                {emailPromptLoading ? "Saving..." : "Save Email"}
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
         <div className="glass-card rounded-lg p-5 sm:p-8">
           <div className="text-center mb-6 sm:mb-8">
             <Shield className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-amber-500 mb-3 sm:mb-4" />

@@ -7,6 +7,16 @@ import { ArrowLeft, FileText, Sparkles, Bug, Wrench, Plus, PartyPopper, Globe } 
 // Changelog data - newest first
 const CHANGELOG_DATA = [
   {
+    version: "3.5.1",
+    date: "17 January 2026",
+    title: "Moderator Email Confirmation",
+    changes: [
+      { type: "feature", text: "Moderators without an email are prompted after login to add one for password recovery" },
+      { type: "feature", text: "Confirmation emails are sent when moderators register or add an email address" },
+      { type: "improvement", text: "Email validation and uniqueness checks enforced for moderator accounts" },
+    ]
+  },
+  {
     version: "3.5.0",
     date: "16 January 2026",
     title: "Application Management Overhaul",
