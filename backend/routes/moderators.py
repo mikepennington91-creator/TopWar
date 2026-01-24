@@ -31,14 +31,20 @@ def normalize_email_address(email: str) -> str:
 
 @router.get("", response_model=List[ModeratorInfo])
 async def get_moderators(current_user: dict = Depends(get_current_moderator)):
-    """Get all moderators."""
+    """Get all moderators. Email is only visible to admins."""
     moderators = await db.moderators.find({}, {"_id": 0, "hashed_password": 0}).to_list(1000)
+    
+    # Check if current user is admin (can view emails)
+    is_admin_user = current_user["role"] == "admin" or current_user.get("is_admin", False)
     
     for mod in moderators:
         if isinstance(mod.get('created_at'), str):
             mod['created_at'] = datetime.fromisoformat(mod['created_at'])
         if isinstance(mod.get('last_login'), str):
             mod['last_login'] = datetime.fromisoformat(mod['last_login'])
+        # Strip email for non-admin users
+        if not is_admin_user:
+            mod.pop('email', None)
     
     return moderators
 
