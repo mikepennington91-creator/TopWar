@@ -142,3 +142,19 @@ Welcome to the team – we can't wait to work with you!
 Kind regards,
 Top War Moderation Team"""
     send_email(to_email, subject, body)
+
+
+def send_moderator_email_confirmation(to_email: str, username: str):
+    """Send confirmation email when a moderator registers an email address."""
+    subject = "Top War Moderator Portal – Email Confirmed"
+    body = f"""Hi {username},
+
+Thanks for confirming your email address for the Top War Moderator Portal.
+
+We'll only use this email to help you reset your password if you ever forget it. We won't use it for marketing or unrelated notifications.
+
+If you did not submit this email address, please contact an administrator immediately.
+
+Kind regards,
+Top War Moderation Team"""
+    send_email(to_email, subject, body)

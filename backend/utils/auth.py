@@ -64,6 +64,13 @@ async def require_admin(current_user: dict = Depends(get_current_moderator)):
     return current_user
 
 
+async def require_admin_role(current_user: dict = Depends(get_current_moderator)):
+    """Require admin role."""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return current_user
+
+
 def get_role_rank(role: str) -> int:
     """Get the rank of a role."""
     return ROLE_HIERARCHY.get(role, 0)

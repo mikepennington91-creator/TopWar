@@ -10,7 +10,7 @@ from models.schemas import (
     ModeratorAdminUpdate, ModeratorApplicationViewerUpdate
 )
 from utils.auth import (
-    get_current_moderator, require_admin, get_role_rank,
+    get_current_moderator, require_admin, require_admin_role, get_role_rank,
     can_modify_role, get_assignable_roles
 )
 
@@ -168,7 +168,7 @@ async def update_admin(username: str, admin_update: ModeratorAdminUpdate, curren
 
 
 @router.patch("/{username}/unlock")
-async def unlock_account(username: str, current_user: dict = Depends(require_admin)):
+async def unlock_account(username: str, current_user: dict = Depends(require_admin_role)):
     """Unlock a locked account."""
     moderator = await db.moderators.find_one({"username": username}, {"_id": 0})
     if not moderator:

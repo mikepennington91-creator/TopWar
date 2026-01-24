@@ -132,6 +132,7 @@ class Moderator(BaseModel):
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     username: str
+    email: str
     hashed_password: str
     password_history: List[str] = Field(default_factory=list)
     role: str = "moderator"
@@ -148,12 +149,14 @@ class Moderator(BaseModel):
 
 class ModeratorCreate(BaseModel):
     username: str
+    email: str
     password: str
     role: str = "moderator"
 
 
 class ModeratorLogin(BaseModel):
     username: str
+    email: str
     password: str
 
 
@@ -163,6 +166,15 @@ class PasswordChange(BaseModel):
 
 
 class PasswordReset(BaseModel):
+    new_password: str
+
+
+class PasswordResetRequest(BaseModel):
+    email: str
+
+
+class PasswordResetByEmail(BaseModel):
+    token: str
     new_password: str
 
 
