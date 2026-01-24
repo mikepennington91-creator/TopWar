@@ -1,15 +1,17 @@
 """Authentication routes."""
 from fastapi import APIRouter, HTTPException, Depends
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+import uuid
 
 from database import db
 from models.schemas import (
     ModeratorCreate, ModeratorLogin, PasswordChange, PasswordReset,
-    Token, Moderator
+    PasswordResetRequest, PasswordResetByEmail, Token, Moderator
 )
 from utils.auth import (
     pwd_context, create_access_token, get_current_moderator, require_admin,
-    validate_password_strength, check_password_history, PASSWORD_HISTORY_COUNT
+    validate_password_strength, check_password_history, PASSWORD_HISTORY_COUNT,
+    MAX_LOGIN_ATTEMPTS
 )
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -22,6 +24,10 @@ async def register_moderator(moderator: ModeratorCreate):
     existing = await db.moderators.find_one({"username": moderator.username}, {"_id": 0})
     if existing:
         raise HTTPException(status_code=400, detail="Username already registered")
+
+    existing_email = await db.moderators.find_one({"email": moderator.email}, {"_id": 0})
+    if existing_email:
+        raise HTTPException(status_code=400, detail="Email already registered")
     
     # Validate password strength
     is_valid, message = validate_password_strength(moderator.password)
@@ -34,6 +40,7 @@ async def register_moderator(moderator: ModeratorCreate):
     # Create moderator with must_change_password=True for new users
     mod_obj = Moderator(
         username=moderator.username,
+        email=moderator.email,
         hashed_password=hashed_password,
         role=moderator.role,
         must_change_password=True
@@ -52,6 +59,12 @@ async def login_moderator(credentials: ModeratorLogin):
     moderator = await db.moderators.find_one({"username": credentials.username}, {"_id": 0})
     if not moderator:
         raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    if moderator.get("email") != credentials.email:
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    if moderator.get("locked_at"):
+        raise HTTPException(status_code=401, detail="Account is locked due to failed login attempts. Contact an admin.")
     
     # Check if account is disabled
     if moderator.get("status", "active") == "disabled":
@@ -59,7 +72,21 @@ async def login_moderator(credentials: ModeratorLogin):
     
     # Verify password
     if not pwd_context.verify(credentials.password, moderator["hashed_password"]):
+        failed_attempts = moderator.get("failed_login_attempts", 0) + 1
+        updates = {"failed_login_attempts": failed_attempts}
+        if failed_attempts >= MAX_LOGIN_ATTEMPTS:
+            updates["locked_at"] = datetime.now(timezone.utc).isoformat()
+        await db.moderators.update_one(
+            {"username": credentials.username},
+            {"$set": updates}
+        )
         raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    if moderator.get("failed_login_attempts", 0) > 0 or moderator.get("locked_at"):
+        await db.moderators.update_one(
+            {"username": credentials.username},
+            {"$set": {"failed_login_attempts": 0, "locked_at": None}}
+        )
     
     # Update last_login timestamp
     await db.moderators.update_one(
@@ -159,3 +186,65 @@ async def reset_password(username: str, password_data: PasswordReset, current_us
     )
     
     return {"message": f"Password reset successfully for {username}"}
+
+
+@router.post("/request-password-reset")
+async def request_password_reset(request: PasswordResetRequest):
+    """Request a password reset via email."""
+    moderator = await db.moderators.find_one({"email": request.email}, {"_id": 0})
+    if moderator:
+        reset_token = str(uuid.uuid4())
+        reset_expires = datetime.now(timezone.utc) + timedelta(hours=1)
+        await db.moderators.update_one(
+            {"email": request.email},
+            {"$set": {
+                "password_reset_token": reset_token,
+                "password_reset_expires": reset_expires.isoformat()
+            }}
+        )
+        # TODO: send reset_token via email integration.
+    return {"message": "If the email exists, a reset link will be sent."}
+
+
+@router.post("/reset-password-by-email")
+async def reset_password_by_email(payload: PasswordResetByEmail):
+    """Reset password using a token sent via email."""
+    moderator = await db.moderators.find_one(
+        {"password_reset_token": payload.token},
+        {"_id": 0}
+    )
+    if not moderator:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+
+    expires_raw = moderator.get("password_reset_expires")
+    if not expires_raw:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+
+    expires = datetime.fromisoformat(expires_raw)
+    if datetime.now(timezone.utc) > expires:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+
+    is_valid, message = validate_password_strength(payload.new_password)
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=message)
+
+    password_history = moderator.get("password_history", [])
+    if not check_password_history(payload.new_password, password_history):
+        raise HTTPException(status_code=400, detail="Password has been used recently. Please choose a different password.")
+
+    new_hashed = pwd_context.hash(payload.new_password)
+    new_history = [moderator["hashed_password"]] + password_history
+    new_history = new_history[:PASSWORD_HISTORY_COUNT]
+
+    await db.moderators.update_one(
+        {"email": moderator["email"]},
+        {"$set": {
+            "hashed_password": new_hashed,
+            "password_history": new_history,
+            "must_change_password": False,
+            "password_reset_token": None,
+            "password_reset_expires": None
+        }}
+    )
+
+    return {"message": "Password reset successfully"}
