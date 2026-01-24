@@ -21,6 +21,7 @@ export default function ModeratorLogin() {
   const [emailPromptOpen, setEmailPromptOpen] = useState(false);
   const [emailPromptValue, setEmailPromptValue] = useState("");
   const [emailPromptLoading, setEmailPromptLoading] = useState(false);
+  const [needsEmailAfterPasswordChange, setNeedsEmailAfterPasswordChange] = useState(false);
   const [mustChangePassword, setMustChangePassword] = useState(false);
   const [passwordChangeForm, setPasswordChangeForm] = useState({
     old_password: "",
@@ -86,6 +87,7 @@ export default function ModeratorLogin() {
       // Check if password change is required
       if (response.data.must_change_password) {
         setMustChangePassword(true);
+        setNeedsEmailAfterPasswordChange(Boolean(response.data.needs_email));
         setPasswordChangeForm(prev => ({ ...prev, old_password: credentials.password }));
         toast.warning("You must change your password before continuing");
         setLoading(false);
@@ -154,6 +156,11 @@ export default function ModeratorLogin() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success("Password changed successfully!");
+      if (needsEmailAfterPasswordChange) {
+        setEmailPromptOpen(true);
+        setNeedsEmailAfterPasswordChange(false);
+        return;
+      }
       navigate('/moderator/portal');
     } catch (error) {
       console.error(error);
@@ -163,12 +170,53 @@ export default function ModeratorLogin() {
     }
   };
 
+  const emailPromptDialog = (
+    <Dialog open={emailPromptOpen}>
+      <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 sm:max-w-md" data-testid="email-confirmation-dialog">
+        <DialogHeader>
+          <DialogTitle className="text-amber-400 flex items-center gap-2">
+            <Mail className="h-5 w-5" />
+            Confirm your email
+          </DialogTitle>
+          <DialogDescription className="text-slate-400">
+            Please enter a valid email address. We only use this to help you reset your password in the future.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleEmailPromptSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email-prompt" className="text-slate-300 font-medium">
+              Email Address
+            </Label>
+            <Input
+              id="email-prompt"
+              name="email-prompt"
+              type="email"
+              value={emailPromptValue}
+              onChange={(e) => setEmailPromptValue(e.target.value)}
+              required
+              className="bg-slate-950/60 border-slate-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-slate-200 rounded-sm"
+              placeholder="Enter your email address"
+            />
+          </div>
+          <Button
+            type="submit"
+            disabled={emailPromptLoading}
+            className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide py-5 text-base rounded-sm btn-glow"
+          >
+            {emailPromptLoading ? "Saving..." : "Save Email"}
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+
   // Forced password change form
   if (mustChangePassword) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-200 flex items-center justify-center px-3 sm:px-4 py-6 grid-texture">
         <div className="w-full max-w-md">
           <div className="glass-card rounded-lg p-5 sm:p-8">
+            {emailPromptDialog}
             <div className="text-center mb-6 sm:mb-8">
               <AlertTriangle className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-amber-500 mb-3 sm:mb-4" />
               <h1 className="text-2xl sm:text-3xl font-bold uppercase tracking-wider text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
@@ -177,58 +225,60 @@ export default function ModeratorLogin() {
               <p className="text-slate-400 mt-2 text-sm">You must change your password before continuing</p>
             </div>
 
-            <form onSubmit={handlePasswordChange} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="new_password" className="text-slate-300 font-medium">
-                  New Password
-                </Label>
-                <Input
-                  id="new_password"
-                  name="new_password"
-                  type="password"
-                  value={passwordChangeForm.new_password}
-                  onChange={handlePasswordChangeInput}
-                  required
-                  className="bg-slate-900/50 border-slate-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-slate-200 rounded-sm"
-                  placeholder="Enter new password"
-                />
-              </div>
+            {!emailPromptOpen && (
+              <form onSubmit={handlePasswordChange} className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="new_password" className="text-slate-300 font-medium">
+                    New Password
+                  </Label>
+                  <Input
+                    id="new_password"
+                    name="new_password"
+                    type="password"
+                    value={passwordChangeForm.new_password}
+                    onChange={handlePasswordChangeInput}
+                    required
+                    className="bg-slate-900/50 border-slate-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-slate-200 rounded-sm"
+                    placeholder="Enter new password"
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="confirm_password" className="text-slate-300 font-medium">
-                  Confirm New Password
-                </Label>
-                <Input
-                  id="confirm_password"
-                  name="confirm_password"
-                  type="password"
-                  value={passwordChangeForm.confirm_password}
-                  onChange={handlePasswordChangeInput}
-                  required
-                  className="bg-slate-900/50 border-slate-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-slate-200 rounded-sm"
-                  placeholder="Confirm new password"
-                />
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirm_password" className="text-slate-300 font-medium">
+                    Confirm New Password
+                  </Label>
+                  <Input
+                    id="confirm_password"
+                    name="confirm_password"
+                    type="password"
+                    value={passwordChangeForm.confirm_password}
+                    onChange={handlePasswordChangeInput}
+                    required
+                    className="bg-slate-900/50 border-slate-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-slate-200 rounded-sm"
+                    placeholder="Confirm new password"
+                  />
+                </div>
 
-              <div className="bg-slate-800/50 border border-slate-700 rounded-md p-3 text-sm text-slate-400">
-                <p className="font-medium text-slate-300 mb-2">Password requirements:</p>
-                <ul className="list-disc list-inside space-y-1">
-                  <li>Minimum 8 characters</li>
-                  <li>At least one uppercase letter</li>
-                  <li>At least one lowercase letter</li>
-                  <li>At least one number</li>
-                  <li>At least one special character</li>
-                </ul>
-              </div>
+                <div className="bg-slate-800/50 border border-slate-700 rounded-md p-3 text-sm text-slate-400">
+                  <p className="font-medium text-slate-300 mb-2">Password requirements:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>Minimum 8 characters</li>
+                    <li>At least one uppercase letter</li>
+                    <li>At least one lowercase letter</li>
+                    <li>At least one number</li>
+                    <li>At least one special character</li>
+                  </ul>
+                </div>
 
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide py-6 text-lg rounded-sm btn-glow"
-              >
-                {loading ? "Changing Password..." : "Change Password"}
-              </Button>
-            </form>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide py-6 text-lg rounded-sm btn-glow"
+                >
+                  {loading ? "Changing Password..." : "Change Password"}
+                </Button>
+              </form>
+            )}
           </div>
         </div>
       </div>
@@ -238,43 +288,7 @@ export default function ModeratorLogin() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 flex items-center justify-center px-3 sm:px-4 pt-14 py-6 grid-texture">
       <div className="w-full max-w-md">
-        <Dialog open={emailPromptOpen}>
-          <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 sm:max-w-md" data-testid="email-confirmation-dialog">
-            <DialogHeader>
-              <DialogTitle className="text-amber-400 flex items-center gap-2">
-                <Mail className="h-5 w-5" />
-                Confirm your email
-              </DialogTitle>
-              <DialogDescription className="text-slate-400">
-                Please enter a valid email address. We only use this to help you reset your password in the future.
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleEmailPromptSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email-prompt" className="text-slate-300 font-medium">
-                  Email Address
-                </Label>
-                <Input
-                  id="email-prompt"
-                  name="email-prompt"
-                  type="email"
-                  value={emailPromptValue}
-                  onChange={(e) => setEmailPromptValue(e.target.value)}
-                  required
-                  className="bg-slate-950/60 border-slate-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-slate-200 rounded-sm"
-                  placeholder="Enter your email address"
-                />
-              </div>
-              <Button
-                type="submit"
-                disabled={emailPromptLoading}
-                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide py-5 text-base rounded-sm btn-glow"
-              >
-                {emailPromptLoading ? "Saving..." : "Save Email"}
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+        {emailPromptDialog}
         <div className="glass-card rounded-lg p-5 sm:p-8">
           <div className="text-center mb-6 sm:mb-8">
             <Shield className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-amber-500 mb-3 sm:mb-4" />

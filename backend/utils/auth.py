@@ -48,9 +48,10 @@ async def get_current_moderator(credentials: HTTPAuthorizationCredentials = Depe
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         role: str = payload.get("role", "moderator")
+        is_admin: bool = payload.get("is_admin", False)
         if username is None:
             raise HTTPException(status_code=401, detail="Invalid authentication credentials")
-        return {"username": username, "role": role}
+        return {"username": username, "role": role, "is_admin": is_admin}
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token has expired")
     except jwt.JWTError:
@@ -59,7 +60,7 @@ async def get_current_moderator(credentials: HTTPAuthorizationCredentials = Depe
 
 async def require_admin(current_user: dict = Depends(get_current_moderator)):
     """Require admin or MMOD role."""
-    if current_user["role"] not in ["admin", "mmod"]:
+    if current_user["role"] not in ["admin", "mmod"] and not current_user.get("is_admin"):
         raise HTTPException(status_code=403, detail="Admin or MMOD access required")
     return current_user
 
