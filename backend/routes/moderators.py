@@ -142,14 +142,21 @@ async def update_moderator_username(username: str, username_update: ModeratorUse
     return {"message": f"Username changed from {username} to {username_update.new_username}"}
 
 
+async def require_mmod_or_admin(current_user: dict = Depends(get_current_moderator)):
+    """Require MMOD or Admin role to update another user's email."""
+    if current_user["role"] not in ["admin", "mmod"] and not current_user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="MMOD or Admin access required to change emails")
+    return current_user
+
+
 @router.patch("/{username}/email")
 async def update_moderator_email(
     username: str,
     email_update: ModeratorEmailUpdate,
     background_tasks: BackgroundTasks,
-    current_user: dict = Depends(require_admin)
+    current_user: dict = Depends(require_mmod_or_admin)
 ):
-    """Change a moderator's email address."""
+    """Change a moderator's email address. MMODs and Admins can change emails."""
     moderator = await db.moderators.find_one({"username": username}, {"_id": 0})
     if not moderator:
         raise HTTPException(status_code=404, detail="Moderator not found")
