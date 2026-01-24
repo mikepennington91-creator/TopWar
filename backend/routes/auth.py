@@ -80,26 +80,6 @@ async def login_moderator(credentials: ModeratorLogin, background_tasks: Backgro
     if not moderator:
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
-    normalized_email = normalize_email_address(credentials.email) if credentials.email else None
-    moderator_email = moderator.get("email")
-
-    if moderator_email:
-        if not normalized_email or moderator_email.lower() != normalized_email:
-            raise HTTPException(status_code=401, detail="Invalid username or password")
-    else:
-        if not normalized_email:
-            raise HTTPException(status_code=400, detail="Email is required to continue")
-        existing_email = await db.moderators.find_one({"email": normalized_email}, {"_id": 0})
-        if existing_email:
-            raise HTTPException(status_code=400, detail="Email already registered")
-        await db.moderators.update_one(
-            {"username": credentials.username},
-            {"$set": {"email": normalized_email}}
-        )
-        background_tasks.add_task(send_moderator_email_confirmation, normalized_email, credentials.username)
-    if moderator.get("email") != credentials.email:
-        raise HTTPException(status_code=401, detail="Invalid username or password")
-
     if moderator.get("locked_at"):
         raise HTTPException(status_code=401, detail="Account is locked due to failed login attempts. Contact an admin.")
     
@@ -125,11 +105,6 @@ async def login_moderator(credentials: ModeratorLogin, background_tasks: Backgro
             {"$set": {"failed_login_attempts": 0, "locked_at": None}}
         )
 
-    if credentials.email and moderator.get("email"):
-        normalized_email = normalize_email_address(credentials.email)
-        if moderator.get("email", "").lower() != normalized_email:
-            raise HTTPException(status_code=401, detail="Invalid username or password")
-    
     # Update last_login timestamp
     await db.moderators.update_one(
         {"username": credentials.username},

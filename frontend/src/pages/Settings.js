@@ -97,6 +97,7 @@ export default function Settings() {
   const [loading, setLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [moderators, setModerators] = useState([]);
+  const [emailEdits, setEmailEdits] = useState({});
   const [passwordForm, setPasswordForm] = useState({
     old_password: "",
     new_password: "",
@@ -222,6 +223,13 @@ export default function Settings() {
         headers: { Authorization: `Bearer ${token}` }
       });
       setModerators(response.data);
+      setEmailEdits(() => {
+        const next = {};
+        response.data.forEach((mod) => {
+          next[mod.username] = mod.email || "";
+        });
+        return next;
+      });
     } catch (error) {
       console.error(error);
       if (error.response?.status === 401) {
@@ -451,6 +459,35 @@ export default function Settings() {
     } catch (error) {
       console.error(error);
       toast.error(error.response?.data?.detail || "Failed to change username");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateEmail = async (username) => {
+    const email = (emailEdits[username] || "").trim();
+    if (!email) {
+      toast.error("Please enter an email address");
+      return;
+    }
+
+    if (!window.confirm(`Update email for ${username}?`)) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('moderator_token');
+      await axios.patch(
+        `${API}/moderators/${username}/email`,
+        { email },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`Email updated for ${username}!`);
+      fetchModerators();
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.detail || "Failed to update email");
     } finally {
       setLoading(false);
     }
@@ -1136,6 +1173,11 @@ export default function Settings() {
                             </span>
                           </div>
                           <p className="text-sm mt-1">{getRoleBadge(mod.role)}</p>
+                          {currentUser?.hasAdminAccess && (
+                            <p className="text-xs text-slate-400 mt-1">
+                              Email: <span className={mod.email ? "text-slate-300" : "text-slate-600 italic"}>{mod.email || "No email on file"}</span>
+                            </p>
+                          )}
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
                           {getStatusBadge(mod.status || "active")}
@@ -1155,6 +1197,7 @@ export default function Settings() {
                         const canChangePerms = canModifyPermissions(currentUser.role, currentUser.hasAdminAccess);
                         const canDeactivate = canDeactivateAccounts(currentUser.role, mod.role, isSelf, currentUser.hasAdminAccess);
                         const assignableRoles = getAssignableRoles(currentUser.role, mod.role, currentUser.hasAdminAccess);
+                        const canEditEmail = currentUser.hasAdminAccess;
                         
                         // Determine what to show
                         const showRoleDropdown = canChangeRole && assignableRoles.length > 0;
@@ -1162,7 +1205,7 @@ export default function Settings() {
                         const showDeleteButton = canChangePerms && !isSelf; // Only admin can delete
                         
                         // If nothing to show, return null
-                        if (!showRoleDropdown && !showPermissions && !canDeactivate) return null;
+                        if (!showRoleDropdown && !showPermissions && !canDeactivate && !canEditEmail) return null;
                         
                         return (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1199,6 +1242,30 @@ export default function Settings() {
                                     )}
                                   </SelectContent>
                                 </Select>
+                              </div>
+                            )}
+
+                            {canEditEmail && (
+                              <div className="space-y-2">
+                                <Label className="text-slate-400 text-xs uppercase">Email</Label>
+                                <div className="flex flex-col sm:flex-row gap-2">
+                                  <Input
+                                    type="email"
+                                    value={emailEdits[mod.username] ?? ""}
+                                    onChange={(e) => setEmailEdits(prev => ({ ...prev, [mod.username]: e.target.value }))}
+                                    placeholder="Enter email address"
+                                    className="bg-slate-900/50 border-slate-700 focus:border-amber-500 text-slate-200 rounded-sm"
+                                  />
+                                  <Button
+                                    type="button"
+                                    onClick={() => handleUpdateEmail(mod.username)}
+                                    disabled={loading}
+                                    size="sm"
+                                    className="bg-amber-500 hover:bg-amber-600 text-white rounded-sm"
+                                  >
+                                    Save Email
+                                  </Button>
+                                </div>
                               </div>
                             )}
                             
