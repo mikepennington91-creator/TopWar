@@ -1,18 +1,16 @@
 """Authentication routes."""
 import uuid
 from datetime import datetime, timezone, timedelta
+from typing import Optional
 
 from email_validator import EmailNotValidError, validate_email
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
-from fastapi import APIRouter, HTTPException, Depends
-from datetime import datetime, timezone, timedelta
-import uuid
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 
 from database import db
 from models.schemas import (
-    ModeratorCreate, ModeratorLogin, PasswordChange, PasswordReset,
-    PasswordResetRequest, PasswordResetByEmail, ModeratorEmailUpdate, Token, Moderator
-    PasswordResetRequest, PasswordResetByEmail, Token, Moderator
+    Moderator, ModeratorCreate, ModeratorEmailUpdate, ModeratorLogin,
+    ModeratorProfile, PasswordChange, PasswordReset, PasswordResetByEmail,
+    PasswordResetRequest, Token
 )
 from utils.auth import (
     pwd_context, create_access_token, get_current_moderator, require_admin,
@@ -32,6 +30,19 @@ def normalize_email_address(email: str) -> str:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
+def has_valid_email(email: Optional[str]) -> bool:
+    """Return True when an email is present and passes basic validation."""
+    if not email:
+        return False
+    if isinstance(email, str) and not email.strip():
+        return False
+    try:
+        validate_email(str(email))
+    except EmailNotValidError:
+        return False
+    return True
+
+
 @router.post("/register", response_model=dict)
 async def register_moderator(moderator: ModeratorCreate, background_tasks: BackgroundTasks):
     """Register a new moderator."""
@@ -43,7 +54,6 @@ async def register_moderator(moderator: ModeratorCreate, background_tasks: Backg
     normalized_email = normalize_email_address(moderator.email)
 
     existing_email = await db.moderators.find_one({"email": normalized_email}, {"_id": 0})
-    existing_email = await db.moderators.find_one({"email": moderator.email}, {"_id": 0})
     if existing_email:
         raise HTTPException(status_code=400, detail="Email already registered")
     
@@ -59,7 +69,6 @@ async def register_moderator(moderator: ModeratorCreate, background_tasks: Backg
     mod_obj = Moderator(
         username=moderator.username,
         email=normalized_email,
-        email=moderator.email,
         hashed_password=hashed_password,
         role=moderator.role,
         must_change_password=True
@@ -78,26 +87,6 @@ async def login_moderator(credentials: ModeratorLogin, background_tasks: Backgro
     # Find moderator
     moderator = await db.moderators.find_one({"username": credentials.username}, {"_id": 0})
     if not moderator:
-        raise HTTPException(status_code=401, detail="Invalid username or password")
-
-    normalized_email = normalize_email_address(credentials.email) if credentials.email else None
-    moderator_email = moderator.get("email")
-
-    if moderator_email:
-        if not normalized_email or moderator_email.lower() != normalized_email:
-            raise HTTPException(status_code=401, detail="Invalid username or password")
-    else:
-        if not normalized_email:
-            raise HTTPException(status_code=400, detail="Email is required to continue")
-        existing_email = await db.moderators.find_one({"email": normalized_email}, {"_id": 0})
-        if existing_email:
-            raise HTTPException(status_code=400, detail="Email already registered")
-        await db.moderators.update_one(
-            {"username": credentials.username},
-            {"$set": {"email": normalized_email}}
-        )
-        background_tasks.add_task(send_moderator_email_confirmation, normalized_email, credentials.username)
-    if moderator.get("email") != credentials.email:
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
     if moderator.get("locked_at"):
@@ -125,11 +114,6 @@ async def login_moderator(credentials: ModeratorLogin, background_tasks: Backgro
             {"$set": {"failed_login_attempts": 0, "locked_at": None}}
         )
 
-    if credentials.email and moderator.get("email"):
-        normalized_email = normalize_email_address(credentials.email)
-        if moderator.get("email", "").lower() != normalized_email:
-            raise HTTPException(status_code=401, detail="Invalid username or password")
-    
     # Update last_login timestamp
     await db.moderators.update_one(
         {"username": credentials.username},
@@ -151,7 +135,24 @@ async def login_moderator(credentials: ModeratorLogin, background_tasks: Backgro
         "must_change_password": moderator.get("must_change_password", False),
         "is_admin": is_admin,
         "is_training_manager": moderator.get("is_training_manager", False),
-        "needs_email": not bool(moderator.get("email"))
+        "needs_email": not has_valid_email(moderator.get("email"))
+    }
+
+
+@router.get("/me", response_model=ModeratorProfile)
+async def get_current_profile(current_user: dict = Depends(get_current_moderator)):
+    """Return the current moderator profile."""
+    moderator = await db.moderators.find_one(
+        {"username": current_user["username"]},
+        {"_id": 0, "username": 1, "email": 1}
+    )
+    if not moderator:
+        raise HTTPException(status_code=404, detail="Moderator not found")
+
+    return {
+        "username": moderator["username"],
+        "email": moderator.get("email"),
+        "needs_email": not has_valid_email(moderator.get("email"))
     }
 
 
@@ -236,13 +237,11 @@ async def request_password_reset(request: PasswordResetRequest):
     """Request a password reset via email."""
     normalized_email = normalize_email_address(request.email)
     moderator = await db.moderators.find_one({"email": normalized_email}, {"_id": 0})
-    moderator = await db.moderators.find_one({"email": request.email}, {"_id": 0})
     if moderator:
         reset_token = str(uuid.uuid4())
         reset_expires = datetime.now(timezone.utc) + timedelta(hours=1)
         await db.moderators.update_one(
             {"email": normalized_email},
-            {"email": request.email},
             {"$set": {
                 "password_reset_token": reset_token,
                 "password_reset_expires": reset_expires.isoformat()
@@ -301,7 +300,7 @@ async def set_moderator_email(payload: ModeratorEmailUpdate, current_user: dict 
     """Set or update the current moderator's email."""
     normalized_email = normalize_email_address(payload.email)
     existing_email = await db.moderators.find_one({"email": normalized_email}, {"_id": 0})
-    if existing_email:
+    if existing_email and existing_email.get("username") != current_user["username"]:
         raise HTTPException(status_code=400, detail="Email already registered")
 
     result = await db.moderators.update_one(

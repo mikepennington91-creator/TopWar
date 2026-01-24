@@ -1,20 +1,32 @@
 """Moderator management routes."""
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from typing import List
 from datetime import datetime
+from email_validator import EmailNotValidError, validate_email
 
 from database import db
 from models.schemas import (
     ModeratorInfo, ModeratorStatusUpdate, ModeratorRoleUpdate,
     ModeratorUsernameUpdate, ModeratorTrainingManagerUpdate,
-    ModeratorAdminUpdate, ModeratorApplicationViewerUpdate
+    ModeratorAdminUpdate, ModeratorApplicationViewerUpdate,
+    ModeratorEmailUpdate
 )
 from utils.auth import (
     get_current_moderator, require_admin, require_admin_role, get_role_rank,
     can_modify_role, get_assignable_roles
 )
+from utils.email import send_moderator_email_confirmation
 
 router = APIRouter(prefix="/moderators", tags=["Moderators"])
+
+
+def normalize_email_address(email: str) -> str:
+    """Validate and normalize email address."""
+    try:
+        result = validate_email(email)
+        return result.email.lower()
+    except EmailNotValidError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.get("", response_model=List[ModeratorInfo])
@@ -128,6 +140,33 @@ async def update_moderator_username(username: str, username_update: ModeratorUse
     )
     
     return {"message": f"Username changed from {username} to {username_update.new_username}"}
+
+
+@router.patch("/{username}/email")
+async def update_moderator_email(
+    username: str,
+    email_update: ModeratorEmailUpdate,
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(require_admin)
+):
+    """Change a moderator's email address."""
+    moderator = await db.moderators.find_one({"username": username}, {"_id": 0})
+    if not moderator:
+        raise HTTPException(status_code=404, detail="Moderator not found")
+
+    normalized_email = normalize_email_address(email_update.email)
+    existing_email = await db.moderators.find_one({"email": normalized_email}, {"_id": 0})
+    if existing_email and existing_email.get("username") != username:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    await db.moderators.update_one(
+        {"username": username},
+        {"$set": {"email": normalized_email}}
+    )
+
+    background_tasks.add_task(send_moderator_email_confirmation, normalized_email, username)
+
+    return {"message": f"Email updated for {username}"}
 
 
 @router.patch("/{username}/training-manager")

@@ -156,7 +156,6 @@ class ModeratorCreate(BaseModel):
 
 class ModeratorLogin(BaseModel):
     username: str
-    email: str
     password: str
     email: Optional[str] = None
 
@@ -181,6 +180,12 @@ class PasswordResetByEmail(BaseModel):
 
 class ModeratorEmailUpdate(BaseModel):
     email: str
+
+
+class ModeratorProfile(BaseModel):
+    username: str
+    email: Optional[str] = None
+    needs_email: bool = False
 
 
 class Token(BaseModel):
