@@ -9,8 +9,8 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from database import db
 from models.schemas import (
     Moderator, ModeratorCreate, ModeratorEmailUpdate, ModeratorLogin,
-    ModeratorProfile, PasswordChange, PasswordReset, PasswordResetByEmail,
-    PasswordResetRequest, Token
+    PasswordChange, PasswordReset, PasswordResetByEmail, PasswordResetRequest,
+    Token
 )
 from utils.auth import (
     pwd_context, create_access_token, get_current_moderator, require_admin,
@@ -135,23 +135,6 @@ async def login_moderator(credentials: ModeratorLogin, background_tasks: Backgro
         "must_change_password": moderator.get("must_change_password", False),
         "is_admin": is_admin,
         "is_training_manager": moderator.get("is_training_manager", False),
-        "needs_email": not has_valid_email(moderator.get("email"))
-    }
-
-
-@router.get("/me", response_model=ModeratorProfile)
-async def get_current_profile(current_user: dict = Depends(get_current_moderator)):
-    """Return the current moderator profile."""
-    moderator = await db.moderators.find_one(
-        {"username": current_user["username"]},
-        {"_id": 0, "username": 1, "email": 1}
-    )
-    if not moderator:
-        raise HTTPException(status_code=404, detail="Moderator not found")
-
-    return {
-        "username": moderator["username"],
-        "email": moderator.get("email"),
         "needs_email": not has_valid_email(moderator.get("email"))
     }
 
