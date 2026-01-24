@@ -219,6 +219,10 @@ export default function Settings() {
   const fetchModerators = async () => {
     try {
       const token = localStorage.getItem('moderator_token');
+      const isAdmin = localStorage.getItem('moderator_is_admin') === 'true';
+      const role = localStorage.getItem('moderator_role');
+      const hasAdminAccess = role === 'admin' || isAdmin;
+      
       const response = await axios.get(`${API}/moderators`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -226,7 +230,9 @@ export default function Settings() {
       setEmailEdits(() => {
         const next = {};
         response.data.forEach((mod) => {
-          next[mod.username] = mod.email || "";
+          // Only pre-populate email for Admins who can view emails
+          // MMODs cannot view emails so start with empty field
+          next[mod.username] = hasAdminAccess ? (mod.email || "") : "";
         });
         return next;
       });
