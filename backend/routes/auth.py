@@ -32,14 +32,19 @@ def normalize_email_address(email: str) -> str:
 
 def has_valid_email(email: Optional[str]) -> bool:
     """Return True when an email is present and passes basic validation."""
-    if not email:
+    # Handle None, empty string, whitespace-only
+    if email is None:
         return False
-    if isinstance(email, str) and not email.strip():
+    if not isinstance(email, str):
         return False
-    try:
-        # Check syntax only, skip deliverability check
-        validate_email(str(email), check_deliverability=False)
-    except EmailNotValidError:
+    email_stripped = email.strip()
+    if not email_stripped:
+        return False
+    # Basic check: must contain @ and at least one character on each side
+    if '@' not in email_stripped or email_stripped.count('@') != 1:
+        return False
+    local, domain = email_stripped.rsplit('@', 1)
+    if not local or not domain or '.' not in domain:
         return False
     return True
 
