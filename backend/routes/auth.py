@@ -37,7 +37,8 @@ def has_valid_email(email: Optional[str]) -> bool:
     if isinstance(email, str) and not email.strip():
         return False
     try:
-        validate_email(str(email))
+        # Check syntax only, skip deliverability check
+        validate_email(str(email), check_deliverability=False)
     except EmailNotValidError:
         return False
     return True
