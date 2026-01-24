@@ -1137,6 +1137,17 @@ class BackendTester:
         
         # Authentication setup with test credentials
         if self.login_test_users():
+            print("\n🔧 Testing Email Assignment Features")
+            print("-" * 30)
+            
+            # Email assignment tests
+            self.test_login_needs_email_flag()
+            self.test_set_email_endpoint()
+            self.test_email_validation()
+            self.test_mmod_can_update_email()
+            self.test_admin_can_view_emails()
+            self.test_non_admin_cannot_view_emails()
+            
             print("\n🔧 Testing Approval Email Feature")
             print("-" * 30)
             
