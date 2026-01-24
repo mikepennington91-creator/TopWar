@@ -156,6 +156,7 @@ class ModeratorCreate(BaseModel):
 
 class ModeratorLogin(BaseModel):
     username: str
+    email: str
     password: str
     email: Optional[str] = None
 
