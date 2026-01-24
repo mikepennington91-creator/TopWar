@@ -208,6 +208,7 @@ class ModeratorInfo(BaseModel):
     can_view_applications: bool
     created_at: datetime
     last_login: Optional[datetime] = None
+    email: Optional[str] = None  # Only populated for admins
 
 
 class ModeratorStatusUpdate(BaseModel):
