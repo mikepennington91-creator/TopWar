@@ -699,7 +699,12 @@ export default function ModeratorDashboard() {
                   filteredApplications.map((app) => {
                     const voteCounts = getVoteCounts(app.votes);
                     return (
-                      <tr key={app.id} data-testid={`application-row-${app.id}`} className="hover:bg-slate-900/30 transition-colors">
+                      <tr
+                        key={app.id}
+                        data-testid={`application-row-${app.id}`}
+                        className="hover:bg-slate-900/30 transition-colors cursor-pointer"
+                        onClick={() => viewApplication(app)}
+                      >
                         <td className="px-4 lg:px-6 py-3 lg:py-4">
                           <div>
                             <p className="font-semibold text-amber-400 text-sm lg:text-base">{app.ingame_name}</p>
@@ -726,7 +731,10 @@ export default function ModeratorDashboard() {
                         <td className="px-4 lg:px-6 py-3 lg:py-4">
                           <Button
                             data-testid={`view-btn-${app.id}`}
-                            onClick={() => viewApplication(app)}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              viewApplication(app);
+                            }}
                             size="sm"
                             className="bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-sm"
                           >
