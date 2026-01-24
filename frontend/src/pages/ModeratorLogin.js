@@ -78,6 +78,9 @@ export default function ModeratorLogin() {
 
     try {
       const response = await axios.post(`${API}/auth/login`, credentials);
+      console.log('Login response:', response.data);
+      console.log('needs_email value:', response.data.needs_email);
+      
       localStorage.setItem('moderator_token', response.data.access_token);
       localStorage.setItem('moderator_role', response.data.role);
       localStorage.setItem('moderator_username', response.data.username);
@@ -95,6 +98,7 @@ export default function ModeratorLogin() {
       }
 
       if (response.data.needs_email) {
+        console.log('Opening email prompt dialog');
         setEmailPromptOpen(true);
         setLoading(false);
         return;
