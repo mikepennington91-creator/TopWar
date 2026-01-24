@@ -279,7 +279,7 @@ async def reset_password_by_email(payload: PasswordResetByEmail):
 
 
 @router.post("/set-email")
-async def set_moderator_email(payload: ModeratorEmailUpdate, current_user: dict = Depends(get_current_moderator), background_tasks: BackgroundTasks):
+async def set_moderator_email(payload: ModeratorEmailUpdate, background_tasks: BackgroundTasks, current_user: dict = Depends(get_current_moderator)):
     """Set or update the current moderator's email."""
     normalized_email = normalize_email_address(payload.email)
     existing_email = await db.moderators.find_one({"email": normalized_email}, {"_id": 0})
