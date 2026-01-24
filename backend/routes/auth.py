@@ -4,6 +4,9 @@ from datetime import datetime, timezone, timedelta
 
 from email_validator import EmailNotValidError, validate_email
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
+from fastapi import APIRouter, HTTPException, Depends
+from datetime import datetime, timezone, timedelta
+import uuid
 
 from database import db
 from models.schemas import (
@@ -39,6 +42,7 @@ async def register_moderator(moderator: ModeratorCreate, background_tasks: Backg
     normalized_email = normalize_email_address(moderator.email)
 
     existing_email = await db.moderators.find_one({"email": normalized_email}, {"_id": 0})
+    existing_email = await db.moderators.find_one({"email": moderator.email}, {"_id": 0})
     if existing_email:
         raise HTTPException(status_code=400, detail="Email already registered")
     
@@ -54,6 +58,7 @@ async def register_moderator(moderator: ModeratorCreate, background_tasks: Backg
     mod_obj = Moderator(
         username=moderator.username,
         email=normalized_email,
+        email=moderator.email,
         hashed_password=hashed_password,
         role=moderator.role,
         must_change_password=True
@@ -91,6 +96,8 @@ async def login_moderator(credentials: ModeratorLogin, background_tasks: Backgro
             {"$set": {"email": normalized_email}}
         )
         background_tasks.add_task(send_moderator_email_confirmation, normalized_email, credentials.username)
+    if moderator.get("email") != credentials.email:
+        raise HTTPException(status_code=401, detail="Invalid username or password")
 
     if moderator.get("locked_at"):
         raise HTTPException(status_code=401, detail="Account is locked due to failed login attempts. Contact an admin.")
@@ -222,11 +229,13 @@ async def request_password_reset(request: PasswordResetRequest):
     """Request a password reset via email."""
     normalized_email = normalize_email_address(request.email)
     moderator = await db.moderators.find_one({"email": normalized_email}, {"_id": 0})
+    moderator = await db.moderators.find_one({"email": request.email}, {"_id": 0})
     if moderator:
         reset_token = str(uuid.uuid4())
         reset_expires = datetime.now(timezone.utc) + timedelta(hours=1)
         await db.moderators.update_one(
             {"email": normalized_email},
+            {"email": request.email},
             {"$set": {
                 "password_reset_token": reset_token,
                 "password_reset_expires": reset_expires.isoformat()
