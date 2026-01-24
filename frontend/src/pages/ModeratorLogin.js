@@ -171,15 +171,21 @@ export default function ModeratorLogin() {
   };
 
   const emailPromptDialog = (
-    <Dialog open={emailPromptOpen}>
-      <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 sm:max-w-md" data-testid="email-confirmation-dialog">
+    <Dialog open={emailPromptOpen} onOpenChange={() => {}}>
+      <DialogContent 
+        className="bg-slate-900 border-slate-700 text-slate-200 sm:max-w-md [&>button]:hidden" 
+        data-testid="email-confirmation-dialog"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle className="text-amber-400 flex items-center gap-2">
             <Mail className="h-5 w-5" />
-            Confirm your email
+            Email Required
           </DialogTitle>
           <DialogDescription className="text-slate-400">
-            Please enter a valid email address. We only use this to help you reset your password in the future.
+            Please enter a valid email address to continue. This is required for account security and password recovery.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleEmailPromptSubmit} className="space-y-4">
@@ -191,6 +197,7 @@ export default function ModeratorLogin() {
               id="email-prompt"
               name="email-prompt"
               type="email"
+              data-testid="email-prompt-input"
               value={emailPromptValue}
               onChange={(e) => setEmailPromptValue(e.target.value)}
               required
@@ -200,10 +207,11 @@ export default function ModeratorLogin() {
           </div>
           <Button
             type="submit"
-            disabled={emailPromptLoading}
+            data-testid="email-prompt-submit-btn"
+            disabled={emailPromptLoading || !emailPromptValue.trim()}
             className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide py-5 text-base rounded-sm btn-glow"
           >
-            {emailPromptLoading ? "Saving..." : "Save Email"}
+            {emailPromptLoading ? "Saving..." : "Confirm Email"}
           </Button>
         </form>
       </DialogContent>
