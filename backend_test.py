@@ -822,11 +822,11 @@ class BackendTester:
     def create_user_without_email(self):
         """Create a test user without email for email assignment testing."""
         try:
-            # Register user without email (using direct database insertion would be better, but we'll use registration)
+            # Register user with a valid email first, then we'll test the needs_email logic
             user_data = {
                 "username": "noemailuser",
                 "password": "NoEmail@123",
-                "email": "temp@example.com",  # We'll remove this after registration
+                "email": "noemailuser@gmail.com",  # Use valid domain
                 "role": "moderator"
             }
             
