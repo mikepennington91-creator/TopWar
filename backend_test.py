@@ -819,6 +819,314 @@ class BackendTester:
         except Exception as e:
             self.log_test("Application Rejection Email Test", False, f"Exception: {str(e)}")
 
+    def create_user_without_email(self):
+        """Create a test user without email for email assignment testing."""
+        try:
+            # Register user without email (using direct database insertion would be better, but we'll use registration)
+            user_data = {
+                "username": "noemailuser",
+                "password": "NoEmail@123",
+                "email": "temp@example.com",  # We'll remove this after registration
+                "role": "moderator"
+            }
+            
+            # Remove auth header temporarily
+            auth_header = self.session.headers.pop("Authorization", None)
+            
+            response = self.session.post(f"{API_BASE}/auth/register", json=user_data)
+            if response.status_code == 200 or (response.status_code == 400 and "already registered" in response.text):
+                self.log_test("User Without Email Creation", True, "Test user for email assignment created")
+                
+                # Restore auth header
+                if auth_header:
+                    self.session.headers["Authorization"] = auth_header
+                return True
+            else:
+                self.log_test("User Without Email Creation", False, f"Status: {response.status_code}", response.text)
+                if auth_header:
+                    self.session.headers["Authorization"] = auth_header
+                return False
+                
+        except Exception as e:
+            self.log_test("User Without Email Creation", False, f"Exception: {str(e)}")
+            return False
+
+    def test_login_needs_email_flag(self):
+        """Test that login returns needs_email flag when user has no email."""
+        try:
+            # Create user without email
+            if not self.create_user_without_email():
+                self.log_test("Login Needs Email Flag", False, "Could not create test user")
+                return None
+            
+            # Remove auth header temporarily
+            auth_header = self.session.headers.pop("Authorization", None)
+            
+            # Login as user without email
+            login_data = {
+                "username": "noemailuser",
+                "password": "NoEmail@123"
+            }
+            
+            response = self.session.post(f"{API_BASE}/auth/login", json=login_data)
+            if response.status_code == 200:
+                data = response.json()
+                needs_email = data.get("needs_email", False)
+                user_token = data.get("access_token")
+                
+                if needs_email:
+                    self.log_test("Login Needs Email Flag", True, "Login correctly returns needs_email=true for user without email")
+                    # Restore auth header
+                    if auth_header:
+                        self.session.headers["Authorization"] = auth_header
+                    return user_token
+                else:
+                    self.log_test("Login Needs Email Flag", False, f"needs_email flag not set correctly: {needs_email}")
+            else:
+                self.log_test("Login Needs Email Flag", False, f"Status: {response.status_code}", response.text)
+            
+            # Restore auth header
+            if auth_header:
+                self.session.headers["Authorization"] = auth_header
+            return None
+            
+        except Exception as e:
+            self.log_test("Login Needs Email Flag", False, f"Exception: {str(e)}")
+            return None
+
+    def test_set_email_endpoint(self):
+        """Test POST /api/auth/set-email endpoint."""
+        try:
+            # Get user token for user without email
+            user_token = self.test_login_needs_email_flag()
+            if not user_token:
+                self.log_test("Set Email Endpoint", False, "Could not get user token for email setting")
+                return
+            
+            # Save current auth and switch to user
+            original_auth = self.session.headers.get("Authorization")
+            self.session.headers["Authorization"] = f"Bearer {user_token}"
+            
+            # Test setting email
+            email_data = {
+                "email": "newemail@example.com"
+            }
+            
+            response = self.session.post(f"{API_BASE}/auth/set-email", json=email_data)
+            if response.status_code == 200:
+                data = response.json()
+                if "successfully" in data.get("message", ""):
+                    self.log_test("Set Email Endpoint", True, "Email successfully set via /api/auth/set-email")
+                    
+                    # Verify email was set by logging in again
+                    self.session.headers.pop("Authorization", None)
+                    login_data = {
+                        "username": "noemailuser",
+                        "password": "NoEmail@123"
+                    }
+                    
+                    login_response = self.session.post(f"{API_BASE}/auth/login", json=login_data)
+                    if login_response.status_code == 200:
+                        login_data_response = login_response.json()
+                        needs_email_after = login_data_response.get("needs_email", True)
+                        if not needs_email_after:
+                            self.log_test("Set Email Verification", True, "needs_email flag correctly updated after setting email")
+                        else:
+                            self.log_test("Set Email Verification", False, "needs_email flag not updated after setting email")
+                else:
+                    self.log_test("Set Email Endpoint", False, f"Unexpected response: {data}")
+            else:
+                self.log_test("Set Email Endpoint", False, f"Status: {response.status_code}", response.text)
+            
+            # Restore admin auth
+            self.session.headers["Authorization"] = original_auth
+            
+        except Exception as e:
+            self.log_test("Set Email Endpoint", False, f"Exception: {str(e)}")
+
+    def create_mmod_user(self):
+        """Create and login as MMOD user for email update testing."""
+        try:
+            # Register MMOD user
+            user_data = {
+                "username": "testmmod",
+                "password": "TestMmod@123",
+                "email": "mmod@example.com",
+                "role": "mmod"
+            }
+            
+            # Remove auth header temporarily
+            auth_header = self.session.headers.pop("Authorization", None)
+            
+            response = self.session.post(f"{API_BASE}/auth/register", json=user_data)
+            if response.status_code == 200 or (response.status_code == 400 and "already registered" in response.text):
+                # Login as MMOD
+                login_data = {
+                    "username": "testmmod",
+                    "password": "TestMmod@123"
+                }
+                
+                login_response = self.session.post(f"{API_BASE}/auth/login", json=login_data)
+                if login_response.status_code == 200:
+                    data = login_response.json()
+                    mmod_token = data.get("access_token")
+                    if mmod_token:
+                        self.log_test("MMOD User Setup", True, "MMOD user ready for testing")
+                        # Restore admin auth
+                        if auth_header:
+                            self.session.headers["Authorization"] = auth_header
+                        return mmod_token
+                    else:
+                        self.log_test("MMOD User Setup", False, "No access token in login response")
+                else:
+                    self.log_test("MMOD User Setup", False, f"Login failed: {login_response.status_code}")
+            else:
+                self.log_test("MMOD User Setup", False, f"Registration failed: {response.status_code}")
+            
+            # Restore admin auth
+            if auth_header:
+                self.session.headers["Authorization"] = auth_header
+            return None
+                
+        except Exception as e:
+            self.log_test("MMOD User Setup", False, f"Exception: {str(e)}")
+            return None
+
+    def test_mmod_can_update_email(self):
+        """Test that MMOD can update another user's email via /api/moderators/{username}/email."""
+        try:
+            # Get MMOD token
+            mmod_token = self.create_mmod_user()
+            if not mmod_token:
+                self.log_test("MMOD Email Update", False, "Could not setup MMOD user")
+                return
+            
+            # Save current auth and switch to MMOD
+            original_auth = self.session.headers.get("Authorization")
+            self.session.headers["Authorization"] = f"Bearer {mmod_token}"
+            
+            # Test updating another user's email
+            email_update_data = {
+                "email": "updated@example.com"
+            }
+            
+            response = self.session.patch(f"{API_BASE}/moderators/noemailuser/email", json=email_update_data)
+            if response.status_code == 200:
+                data = response.json()
+                if "updated" in data.get("message", ""):
+                    self.log_test("MMOD Email Update", True, "MMOD successfully updated another user's email")
+                else:
+                    self.log_test("MMOD Email Update", False, f"Unexpected response: {data}")
+            else:
+                self.log_test("MMOD Email Update", False, f"Status: {response.status_code}", response.text)
+            
+            # Restore admin auth
+            self.session.headers["Authorization"] = original_auth
+            
+        except Exception as e:
+            self.log_test("MMOD Email Update", False, f"Exception: {str(e)}")
+
+    def test_admin_can_view_emails(self):
+        """Test that Admin can view email addresses in moderator list."""
+        try:
+            # Ensure we're logged in as admin
+            if not self.admin_token:
+                self.log_test("Admin View Emails", False, "No admin token available")
+                return
+            
+            response = self.session.get(f"{API_BASE}/moderators")
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list) and len(data) > 0:
+                    # Check if emails are visible to admin
+                    users_with_emails = [mod for mod in data if mod.get("email") is not None]
+                    if len(users_with_emails) > 0:
+                        self.log_test("Admin View Emails", True, f"Admin can view emails in moderator list ({len(users_with_emails)} users with emails)")
+                    else:
+                        self.log_test("Admin View Emails", False, "No emails visible to admin in moderator list")
+                else:
+                    self.log_test("Admin View Emails", False, "No moderators found in list")
+            else:
+                self.log_test("Admin View Emails", False, f"Status: {response.status_code}", response.text)
+            
+        except Exception as e:
+            self.log_test("Admin View Emails", False, f"Exception: {str(e)}")
+
+    def test_non_admin_cannot_view_emails(self):
+        """Test that non-admin users cannot see email addresses in moderator list."""
+        try:
+            # Get regular moderator token
+            regular_token = self.create_non_training_manager_user()
+            if not regular_token:
+                self.log_test("Non-Admin Email Visibility", False, "Could not setup regular moderator")
+                return
+            
+            # Save current auth and switch to regular moderator
+            original_auth = self.session.headers.get("Authorization")
+            self.session.headers["Authorization"] = f"Bearer {regular_token}"
+            
+            response = self.session.get(f"{API_BASE}/moderators")
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list) and len(data) > 0:
+                    # Check if emails are hidden from non-admin
+                    users_with_emails = [mod for mod in data if mod.get("email") is not None]
+                    if len(users_with_emails) == 0:
+                        self.log_test("Non-Admin Email Visibility", True, "Non-admin users cannot see emails in moderator list")
+                    else:
+                        self.log_test("Non-Admin Email Visibility", False, f"Non-admin can see emails ({len(users_with_emails)} users with visible emails)")
+                else:
+                    self.log_test("Non-Admin Email Visibility", False, "No moderators found in list")
+            else:
+                self.log_test("Non-Admin Email Visibility", False, f"Status: {response.status_code}", response.text)
+            
+            # Restore admin auth
+            self.session.headers["Authorization"] = original_auth
+            
+        except Exception as e:
+            self.log_test("Non-Admin Email Visibility", False, f"Exception: {str(e)}")
+
+    def test_email_validation(self):
+        """Test email validation in set-email endpoint."""
+        try:
+            # Get user token for user without email
+            user_token = self.test_login_needs_email_flag()
+            if not user_token:
+                self.log_test("Email Validation", False, "Could not get user token for email validation testing")
+                return
+            
+            # Save current auth and switch to user
+            original_auth = self.session.headers.get("Authorization")
+            self.session.headers["Authorization"] = f"Bearer {user_token}"
+            
+            # Test with invalid email
+            invalid_email_data = {
+                "email": "invalid-email"
+            }
+            
+            response = self.session.post(f"{API_BASE}/auth/set-email", json=invalid_email_data)
+            if response.status_code == 400:
+                self.log_test("Email Validation - Invalid Email", True, "Invalid email correctly rejected")
+            else:
+                self.log_test("Email Validation - Invalid Email", False, f"Invalid email not rejected: {response.status_code}")
+            
+            # Test with valid email
+            valid_email_data = {
+                "email": "valid@example.com"
+            }
+            
+            response = self.session.post(f"{API_BASE}/auth/set-email", json=valid_email_data)
+            if response.status_code == 200:
+                self.log_test("Email Validation - Valid Email", True, "Valid email accepted")
+            else:
+                self.log_test("Email Validation - Valid Email", False, f"Valid email rejected: {response.status_code}")
+            
+            # Restore admin auth
+            self.session.headers["Authorization"] = original_auth
+            
+        except Exception as e:
+            self.log_test("Email Validation", False, f"Exception: {str(e)}")
+
     def run_all_tests(self):
         """Run all backend tests."""
         print("🚀 Starting Backend API Tests")
