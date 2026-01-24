@@ -16,7 +16,6 @@ export default function ModeratorLogin() {
   const [loading, setLoading] = useState(false);
   const [credentials, setCredentials] = useState({
     username: "",
-    email: "",
     password: ""
   });
   const [emailPromptOpen, setEmailPromptOpen] = useState(false);
@@ -301,27 +300,6 @@ export default function ModeratorLogin() {
                 className="bg-slate-900/50 border-slate-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-slate-200 rounded-sm"
                 placeholder="Enter your username"
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-slate-300 font-medium">
-                Email Address
-              </Label>
-              <Input
-                id="email"
-                name="email"
-                data-testid="email-input"
-                type="email"
-                value={credentials.email}
-                onChange={handleChange}
-                required
-                className="bg-slate-900/50 border-slate-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-slate-200 rounded-sm"
-                placeholder="Enter your email address"
-              />
-              <p className="text-xs text-slate-500">
-                If you don&apos;t have an email on file yet, enter one now to confirm your account.
-                We only use this for password resets.
-              </p>
             </div>
 
             <div className="space-y-2">
