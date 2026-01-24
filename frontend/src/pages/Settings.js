@@ -1197,7 +1197,9 @@ export default function Settings() {
                         const canChangePerms = canModifyPermissions(currentUser.role, currentUser.hasAdminAccess);
                         const canDeactivate = canDeactivateAccounts(currentUser.role, mod.role, isSelf, currentUser.hasAdminAccess);
                         const assignableRoles = getAssignableRoles(currentUser.role, mod.role, currentUser.hasAdminAccess);
-                        const canEditEmail = currentUser.hasAdminAccess;
+                        // MMODs can edit emails but only Admins can VIEW emails
+                        const canEditEmail = currentUser.hasAdminAccess || currentUser.role === 'mmod';
+                        const canViewEmail = currentUser.hasAdminAccess; // Only Admins can see current email
                         
                         // Determine what to show
                         const showRoleDropdown = canChangeRole && assignableRoles.length > 0;
