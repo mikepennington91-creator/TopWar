@@ -1249,17 +1249,21 @@ export default function Settings() {
 
                             {canEditEmail && (
                               <div className="space-y-2">
-                                <Label className="text-slate-400 text-xs uppercase">Email</Label>
+                                <Label className="text-slate-400 text-xs uppercase">
+                                  {canViewEmail ? "Email" : "Update Email"}
+                                </Label>
                                 <div className="flex flex-col sm:flex-row gap-2">
                                   <Input
                                     type="email"
-                                    value={emailEdits[mod.username] ?? ""}
+                                    data-testid={`email-input-${mod.username}`}
+                                    value={canViewEmail ? (emailEdits[mod.username] ?? "") : (emailEdits[mod.username] || "")}
                                     onChange={(e) => setEmailEdits(prev => ({ ...prev, [mod.username]: e.target.value }))}
-                                    placeholder="Enter email address"
+                                    placeholder={canViewEmail ? "Enter email address" : "Enter new email address"}
                                     className="bg-slate-900/50 border-slate-700 focus:border-amber-500 text-slate-200 rounded-sm"
                                   />
                                   <Button
                                     type="button"
+                                    data-testid={`save-email-btn-${mod.username}`}
                                     onClick={() => handleUpdateEmail(mod.username)}
                                     disabled={loading}
                                     size="sm"
@@ -1268,6 +1272,11 @@ export default function Settings() {
                                     Save Email
                                   </Button>
                                 </div>
+                                {!canViewEmail && (
+                                  <p className="text-xs text-slate-500 italic">
+                                    You can update emails but cannot view existing ones
+                                  </p>
+                                )}
                               </div>
                             )}
                             
