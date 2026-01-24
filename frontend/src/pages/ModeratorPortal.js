@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Shield, Megaphone, FileText, Calendar, Settings, LogOut, Plus, Trash2, Eye, EyeOff, Users, BarChart3, X, ScrollText, Lightbulb, Check, ChevronDown, ChevronUp, MessageSquare } from "lucide-react";
+import { Shield, Megaphone, FileText, Calendar, Settings, LogOut, Plus, Trash2, Eye, EyeOff, Users, BarChart3, X, ScrollText, Lightbulb, Check, ChevronDown, ChevronUp, MessageSquare, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import HolidayOverlay from "@/components/HolidayOverlay";
 import SeasonalOverlay from "@/components/SeasonalOverlay";
@@ -39,6 +40,9 @@ export default function ModeratorPortal() {
   const [showFeatureForm, setShowFeatureForm] = useState(false);
   const [newFeatureRequest, setNewFeatureRequest] = useState({ title: "", description: "", category: "general" });
   const [featureRequestsExpanded, setFeatureRequestsExpanded] = useState(true);
+  const [emailPromptOpen, setEmailPromptOpen] = useState(false);
+  const [emailPromptValue, setEmailPromptValue] = useState("");
+  const [emailPromptLoading, setEmailPromptLoading] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('moderator_token');
@@ -55,6 +59,7 @@ export default function ModeratorPortal() {
     fetchDismissedAnnouncements();
     fetchFeatureRequests();
     checkNewPolls();
+    checkForMissingEmail();
   }, [navigate]);
 
   useEffect(() => {
@@ -192,6 +197,40 @@ export default function ModeratorPortal() {
     }
   };
 
+  const checkForMissingEmail = async () => {
+    try {
+      const token = localStorage.getItem('moderator_token');
+      const response = await axios.get(`${API}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.data.needs_email) {
+        setEmailPromptOpen(true);
+      }
+    } catch (error) {
+      console.error("Failed to check moderator email status:", error);
+    }
+  };
+
+  const handleEmailPromptSubmit = async (e) => {
+    e.preventDefault();
+    setEmailPromptLoading(true);
+    try {
+      const token = localStorage.getItem('moderator_token');
+      await axios.post(
+        `${API}/auth/set-email`,
+        { email: emailPromptValue },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Email saved successfully!");
+      setEmailPromptOpen(false);
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.detail || "Failed to save email");
+    } finally {
+      setEmailPromptLoading(false);
+    }
+  };
+
   const handleCreateFeatureRequest = async (e) => {
     e.preventDefault();
     if (!newFeatureRequest.title || !newFeatureRequest.description) {
@@ -319,6 +358,44 @@ export default function ModeratorPortal() {
       <HolidayOverlay />
       {/* Seasonal Animation Overlay */}
       <SeasonalOverlay />
+
+      <Dialog open={emailPromptOpen}>
+        <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 sm:max-w-md" data-testid="email-confirmation-dialog">
+          <DialogHeader>
+            <DialogTitle className="text-amber-400 flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              Confirm your email
+            </DialogTitle>
+            <DialogDescription className="text-slate-400">
+              Please enter a valid email address. We only use this to help you reset your password in the future.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEmailPromptSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email-prompt" className="text-slate-300 font-medium">
+                Email Address
+              </Label>
+              <Input
+                id="email-prompt"
+                name="email-prompt"
+                type="email"
+                value={emailPromptValue}
+                onChange={(e) => setEmailPromptValue(e.target.value)}
+                required
+                className="bg-slate-950/60 border-slate-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-slate-200 rounded-sm"
+                placeholder="Enter your email address"
+              />
+            </div>
+            <Button
+              type="submit"
+              disabled={emailPromptLoading}
+              className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide py-5 text-base rounded-sm btn-glow"
+            >
+              {emailPromptLoading ? "Saving..." : "Save Email"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
       
       {/* User Info Bar */}
       <div className="bg-slate-900/50 border-b border-slate-800 py-2 px-3 sm:px-6">

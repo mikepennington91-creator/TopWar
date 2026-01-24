@@ -182,6 +182,12 @@ class ModeratorEmailUpdate(BaseModel):
     email: str
 
 
+class ModeratorProfile(BaseModel):
+    username: str
+    email: Optional[str] = None
+    needs_email: bool = False
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str
