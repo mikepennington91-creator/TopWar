@@ -239,6 +239,7 @@ class BackendTester:
             user_data = {
                 "username": "regularmod",
                 "password": "Regular@123",
+                "email": "regularmod@gmail.com",
                 "role": "moderator"
             }
             
