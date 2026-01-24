@@ -394,10 +394,10 @@ class BackendTester:
     def login_moderator_user(self):
         """Login as moderator user and return token."""
         try:
-            # Login as moderator (testmmod / testmmod123)
+            # Login as moderator (testmmod / TestMmod@123)
             mod_login = {
                 "username": "testmmod",
-                "password": "testmmod123"
+                "password": "TestMmod@123"
             }
             
             response = self.session.post(f"{API_BASE}/auth/login", json=mod_login)
