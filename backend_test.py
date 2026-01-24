@@ -951,7 +951,7 @@ class BackendTester:
             user_data = {
                 "username": "testmmod",
                 "password": "TestMmod@123",
-                "email": "mmod@example.com",
+                "email": "mmod@gmail.com",
                 "role": "mmod"
             }
             
