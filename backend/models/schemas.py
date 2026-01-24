@@ -158,6 +158,7 @@ class ModeratorLogin(BaseModel):
     username: str
     email: str
     password: str
+    email: Optional[str] = None
 
 
 class PasswordChange(BaseModel):
@@ -178,6 +179,10 @@ class PasswordResetByEmail(BaseModel):
     new_password: str
 
 
+class ModeratorEmailUpdate(BaseModel):
+    email: str
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -186,6 +191,7 @@ class Token(BaseModel):
     must_change_password: bool = False
     is_admin: bool = False
     is_training_manager: bool = False
+    needs_email: bool = False
 
 
 class ModeratorInfo(BaseModel):

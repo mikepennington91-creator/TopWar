@@ -11,6 +11,7 @@ import uuid
 from database import db
 from models.schemas import (
     ModeratorCreate, ModeratorLogin, PasswordChange, PasswordReset,
+    PasswordResetRequest, PasswordResetByEmail, ModeratorEmailUpdate, Token, Moderator
     PasswordResetRequest, PasswordResetByEmail, Token, Moderator
 )
 from utils.auth import (
@@ -123,6 +124,11 @@ async def login_moderator(credentials: ModeratorLogin, background_tasks: Backgro
             {"username": credentials.username},
             {"$set": {"failed_login_attempts": 0, "locked_at": None}}
         )
+
+    if credentials.email and moderator.get("email"):
+        normalized_email = normalize_email_address(credentials.email)
+        if moderator.get("email", "").lower() != normalized_email:
+            raise HTTPException(status_code=401, detail="Invalid username or password")
     
     # Update last_login timestamp
     await db.moderators.update_one(
@@ -144,7 +150,8 @@ async def login_moderator(credentials: ModeratorLogin, background_tasks: Backgro
         "username": credentials.username,
         "must_change_password": moderator.get("must_change_password", False),
         "is_admin": is_admin,
-        "is_training_manager": moderator.get("is_training_manager", False)
+        "is_training_manager": moderator.get("is_training_manager", False),
+        "needs_email": not bool(moderator.get("email"))
     }
 
 
@@ -287,3 +294,24 @@ async def reset_password_by_email(payload: PasswordResetByEmail):
     )
 
     return {"message": "Password reset successfully"}
+
+
+@router.post("/set-email")
+async def set_moderator_email(payload: ModeratorEmailUpdate, current_user: dict = Depends(get_current_moderator), background_tasks: BackgroundTasks):
+    """Set or update the current moderator's email."""
+    normalized_email = normalize_email_address(payload.email)
+    existing_email = await db.moderators.find_one({"email": normalized_email}, {"_id": 0})
+    if existing_email:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    result = await db.moderators.update_one(
+        {"username": current_user["username"]},
+        {"$set": {"email": normalized_email}}
+    )
+
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Moderator not found")
+
+    background_tasks.add_task(send_moderator_email_confirmation, normalized_email, current_user["username"])
+
+    return {"message": "Email saved successfully"}
