@@ -57,11 +57,13 @@ async def register_moderator(moderator: ModeratorCreate, background_tasks: Backg
     if existing:
         raise HTTPException(status_code=400, detail="Username already registered")
 
-    normalized_email = normalize_email_address(moderator.email)
+    normalized_email = None
+    if moderator.email is not None and moderator.email.strip():
+        normalized_email = normalize_email_address(moderator.email)
 
-    existing_email = await db.moderators.find_one({"email": normalized_email}, {"_id": 0})
-    if existing_email:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        existing_email = await db.moderators.find_one({"email": normalized_email}, {"_id": 0})
+        if existing_email:
+            raise HTTPException(status_code=400, detail="Email already registered")
     
     # Validate password strength
     is_valid, message = validate_password_strength(moderator.password)
@@ -83,7 +85,8 @@ async def register_moderator(moderator: ModeratorCreate, background_tasks: Backg
     doc['created_at'] = doc['created_at'].isoformat()
     
     await db.moderators.insert_one(doc)
-    background_tasks.add_task(send_moderator_email_confirmation, normalized_email, moderator.username)
+    if normalized_email:
+        background_tasks.add_task(send_moderator_email_confirmation, normalized_email, moderator.username)
     return {"message": "Moderator registered successfully", "username": moderator.username, "role": moderator.role}
 
 
