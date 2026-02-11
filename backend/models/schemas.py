@@ -132,7 +132,7 @@ class Moderator(BaseModel):
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     username: str
-    email: str
+    email: Optional[str] = None
     hashed_password: str
     password_history: List[str] = Field(default_factory=list)
     role: str = "moderator"
@@ -149,7 +149,7 @@ class Moderator(BaseModel):
 
 class ModeratorCreate(BaseModel):
     username: str
-    email: str
+    email: Optional[str] = None
     password: str
     role: str = "moderator"
 
