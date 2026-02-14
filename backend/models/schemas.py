@@ -2,7 +2,7 @@
 import uuid
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Dict
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, conint
 
 
 # ============= Application Models =============
@@ -39,6 +39,7 @@ class Application(BaseModel):
     favourite_event: str
     free_gems: str
     heroes_mutated: str
+    highest_character_level: Optional[conint(ge=1, le=9999)] = None
     discord_tools_comfort: str
     guidelines_rating: str
     complex_mechanic: str
@@ -81,6 +82,7 @@ class ApplicationCreate(BaseModel):
     favourite_event: str
     free_gems: str
     heroes_mutated: str
+    highest_character_level: conint(ge=1, le=9999)
     discord_tools_comfort: str
     guidelines_rating: str
     complex_mechanic: str
@@ -136,6 +138,7 @@ class Moderator(BaseModel):
     hashed_password: str
     password_history: List[str] = Field(default_factory=list)
     role: str = "moderator"
+    roles: List[str] = Field(default_factory=lambda: ["moderator"])
     status: str = "active"
     is_training_manager: bool = False
     is_admin: bool = False
@@ -152,6 +155,7 @@ class ModeratorCreate(BaseModel):
     email: Optional[str] = None
     password: str
     role: str = "moderator"
+    roles: Optional[List[str]] = None
 
 
 class ModeratorLogin(BaseModel):
@@ -192,6 +196,7 @@ class Token(BaseModel):
     access_token: str
     token_type: str
     role: str
+    roles: List[str] = Field(default_factory=list)
     username: str
     must_change_password: bool = False
     is_admin: bool = False
@@ -202,6 +207,7 @@ class Token(BaseModel):
 class ModeratorInfo(BaseModel):
     username: str
     role: str
+    roles: List[str] = Field(default_factory=list)
     status: str
     is_training_manager: bool
     is_admin: bool
@@ -216,7 +222,8 @@ class ModeratorStatusUpdate(BaseModel):
 
 
 class ModeratorRoleUpdate(BaseModel):
-    role: str
+    role: Optional[str] = None
+    roles: Optional[List[str]] = None
 
 
 class ModeratorUsernameUpdate(BaseModel):

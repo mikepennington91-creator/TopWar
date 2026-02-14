@@ -83,6 +83,7 @@ export default function ModeratorLogin() {
       
       localStorage.setItem('moderator_token', response.data.access_token);
       localStorage.setItem('moderator_role', response.data.role);
+      localStorage.setItem('moderator_roles', JSON.stringify(response.data.roles || [response.data.role]));
       localStorage.setItem('moderator_username', response.data.username);
       localStorage.setItem('moderator_is_admin', response.data.is_admin ? 'true' : 'false');
       localStorage.setItem('moderator_is_training_manager', response.data.is_training_manager ? 'true' : 'false');

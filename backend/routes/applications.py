@@ -8,7 +8,7 @@ from models.schemas import (
     Application, ApplicationCreate, ApplicationUpdate,
     VoteCreate, CommentCreate, AuditLog, ApplicationSettings, ApplicationSettingsUpdate
 )
-from utils.auth import get_current_moderator, require_admin
+from utils.auth import get_current_moderator, require_admin, has_any_role
 from utils.email import (
     send_application_confirmation_email,
     send_application_approved_email,
@@ -18,6 +18,14 @@ from utils.email import (
 )
 
 router = APIRouter(prefix="/applications", tags=["Applications"])
+
+async def require_application_status_manager(current_user: dict = Depends(get_current_moderator)):
+    """Allow elevated moderators and leader roles to change application statuses."""
+    allowed_roles = {"admin", "mmod", "in_game_leader", "discord_leader"}
+    if not has_any_role(current_user, allowed_roles) and not current_user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Not authorized to change application statuses")
+    return current_user
+
 
 
 def convert_application_timestamps(app: dict) -> dict:
@@ -186,10 +194,10 @@ async def comment_on_application(application_id: str, comment_data: CommentCreat
 
 
 @router.patch("/{application_id}", response_model=Application)
-async def update_application_status(application_id: str, update: ApplicationUpdate, background_tasks: BackgroundTasks, current_user: dict = Depends(require_admin)):
+async def update_application_status(application_id: str, update: ApplicationUpdate, background_tasks: BackgroundTasks, current_user: dict = Depends(require_application_status_manager)):
     """Update application status."""
-    if update.status not in ["approved", "rejected", "pending", "awaiting_review", "waiting"]:
-        raise HTTPException(status_code=400, detail="Status must be 'approved', 'rejected', 'pending', 'awaiting_review', or 'waiting'")
+    if update.status not in ["approved", "rejected", "pending", "awaiting_review", "waiting", "in_game_approved", "discord_approved"]:
+        raise HTTPException(status_code=400, detail="Status must be 'approved', 'rejected', 'pending', 'awaiting_review', 'waiting', 'in_game_approved', or 'discord_approved'")
     
     if not update.comment or not update.comment.strip():
         raise HTTPException(status_code=400, detail="A comment is required when changing application status")
