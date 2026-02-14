@@ -13,7 +13,7 @@ from models.schemas import (
 )
 from utils.auth import (
     get_current_moderator, require_admin, require_admin_role, get_role_rank,
-    can_modify_role, get_assignable_roles
+    can_modify_role, get_assignable_roles, normalize_roles, get_highest_role, has_any_role
 )
 from utils.email import send_moderator_email_confirmation
 
@@ -38,6 +38,8 @@ async def get_moderators(current_user: dict = Depends(get_current_moderator)):
     is_admin_user = current_user["role"] == "admin" or current_user.get("is_admin", False)
     
     for mod in moderators:
+        mod["roles"] = normalize_roles(mod.get("role", "moderator"), mod.get("roles", []))
+        mod["role"] = get_highest_role(mod["roles"])
         if isinstance(mod.get('created_at'), str):
             mod['created_at'] = datetime.fromisoformat(mod['created_at'])
         if isinstance(mod.get('last_login'), str):
@@ -65,7 +67,8 @@ async def update_moderator_status(username: str, status_update: ModeratorStatusU
     # MMODs can only modify users with lower rank
     if current_user["role"] != "admin":
         current_rank = get_role_rank(current_user["role"])
-        target_rank = get_role_rank(moderator.get("role", "moderator"))
+        target_roles = normalize_roles(moderator.get("role", "moderator"), moderator.get("roles", []))
+        target_rank = get_role_rank(get_highest_role(target_roles))
         if current_rank <= target_rank:
             raise HTTPException(status_code=403, detail="You can only modify users with lower rank than yours")
     
@@ -110,23 +113,29 @@ async def update_moderator_role(username: str, role_update: ModeratorRoleUpdate,
     moderator = await db.moderators.find_one({"username": username}, {"_id": 0})
     if not moderator:
         raise HTTPException(status_code=404, detail="Moderator not found")
-    
+
     is_self = current_user["username"] == username
-    target_role = moderator.get("role", "moderator")
-    
+    target_roles = normalize_roles(moderator.get("role", "moderator"), moderator.get("roles", []))
+    target_role = get_highest_role(target_roles)
+
     if not can_modify_role(current_user["role"], target_role, is_self):
         raise HTTPException(status_code=403, detail="You do not have permission to modify this user's role")
-    
+
     assignable_roles = get_assignable_roles(current_user["role"])
-    if role_update.role not in assignable_roles:
-        raise HTTPException(status_code=403, detail=f"You cannot assign the '{role_update.role}' role")
-    
+    for incoming_role in incoming_roles:
+        if incoming_role not in assignable_roles:
+            raise HTTPException(status_code=403, detail=f"You cannot assign the '{incoming_role}' role")
+
+    chosen_primary_role = primary_roles[0] if primary_roles else "moderator"
+    normalized_roles = normalize_roles(chosen_primary_role, incoming_roles)
+    primary_role = chosen_primary_role
+
     await db.moderators.update_one(
         {"username": username},
-        {"$set": {"role": role_update.role}}
+        {"$set": {"role": primary_role, "roles": normalized_roles}}
     )
-    
-    return {"message": f"Moderator {username} role updated to {role_update.role}"}
+
+    return {"message": f"Moderator {username} roles updated", "role": primary_role, "roles": normalized_roles}
 
 
 @router.patch("/{username}/username")
@@ -150,7 +159,7 @@ async def update_moderator_username(username: str, username_update: ModeratorUse
 
 async def require_mmod_or_admin(current_user: dict = Depends(get_current_moderator)):
     """Require MMOD or Admin role to update another user's email."""
-    if current_user["role"] not in ["admin", "mmod"] and not current_user.get("is_admin"):
+    if not has_any_role(current_user, ["admin", "mmod"]) and not current_user.get("is_admin"):
         raise HTTPException(status_code=403, detail="MMOD or Admin access required to change emails")
     return current_user
 

@@ -48,6 +48,18 @@ const getAssignableRoles = (currentUserRole, targetUserRole, hasAdminAccess = fa
     .map(([role]) => role);
 };
 
+const LEADER_ROLES = ['in_game_leader', 'discord_leader'];
+
+const getAssignablePrimaryRoles = (assignableRoles = []) => assignableRoles.filter((role) => !LEADER_ROLES.includes(role));
+
+const canAssignLeaderRole = (assignableRoles = [], leaderRole) => assignableRoles.includes(leaderRole);
+
+const getDefaultRoleEditState = (role = 'moderator', roles = []) => ({
+  role: role || 'moderator',
+  in_game_leader: Array.isArray(roles) && roles.includes('in_game_leader'),
+  discord_leader: Array.isArray(roles) && roles.includes('discord_leader')
+});
+
 // Check if current user can modify target user's role
 const canModifyRole = (currentUserRole, targetUserRole, isSelf, hasAdminAccess = false) => {
   // Admin or admin-access users can change their own role
@@ -100,6 +112,7 @@ export default function Settings() {
   const [currentUser, setCurrentUser] = useState(null);
   const [moderators, setModerators] = useState([]);
   const [emailEdits, setEmailEdits] = useState({});
+  const [roleEdits, setRoleEdits] = useState({});
   const [passwordForm, setPasswordForm] = useState({
     old_password: "",
     new_password: "",
@@ -228,10 +241,29 @@ export default function Settings() {
       const response = await axios.get(`${API}/moderators`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setModerators(response.data);
+      const normalizedModerators = response.data.map((mod) => {
+        const roles = Array.isArray(mod.roles) && mod.roles.length > 0 ? mod.roles : [mod.role || "moderator"];
+        const primaryRole = mod.role && !LEADER_ROLES.includes(mod.role)
+          ? mod.role
+          : (roles.find((r) => !LEADER_ROLES.includes(r)) || "moderator");
+
+        return {
+          ...mod,
+          role: primaryRole,
+          roles
+        };
+      });
+      setModerators(normalizedModerators);
+      setRoleEdits(() => {
+        const next = {};
+        normalizedModerators.forEach((mod) => {
+          next[mod.username] = getDefaultRoleEditState(mod.role, mod.roles);
+        });
+        return next;
+      });
       setEmailEdits(() => {
         const next = {};
-        response.data.forEach((mod) => {
+        normalizedModerators.forEach((mod) => {
           // Only pre-populate email for Admins who can view emails
           // MMODs cannot view emails so start with empty field
           next[mod.username] = hasAdminAccess ? (mod.email || "") : "";
@@ -422,24 +454,44 @@ export default function Settings() {
     }
   };
 
-  const handleChangeRole = async (username, newRole) => {
-    if (!window.confirm(`Change ${username}'s role to ${newRole.replace('_', ' ')}?`)) {
+  const updateRoleEdit = (username, updates) => {
+    setRoleEdits(prev => ({
+      ...prev,
+      [username]: {
+        ...getDefaultRoleEditState(),
+        ...(prev[username] || {}),
+        ...updates
+      }
+    }));
+  };
+
+  const handleSaveRoles = async (username) => {
+    const editState = roleEdits[username] || getDefaultRoleEditState();
+    const selectedRoles = [
+      editState.role || 'moderator',
+      ...(editState.in_game_leader ? ['in_game_leader'] : []),
+      ...(editState.discord_leader ? ['discord_leader'] : [])
+    ];
+
+    const prettyRoles = selectedRoles.map((r) => r.replaceAll('_', ' ')).join(', ');
+
+    if (!window.confirm(`Update ${username}'s role settings to: ${prettyRoles}?`)) {
       return;
     }
-    
+
     setLoading(true);
     try {
       const token = localStorage.getItem('moderator_token');
       await axios.patch(
         `${API}/moderators/${username}/role`,
-        { role: newRole },
+        { roles: selectedRoles },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success(`Role updated to ${newRole.replace('_', ' ')}!`);
+      toast.success('Role settings updated successfully!');
       fetchModerators();
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.detail || "Failed to update role");
+      toast.error(error.response?.data?.detail || "Failed to update role settings");
     } finally {
       setLoading(false);
     }
@@ -1184,7 +1236,12 @@ export default function Settings() {
                               Last login: <span className={mod.last_login ? 'text-slate-400' : 'text-slate-600 italic'}>{formatLastLogin(mod.last_login)}</span>
                             </span>
                           </div>
-                          <p className="text-sm mt-1">{getRoleBadge(mod.role)}</p>
+                          <div className="text-sm mt-1">{getRoleBadge(mod.role)}</div>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {(mod.roles || [mod.role]).map((r) => (
+                              <Badge key={`${mod.username}-${r}`} variant="outline" className="text-[10px] border-slate-600 text-slate-300">{r.replaceAll("_", " ").toUpperCase()}</Badge>
+                            ))}
+                          </div>
                           {currentUser?.hasAdminAccess && (
                             <p className="text-xs text-slate-400 mt-1">
                               Email: <span className={mod.email ? "text-slate-300" : "text-slate-600 italic"}>{mod.email || "No email on file"}</span>

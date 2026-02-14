@@ -29,7 +29,7 @@ export default function ModeratorDashboard() {
   const [selectedApp, setSelectedApp] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState({ username: "", role: "moderator", is_training_manager: false });
+  const [currentUser, setCurrentUser] = useState({ username: "", role: "moderator", roles: ["moderator"], is_training_manager: false });
   const [newComment, setNewComment] = useState("");
   const [sortOrder, setSortOrder] = useState("newest"); // newest, oldest, most_positive_votes, most_negative_votes
   const [statusFilter, setStatusFilter] = useState(["all"]); // all, awaiting_review, pending, approved, rejected
@@ -44,33 +44,37 @@ export default function ModeratorDashboard() {
     const token = localStorage.getItem('moderator_token');
     const role = localStorage.getItem('moderator_role');
     const username = localStorage.getItem('moderator_username');
+    const storedRoles = JSON.parse(localStorage.getItem('moderator_roles') || '[]');
     
     if (!token) {
       navigate('/moderator/login');
       return;
     }
     
-    fetchCurrentUser(token, username, role);
+    fetchCurrentUser(token, username, role, storedRoles);
     fetchApplications();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
-  const fetchCurrentUser = async (token, username, role) => {
+  const fetchCurrentUser = async (token, username, role, storedRoles = []) => {
     try {
       // Fetch moderator list to check training manager and admin status
       const response = await axios.get(`${API}/moderators`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const currentMod = response.data.find(m => m.username === username);
+      const roles = (currentMod?.roles && currentMod.roles.length > 0) ? currentMod.roles : (storedRoles.length > 0 ? storedRoles : [role]);
       setCurrentUser({ 
         username, 
-        role,
+        role: currentMod?.role || role,
+        roles,
         is_training_manager: currentMod?.is_training_manager || false,
         is_admin: currentMod?.is_admin || role === 'admin'
       });
     } catch (error) {
       // If can't fetch (non-admin), just set basic info
-      setCurrentUser({ username, role, is_training_manager: false, is_admin: role === 'admin' });
+      const roles = storedRoles.length > 0 ? storedRoles : [role];
+      setCurrentUser({ username, role, roles, is_training_manager: false, is_admin: role === 'admin' });
     }
   };
 
@@ -219,6 +223,11 @@ export default function ModeratorDashboard() {
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const currentUserHasAnyRole = (allowedRoles) => {
+    const roleSet = new Set([...(currentUser.roles || []), currentUser.role]);
+    return allowedRoles.some((roleName) => roleSet.has(roleName));
   };
 
   const handleComment = async (applicationId) => {
@@ -422,7 +431,7 @@ export default function ModeratorDashboard() {
             
             {/* Desktop Navigation */}
             <div className="hidden md:flex gap-2 lg:gap-3">
-              {(currentUser.role === "admin" || currentUser.role === "mmod") && (
+              {currentUserHasAnyRole(["admin", "mmod"]) && (
                 <Button
                   data-testid="audit-log-btn"
                   onClick={() => navigate('/moderator/audit-log')}
@@ -480,7 +489,7 @@ export default function ModeratorDashboard() {
           {/* Mobile Navigation Menu */}
           {mobileMenuOpen && (
             <div className="md:hidden mt-3 pt-3 border-t border-slate-700 grid grid-cols-2 gap-2">
-              {(currentUser.role === "admin" || currentUser.role === "mmod") && (
+              {currentUserHasAnyRole(["admin", "mmod"]) && (
                 <Button
                   onClick={() => { navigate('/moderator/audit-log'); setMobileMenuOpen(false); }}
                   variant="outline"

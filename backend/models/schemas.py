@@ -138,6 +138,7 @@ class Moderator(BaseModel):
     hashed_password: str
     password_history: List[str] = Field(default_factory=list)
     role: str = "moderator"
+    roles: List[str] = Field(default_factory=lambda: ["moderator"])
     status: str = "active"
     is_training_manager: bool = False
     is_admin: bool = False
@@ -154,6 +155,7 @@ class ModeratorCreate(BaseModel):
     email: Optional[str] = None
     password: str
     role: str = "moderator"
+    roles: Optional[List[str]] = None
 
 
 class ModeratorLogin(BaseModel):
@@ -194,6 +196,7 @@ class Token(BaseModel):
     access_token: str
     token_type: str
     role: str
+    roles: List[str] = Field(default_factory=list)
     username: str
     must_change_password: bool = False
     is_admin: bool = False
@@ -204,6 +207,7 @@ class Token(BaseModel):
 class ModeratorInfo(BaseModel):
     username: str
     role: str
+    roles: List[str] = Field(default_factory=list)
     status: str
     is_training_manager: bool
     is_admin: bool
@@ -218,7 +222,8 @@ class ModeratorStatusUpdate(BaseModel):
 
 
 class ModeratorRoleUpdate(BaseModel):
-    role: str
+    role: Optional[str] = None
+    roles: Optional[List[str]] = None
 
 
 class ModeratorUsernameUpdate(BaseModel):

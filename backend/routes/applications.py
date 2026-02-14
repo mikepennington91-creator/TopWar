@@ -8,7 +8,7 @@ from models.schemas import (
     Application, ApplicationCreate, ApplicationUpdate,
     VoteCreate, CommentCreate, AuditLog, ApplicationSettings, ApplicationSettingsUpdate
 )
-from utils.auth import get_current_moderator, require_admin
+from utils.auth import get_current_moderator, require_admin, has_any_role
 from utils.email import (
     send_application_confirmation_email,
     send_application_approved_email,

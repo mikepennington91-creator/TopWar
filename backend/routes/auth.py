@@ -15,7 +15,7 @@ from models.schemas import (
 from utils.auth import (
     pwd_context, create_access_token, get_current_moderator, require_admin,
     validate_password_strength, check_password_history, PASSWORD_HISTORY_COUNT,
-    MAX_LOGIN_ATTEMPTS
+    MAX_LOGIN_ATTEMPTS, normalize_roles, get_highest_role
 )
 from utils.email import send_moderator_email_confirmation
 
@@ -79,6 +79,7 @@ async def register_moderator(moderator: ModeratorCreate, background_tasks: Backg
         email=normalized_email,
         hashed_password=hashed_password,
         role=moderator.role,
+        roles=normalize_roles(moderator.role, moderator.roles),
         must_change_password=True
     )
     doc = mod_obj.model_dump()
@@ -129,17 +130,21 @@ async def login_moderator(credentials: ModeratorLogin, background_tasks: Backgro
         {"$set": {"last_login": datetime.now(timezone.utc).isoformat()}}
     )
     
-    # Create token - include is_admin flag in token data
+    # Create token - include multi-role data with computed primary role
     is_admin = moderator.get("is_admin", False)
+    roles = normalize_roles(moderator.get("role", "moderator"), moderator.get("roles", []))
+    primary_role = get_highest_role(roles)
     access_token = create_access_token(data={
         "sub": credentials.username, 
-        "role": moderator.get("role", "moderator"),
+        "role": primary_role,
+        "roles": roles,
         "is_admin": is_admin
     })
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "role": moderator.get("role", "moderator"),
+        "role": primary_role,
+        "roles": roles,
         "username": credentials.username,
         "must_change_password": moderator.get("must_change_password", False),
         "is_admin": is_admin,
