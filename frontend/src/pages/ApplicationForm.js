@@ -43,6 +43,7 @@ export default function ApplicationForm() {
     favourite_event: "",
     free_gems: "",
     heroes_mutated: "",
+    highest_character_level: "",
     discord_tools_comfort: "",
     guidelines_rating: "",
     complex_mechanic: "",
@@ -80,6 +81,13 @@ export default function ApplicationForm() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === "highest_character_level") {
+      const numericValue = value.replace(/\D/g, '').slice(0, 4);
+      setFormData(prev => ({ ...prev, [name]: numericValue }));
+      return;
+    }
+
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -97,7 +105,8 @@ export default function ApplicationForm() {
       // Convert age to number
       const submitData = {
         ...formData,
-        age: parseInt(formData.age)
+        age: parseInt(formData.age),
+        highest_character_level: parseInt(formData.highest_character_level)
       };
 
       // If position is "In-Game", set discord_tools_comfort to N/A
@@ -144,6 +153,7 @@ export default function ApplicationForm() {
     { name: "country", label: "Country of residence", type: "text", required: true },
     { name: "activity_times", label: "What are your typical activity times per day? i.e. Reset - 5 to reset.", type: "text", required: true },
     { name: "server", label: "What server are you in? Only write your main Warzone", type: "number", required: true, min: 1 },
+    { name: "highest_character_level", label: "What is your highest character level", type: "number", required: true, min: 1, max: 9999, maxLength: 4 },
     { name: "native_language", label: "What is your native language?", type: "text", required: true },
     { name: "other_languages", label: "What other languages do you speak?", type: "text", required: true },
     { name: "previous_experience", label: "Describe your previous experience with online moderation, if any (platforms, roles, duration).", type: "textarea", required: true },
@@ -421,6 +431,7 @@ export default function ApplicationForm() {
                     required={question.required}
                     min={question.min}
                     max={question.max}
+                    maxLength={question.maxLength}
                     className="bg-slate-900/50 border-slate-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-slate-200 rounded-sm"
                     placeholder="Type your answer here..."
                   />
