@@ -31,7 +31,7 @@ export default function ModeratorDashboard() {
   const [actionLoading, setActionLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState({ username: "", role: "moderator", is_training_manager: false });
   const [newComment, setNewComment] = useState("");
-  const [sortOrder, setSortOrder] = useState("newest"); // newest or oldest
+  const [sortOrder, setSortOrder] = useState("newest"); // newest, oldest, most_positive_votes, most_negative_votes
   const [statusFilter, setStatusFilter] = useState(["all"]); // all, awaiting_review, pending, approved, rejected
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showStatusChangeDialog, setShowStatusChangeDialog] = useState(false);
@@ -82,7 +82,7 @@ export default function ModeratorDashboard() {
       // Pending tab shows: awaiting_review and pending (needs votes)
       filtered = filtered.filter(app => app.status === 'awaiting_review' || app.status === 'pending');
     } else if (activeTab === "approved") {
-      filtered = filtered.filter(app => app.status === 'approved');
+      filtered = filtered.filter(app => ['approved', 'in_game_approved', 'discord_approved'].includes(app.status));
     } else if (activeTab === "rejected") {
       filtered = filtered.filter(app => app.status === 'rejected');
     } else if (activeTab === "waiting") {
@@ -109,6 +109,17 @@ export default function ModeratorDashboard() {
     filtered.sort((a, b) => {
       const dateA = new Date(a.submitted_at);
       const dateB = new Date(b.submitted_at);
+      const votesA = getVoteCounts(a.votes || []);
+      const votesB = getVoteCounts(b.votes || []);
+
+      if (sortOrder === "most_positive_votes") {
+        return votesB.approve - votesA.approve;
+      }
+
+      if (sortOrder === "most_negative_votes") {
+        return votesB.reject - votesA.reject;
+      }
+
       return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
     });
     
@@ -310,6 +321,11 @@ export default function ModeratorDashboard() {
     };
   };
 
+  const canApplyIntermediateStatus = currentUser.role === 'admin' || currentUser.role === 'mmod' || currentUser.role === 'in_game_leader' || currentUser.role === 'discord_leader' || currentUser.is_training_manager;
+
+  const canApplyFinalApproval = canApplyIntermediateStatus && (selectedApp?.status === 'in_game_approved' || selectedApp?.status === 'discord_approved');
+
+
   // Check if current user has viewed the application
   const hasUserViewed = (viewedBy) => {
     if (!viewedBy || viewedBy.length === 0) return false;
@@ -363,6 +379,10 @@ export default function ModeratorDashboard() {
         return <Badge data-testid={`badge-pending`} className="uppercase bg-blue-500/20 text-blue-400 border-blue-500/50 font-semibold">Pending</Badge>;
       case "approved":
         return <Badge data-testid={`badge-approved`} className="uppercase bg-emerald-500/20 text-emerald-400 border-emerald-500/50 font-semibold">Approved</Badge>;
+      case "in_game_approved":
+        return <Badge data-testid={`badge-in-game-approved`} className="uppercase bg-cyan-500/20 text-cyan-400 border-cyan-500/50 font-semibold">In-Game Approved</Badge>;
+      case "discord_approved":
+        return <Badge data-testid={`badge-discord-approved`} className="uppercase bg-indigo-500/20 text-indigo-400 border-indigo-500/50 font-semibold">Discord Approved</Badge>;
       case "rejected":
         return <Badge data-testid={`badge-rejected`} className="uppercase bg-red-500/20 text-red-400 border-red-500/50 font-semibold">Rejected</Badge>;
       case "waiting":
@@ -545,6 +565,8 @@ export default function ModeratorDashboard() {
               <SelectContent className="bg-slate-900 border-slate-700">
                 <SelectItem value="newest" className="text-slate-200">Newest First</SelectItem>
                 <SelectItem value="oldest" className="text-slate-200">Oldest First</SelectItem>
+                <SelectItem value="most_positive_votes" className="text-emerald-400">Most Positive Votes</SelectItem>
+                <SelectItem value="most_negative_votes" className="text-red-400">Most Negative Votes</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -558,7 +580,7 @@ export default function ModeratorDashboard() {
           </div>
           <div className="glass-card p-3 sm:p-4 rounded-lg">
             <p className="text-slate-400 text-xs uppercase tracking-wide" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Approved</p>
-            <p className="text-xl sm:text-3xl font-bold text-emerald-500 mt-1" style={{ fontFamily: 'Rajdhani, sans-serif' }}>{applications.filter(a => a.status === 'approved').length}</p>
+            <p className="text-xl sm:text-3xl font-bold text-emerald-500 mt-1" style={{ fontFamily: 'Rajdhani, sans-serif' }}>{applications.filter(a => ['approved', 'in_game_approved', 'discord_approved'].includes(a.status)).length}</p>
           </div>
           <div className="glass-card p-3 sm:p-4 rounded-lg">
             <p className="text-slate-400 text-xs uppercase tracking-wide" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Waiting</p>
@@ -591,7 +613,7 @@ export default function ModeratorDashboard() {
               <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
               <span className="hidden sm:inline">Approved</span>
               <span className="sm:hidden">OK</span>
-              <Badge className="ml-1 sm:ml-2 bg-emerald-500/20 text-emerald-400 text-xs h-5 px-1.5">{applications.filter(a => a.status === 'approved').length}</Badge>
+              <Badge className="ml-1 sm:ml-2 bg-emerald-500/20 text-emerald-400 text-xs h-5 px-1.5">{applications.filter(a => ['approved', 'in_game_approved', 'discord_approved'].includes(a.status)).length}</Badge>
             </TabsTrigger>
             <TabsTrigger 
               value="waiting" 
@@ -875,6 +897,11 @@ export default function ModeratorDashboard() {
                         value: selectedApp.heroes_mutated 
                       },
                       { 
+                        shortLabel: "Highest Character Level", 
+                        fullLabel: "What is your highest character level",
+                        value: selectedApp.highest_character_level 
+                      },
+                      { 
                         shortLabel: "Discord Tools Comfort Level (1-5)", 
                         fullLabel: "What is your comfort level with using discord moderation tools & bots? (1 = Not comfortable, 5 = Very comfortable)",
                         value: selectedApp.discord_tools_comfort,
@@ -1081,27 +1108,23 @@ export default function ModeratorDashboard() {
                 </div>
 
                 {/* Final Decision - Admin/Senior Moderator/Training Manager */}
-                {selectedApp.status === 'pending' && (
-                  currentUser.role === 'admin' || 
-                  currentUser.role === 'senior_moderator' || 
-                  currentUser.is_training_manager
-                ) && (
+                {selectedApp.status === 'pending' && canApplyIntermediateStatus && (
                   <div className="border-t border-slate-700 pt-4">
                     <h3 className="text-lg font-semibold uppercase tracking-wide text-red-500 mb-4" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                      Final Decision (Admin/Senior Mod/Training Manager)
+                      Application Status (Leaders/Admin)
                     </h3>
                     <div className="flex flex-col sm:flex-row gap-3">
                       <Button
                         data-testid="approve-btn"
                         onClick={() => {
-                          setStatusChangeData({ status: "approved", comment: "" });
+                          setStatusChangeData({ status: selectedApp.position === "Discord" ? "discord_approved" : "in_game_approved", comment: "" });
                           setShowStatusChangeDialog(true);
                         }}
                         disabled={actionLoading}
                         className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold uppercase tracking-wide py-3 rounded-sm"
                       >
                         <CheckCircle className="mr-2 h-4 w-4" />
-                        Approve Application
+                        Mark as Team Approved
                       </Button>
                       <Button
                         data-testid="waiting-btn"
@@ -1132,17 +1155,13 @@ export default function ModeratorDashboard() {
                 )}
 
                 {/* Convert Waiting to Approved - For waitlisted applications */}
-                {selectedApp.status === 'waiting' && (
-                  currentUser.role === 'admin' || 
-                  currentUser.role === 'senior_moderator' || 
-                  currentUser.is_training_manager
-                ) && (
+                {canApplyFinalApproval && (
                   <div className="border-t border-slate-700 pt-4">
                     <h3 className="text-lg font-semibold uppercase tracking-wide text-emerald-500 mb-4" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                      Convert Waiting Application
+                      Approve Application
                     </h3>
                     <p className="text-sm text-slate-400 mb-4">
-                      A vacancy has opened! Convert this waiting application to fully approved.
+                      This application has team approval. Finalize it as fully approved or reject it.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3">
                       <Button
@@ -1155,7 +1174,7 @@ export default function ModeratorDashboard() {
                         className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold uppercase tracking-wide py-3 rounded-sm"
                       >
                         <UserCheck className="mr-2 h-4 w-4" />
-                        Approve - Position Available
+                        Approve Application
                       </Button>
                       <Button
                         data-testid="reject-waiting-btn"
@@ -1264,6 +1283,8 @@ export default function ModeratorDashboard() {
                     <SelectItem value="awaiting_review" className="text-slate-400">Awaiting Review</SelectItem>
                     <SelectItem value="pending" className="text-blue-400">Pending</SelectItem>
                     <SelectItem value="approved" className="text-emerald-400">Approved</SelectItem>
+                    <SelectItem value="in_game_approved" className="text-cyan-400">In-Game Approved</SelectItem>
+                    <SelectItem value="discord_approved" className="text-indigo-400">Discord Approved</SelectItem>
                     <SelectItem value="waiting" className="text-amber-400">Waiting (No Vacancy)</SelectItem>
                     <SelectItem value="rejected" className="text-red-400">Rejected</SelectItem>
                   </SelectContent>

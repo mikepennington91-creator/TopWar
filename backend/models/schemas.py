@@ -2,7 +2,7 @@
 import uuid
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Dict
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, conint
 
 
 # ============= Application Models =============
@@ -39,6 +39,7 @@ class Application(BaseModel):
     favourite_event: str
     free_gems: str
     heroes_mutated: str
+    highest_character_level: Optional[conint(ge=1, le=9999)] = None
     discord_tools_comfort: str
     guidelines_rating: str
     complex_mechanic: str
@@ -81,6 +82,7 @@ class ApplicationCreate(BaseModel):
     favourite_event: str
     free_gems: str
     heroes_mutated: str
+    highest_character_level: conint(ge=1, le=9999)
     discord_tools_comfort: str
     guidelines_rating: str
     complex_mechanic: str

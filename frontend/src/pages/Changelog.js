@@ -7,6 +7,19 @@ import { ArrowLeft, FileText, Sparkles, Bug, Wrench, Plus, PartyPopper, Globe } 
 // Changelog data - newest first
 const CHANGELOG_DATA = [
   {
+    version: "3.6.0",
+    date: "14 February 2026",
+    title: "Application Approval Workflow & Leader Roles",
+    changes: [
+      { type: "feature", text: "Added new intermediate application statuses: In-Game Approved and Discord Approved" },
+      { type: "feature", text: "Added two new moderator roles: In-Game Leader and Discord Leader" },
+      { type: "feature", text: "In-Game Leader and Discord Leader can now apply In-Game/Discord Approved and Rejected application statuses" },
+      { type: "improvement", text: "Approve Application action now appears only when an application is In-Game Approved or Discord Approved" },
+      { type: "feature", text: "Added new form question: 'What is your highest character level' (numeric, max 4 digits)" },
+      { type: "improvement", text: "Application list sorting now supports vote-based sorts: Most Positive Votes and Most Negative Votes" },
+    ]
+  },
+  {
     version: "3.5.1",
     date: "17 January 2026",
     title: "Moderator Email Confirmation",

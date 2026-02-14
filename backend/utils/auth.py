@@ -24,11 +24,13 @@ security = HTTPBearer()
 # Role hierarchy - higher number = higher rank
 ROLE_HIERARCHY = {
     'moderator': 0,
-    'lmod': 1,
-    'smod': 2,
-    'mmod': 3,
-    'developer': 4,
-    'admin': 5
+    'in_game_leader': 1,
+    'discord_leader': 1,
+    'lmod': 2,
+    'smod': 3,
+    'mmod': 4,
+    'developer': 5,
+    'admin': 6
 }
 
 
@@ -95,7 +97,7 @@ def can_modify_role(current_role: str, target_role: str, is_self: bool = False) 
 def get_assignable_roles(current_role: str) -> list:
     """Get roles that current user can assign."""
     if current_role == 'admin':
-        return ['admin', 'developer', 'mmod', 'smod', 'lmod', 'moderator']
+        return ['admin', 'developer', 'mmod', 'smod', 'lmod', 'in_game_leader', 'discord_leader', 'moderator']
     current_rank = get_role_rank(current_role)
     return [role for role, rank in ROLE_HIERARCHY.items() if rank < current_rank and role != 'admin']
 
