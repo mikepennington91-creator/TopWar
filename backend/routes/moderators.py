@@ -104,8 +104,8 @@ async def delete_moderator(username: str, current_user: dict = Depends(require_a
 @router.patch("/{username}/role")
 async def update_moderator_role(username: str, role_update: ModeratorRoleUpdate, current_user: dict = Depends(get_current_moderator)):
     """Update moderator role."""
-    if role_update.role not in ["admin", "mmod", "moderator", "lmod", "smod", "developer"]:
-        raise HTTPException(status_code=400, detail="Role must be 'admin', 'mmod', 'moderator', 'lmod', 'smod', or 'developer'")
+    if role_update.role not in ["admin", "mmod", "moderator", "lmod", "smod", "developer", "in_game_leader", "discord_leader"]:
+        raise HTTPException(status_code=400, detail="Role must be 'admin', 'mmod', 'moderator', 'lmod', 'smod', 'developer', 'in_game_leader', or 'discord_leader'")
     
     moderator = await db.moderators.find_one({"username": username}, {"_id": 0})
     if not moderator:

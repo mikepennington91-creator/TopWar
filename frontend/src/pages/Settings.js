@@ -18,11 +18,13 @@ const API = `${BACKEND_URL}/api`;
 // Role hierarchy - higher index = higher rank
 const ROLE_HIERARCHY = {
   'moderator': 0,
-  'lmod': 1,
-  'smod': 2,
-  'mmod': 3,
-  'developer': 4,
-  'admin': 5  // Admin has highest privileges
+  'in_game_leader': 1,
+  'discord_leader': 1,
+  'lmod': 2,
+  'smod': 3,
+  'mmod': 4,
+  'developer': 5,
+  'admin': 6  // Admin has highest privileges
 };
 
 // Get roles that a user can assign based on their role
@@ -32,7 +34,7 @@ const getAssignableRoles = (currentUserRole, targetUserRole, hasAdminAccess = fa
   
   // Admin or users with admin access can assign any role
   if (currentUserRole === 'admin' || hasAdminAccess) {
-    return ['admin', 'developer', 'mmod', 'smod', 'lmod', 'moderator'];
+    return ['admin', 'developer', 'mmod', 'smod', 'lmod', 'in_game_leader', 'discord_leader', 'moderator'];
   }
   
   // Can only change roles of users with lower rank
@@ -584,6 +586,8 @@ export default function Settings() {
       moderator: { color: "text-blue-400", label: "MODERATOR" },
       lmod: { color: "text-purple-400", label: "LMOD" },
       smod: { color: "text-pink-400", label: "SMOD" },
+      in_game_leader: { color: "text-cyan-400", label: "IN-GAME LEADER" },
+      discord_leader: { color: "text-indigo-400", label: "DISCORD LEADER" },
       developer: { color: "text-yellow-400", label: "DEVELOPER" }
     };
     const roleConfig = config[role] || { color: "text-slate-400", label: role };
@@ -1113,6 +1117,8 @@ export default function Settings() {
                         <SelectItem value="mmod" className="text-red-500">MMOD</SelectItem>
                         <SelectItem value="moderator" className="text-blue-400">Moderator</SelectItem>
                         <SelectItem value="lmod" className="text-purple-400">LMOD</SelectItem>
+                        <SelectItem value="in_game_leader" className="text-cyan-400">In-Game Leader</SelectItem>
+                        <SelectItem value="discord_leader" className="text-indigo-400">Discord Leader</SelectItem>
                         <SelectItem value="smod" className="text-pink-400">SMOD</SelectItem>
                         <SelectItem value="developer" className="text-yellow-400">Developer</SelectItem>
                       </SelectContent>
@@ -1244,6 +1250,12 @@ export default function Settings() {
                                     )}
                                     {assignableRoles.includes('lmod') && (
                                       <SelectItem value="lmod" className="text-purple-400">LMOD</SelectItem>
+                                    )}
+                                    {assignableRoles.includes('in_game_leader') && (
+                                      <SelectItem value="in_game_leader" className="text-cyan-400">In-Game Leader</SelectItem>
+                                    )}
+                                    {assignableRoles.includes('discord_leader') && (
+                                      <SelectItem value="discord_leader" className="text-indigo-400">Discord Leader</SelectItem>
                                     )}
                                     {assignableRoles.includes('moderator') && (
                                       <SelectItem value="moderator" className="text-blue-400">Moderator</SelectItem>
