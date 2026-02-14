@@ -17,7 +17,6 @@ const CHANGELOG_DATA = [
       { type: "improvement", text: "Approve Application action now appears only when an application is In-Game Approved or Discord Approved" },
       { type: "feature", text: "Added new form question: 'What is your highest character level' (numeric, max 4 digits)" },
       { type: "improvement", text: "Application list sorting now supports vote-based sorts: Most Positive Votes and Most Negative Votes" },
-      { type: "feature", text: "Moderators can now be assigned multiple roles at once from Settings" },
     ]
   },
   {

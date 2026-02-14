@@ -1263,33 +1263,42 @@ export default function Settings() {
                             {/* Role Selection */}
                             {showRoleDropdown && (
                               <div className="space-y-2">
-                                <Label className="text-slate-400 text-xs uppercase">Roles</Label>
-                                <div className="space-y-2 rounded-sm border border-slate-700 bg-slate-900/40 p-3">
-                                  {assignableRoles.map((roleOption) => {
-                                    const checked = (roleEdits[mod.username] || []).includes(roleOption);
-                                    return (
-                                      <label key={`${mod.username}-${roleOption}`} className="flex items-center gap-2 text-sm text-slate-300">
-                                        <input
-                                          type="checkbox"
-                                          checked={checked}
-                                          onChange={(e) => toggleRoleSelection(mod.username, roleOption, e.target.checked)}
-                                          disabled={loading}
-                                          className="h-4 w-4 rounded border-slate-600 bg-slate-800"
-                                        />
-                                        <span>{roleOption.replaceAll('_', ' ')}</span>
-                                      </label>
-                                    );
-                                  })}
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    onClick={() => handleSaveRoles(mod.username)}
-                                    disabled={loading}
-                                    className="mt-2 bg-amber-500 hover:bg-amber-600 text-white rounded-sm"
-                                  >
-                                    Save Roles
-                                  </Button>
-                                </div>
+                                <Label className="text-slate-400 text-xs uppercase">Role</Label>
+                                <Select
+                                  value={mod.role}
+                                  onValueChange={(value) => handleChangeRole(mod.username, value)}
+                                  disabled={loading}
+                                >
+                                  <SelectTrigger className="bg-slate-900/50 border-slate-700 text-slate-200 rounded-sm">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-slate-900 border-slate-700">
+                                    {assignableRoles.includes('admin') && (
+                                      <SelectItem value="admin" className="text-red-400">Admin</SelectItem>
+                                    )}
+                                    {assignableRoles.includes('developer') && (
+                                      <SelectItem value="developer" className="text-yellow-400">Developer</SelectItem>
+                                    )}
+                                    {assignableRoles.includes('mmod') && (
+                                      <SelectItem value="mmod" className="text-red-500">MMOD</SelectItem>
+                                    )}
+                                    {assignableRoles.includes('smod') && (
+                                      <SelectItem value="smod" className="text-pink-400">SMOD</SelectItem>
+                                    )}
+                                    {assignableRoles.includes('lmod') && (
+                                      <SelectItem value="lmod" className="text-purple-400">LMOD</SelectItem>
+                                    )}
+                                    {assignableRoles.includes('in_game_leader') && (
+                                      <SelectItem value="in_game_leader" className="text-cyan-400">In-Game Leader</SelectItem>
+                                    )}
+                                    {assignableRoles.includes('discord_leader') && (
+                                      <SelectItem value="discord_leader" className="text-indigo-400">Discord Leader</SelectItem>
+                                    )}
+                                    {assignableRoles.includes('moderator') && (
+                                      <SelectItem value="moderator" className="text-blue-400">Moderator</SelectItem>
+                                    )}
+                                  </SelectContent>
+                                </Select>
                               </div>
                             )}
 
