@@ -1282,74 +1282,43 @@ export default function Settings() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Role Selection */}
                             {showRoleDropdown && (
-                              <div className="space-y-2 md:col-span-2">
-                                <Label className="text-slate-400 text-xs uppercase">Role Settings</Label>
-                                <div className="rounded-sm border border-slate-700 bg-slate-900/40 p-3">
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div className="space-y-2">
-                                      <Label className="text-[11px] text-slate-400 uppercase">Primary Role</Label>
-                                      <Select
-                                        value={(roleEdits[mod.username]?.role || mod.role || 'moderator')}
-                                        onValueChange={(value) => updateRoleEdit(mod.username, { role: value })}
-                                        disabled={loading}
-                                      >
-                                        <SelectTrigger className="bg-slate-900/50 border-slate-700 text-slate-200 rounded-sm">
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-slate-900 border-slate-700">
-                                          {getAssignablePrimaryRoles(assignableRoles).map((roleOption) => (
-                                            <SelectItem key={`${mod.username}-role-${roleOption}`} value={roleOption} className="text-slate-200">
-                                              {roleOption.replaceAll('_', ' ').toUpperCase()}
-                                            </SelectItem>
-                                          ))}
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                      <Label className="text-[11px] text-slate-400 uppercase">Leader Access</Label>
-                                      <div className="space-y-2 rounded-sm border border-slate-800 bg-slate-950/40 p-3">
-                                        {canAssignLeaderRole(assignableRoles, 'in_game_leader') && (
-                                          <label className="flex items-center gap-2 text-sm text-slate-300">
-                                            <input
-                                              type="checkbox"
-                                              checked={Boolean(roleEdits[mod.username]?.in_game_leader)}
-                                              onChange={(e) => updateRoleEdit(mod.username, { in_game_leader: e.target.checked })}
-                                              disabled={loading}
-                                              className="h-4 w-4 rounded border-slate-600 bg-slate-800"
-                                            />
-                                            <span>In-Game Leader</span>
-                                          </label>
-                                        )}
-                                        {canAssignLeaderRole(assignableRoles, 'discord_leader') && (
-                                          <label className="flex items-center gap-2 text-sm text-slate-300">
-                                            <input
-                                              type="checkbox"
-                                              checked={Boolean(roleEdits[mod.username]?.discord_leader)}
-                                              onChange={(e) => updateRoleEdit(mod.username, { discord_leader: e.target.checked })}
-                                              disabled={loading}
-                                              className="h-4 w-4 rounded border-slate-600 bg-slate-800"
-                                            />
-                                            <span>Discord Leader</span>
-                                          </label>
-                                        )}
-                                        {!canAssignLeaderRole(assignableRoles, 'in_game_leader') && !canAssignLeaderRole(assignableRoles, 'discord_leader') && (
-                                          <p className="text-xs text-slate-500 italic">No leader role access can be assigned by your account level.</p>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    onClick={() => handleSaveRoles(mod.username)}
-                                    disabled={loading}
-                                    className="mt-3 bg-amber-500 hover:bg-amber-600 text-white rounded-sm"
-                                  >
-                                    Save Role Settings
-                                  </Button>
-                                </div>
+                              <div className="space-y-2">
+                                <Label className="text-slate-400 text-xs uppercase">Role</Label>
+                                <Select
+                                  value={mod.role}
+                                  onValueChange={(value) => handleChangeRole(mod.username, value)}
+                                  disabled={loading}
+                                >
+                                  <SelectTrigger className="bg-slate-900/50 border-slate-700 text-slate-200 rounded-sm">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-slate-900 border-slate-700">
+                                    {assignableRoles.includes('admin') && (
+                                      <SelectItem value="admin" className="text-red-400">Admin</SelectItem>
+                                    )}
+                                    {assignableRoles.includes('developer') && (
+                                      <SelectItem value="developer" className="text-yellow-400">Developer</SelectItem>
+                                    )}
+                                    {assignableRoles.includes('mmod') && (
+                                      <SelectItem value="mmod" className="text-red-500">MMOD</SelectItem>
+                                    )}
+                                    {assignableRoles.includes('smod') && (
+                                      <SelectItem value="smod" className="text-pink-400">SMOD</SelectItem>
+                                    )}
+                                    {assignableRoles.includes('lmod') && (
+                                      <SelectItem value="lmod" className="text-purple-400">LMOD</SelectItem>
+                                    )}
+                                    {assignableRoles.includes('in_game_leader') && (
+                                      <SelectItem value="in_game_leader" className="text-cyan-400">In-Game Leader</SelectItem>
+                                    )}
+                                    {assignableRoles.includes('discord_leader') && (
+                                      <SelectItem value="discord_leader" className="text-indigo-400">Discord Leader</SelectItem>
+                                    )}
+                                    {assignableRoles.includes('moderator') && (
+                                      <SelectItem value="moderator" className="text-blue-400">Moderator</SelectItem>
+                                    )}
+                                  </SelectContent>
+                                </Select>
                               </div>
                             )}
 
