@@ -22,7 +22,7 @@ router = APIRouter(prefix="/applications", tags=["Applications"])
 async def require_application_status_manager(current_user: dict = Depends(get_current_moderator)):
     """Allow elevated moderators and leader roles to change application statuses."""
     allowed_roles = {"admin", "mmod", "in_game_leader", "discord_leader"}
-    if not has_any_role(current_user, allowed_roles) and not current_user.get("is_admin"):
+    if current_user.get("role") not in allowed_roles and not current_user.get("is_admin"):
         raise HTTPException(status_code=403, detail="Not authorized to change application statuses")
     return current_user
 

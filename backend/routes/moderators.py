@@ -106,21 +106,10 @@ async def delete_moderator(username: str, current_user: dict = Depends(require_a
 
 @router.patch("/{username}/role")
 async def update_moderator_role(username: str, role_update: ModeratorRoleUpdate, current_user: dict = Depends(get_current_moderator)):
-    """Update moderator roles."""
-    valid_roles = ["admin", "mmod", "moderator", "lmod", "smod", "developer", "in_game_leader", "discord_leader"]
-
-    incoming_roles = role_update.roles if role_update.roles is not None else ([role_update.role] if role_update.role else None)
-    if not incoming_roles:
-        raise HTTPException(status_code=400, detail="At least one role is required")
-
-    for incoming_role in incoming_roles:
-        if incoming_role not in valid_roles:
-            raise HTTPException(status_code=400, detail="Role must be 'admin', 'mmod', 'moderator', 'lmod', 'smod', 'developer', 'in_game_leader', or 'discord_leader'")
-
-    primary_roles = [role for role in incoming_roles if role not in ["in_game_leader", "discord_leader"]]
-    if len(primary_roles) > 1:
-        raise HTTPException(status_code=400, detail="Only one primary role can be assigned at a time")
-
+    """Update moderator role."""
+    if role_update.role not in ["admin", "mmod", "moderator", "lmod", "smod", "developer", "in_game_leader", "discord_leader"]:
+        raise HTTPException(status_code=400, detail="Role must be 'admin', 'mmod', 'moderator', 'lmod', 'smod', 'developer', 'in_game_leader', or 'discord_leader'")
+    
     moderator = await db.moderators.find_one({"username": username}, {"_id": 0})
     if not moderator:
         raise HTTPException(status_code=404, detail="Moderator not found")

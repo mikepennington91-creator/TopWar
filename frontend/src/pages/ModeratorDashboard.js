@@ -330,7 +330,7 @@ export default function ModeratorDashboard() {
     };
   };
 
-  const canApplyIntermediateStatus = currentUserHasAnyRole(['admin', 'mmod', 'in_game_leader', 'discord_leader']) || currentUser.is_training_manager;
+  const canApplyIntermediateStatus = currentUser.role === 'admin' || currentUser.role === 'mmod' || currentUser.role === 'in_game_leader' || currentUser.role === 'discord_leader' || currentUser.is_training_manager;
 
   const canApplyFinalApproval = canApplyIntermediateStatus && (selectedApp?.status === 'in_game_approved' || selectedApp?.status === 'discord_approved');
 
