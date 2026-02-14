@@ -18,11 +18,13 @@ const API = `${BACKEND_URL}/api`;
 // Role hierarchy - higher index = higher rank
 const ROLE_HIERARCHY = {
   'moderator': 0,
-  'lmod': 1,
-  'smod': 2,
-  'mmod': 3,
-  'developer': 4,
-  'admin': 5  // Admin has highest privileges
+  'in_game_leader': 1,
+  'discord_leader': 1,
+  'lmod': 2,
+  'smod': 3,
+  'mmod': 4,
+  'developer': 5,
+  'admin': 6  // Admin has highest privileges
 };
 
 // Get roles that a user can assign based on their role
@@ -32,7 +34,7 @@ const getAssignableRoles = (currentUserRole, targetUserRole, hasAdminAccess = fa
   
   // Admin or users with admin access can assign any role
   if (currentUserRole === 'admin' || hasAdminAccess) {
-    return ['admin', 'developer', 'mmod', 'smod', 'lmod', 'moderator'];
+    return ['admin', 'developer', 'mmod', 'smod', 'lmod', 'in_game_leader', 'discord_leader', 'moderator'];
   }
   
   // Can only change roles of users with lower rank
@@ -45,6 +47,12 @@ const getAssignableRoles = (currentUserRole, targetUserRole, hasAdminAccess = fa
     .filter(([role, rank]) => rank < currentRank && role !== 'admin')
     .map(([role]) => role);
 };
+
+const LEADER_ROLES = ['in_game_leader', 'discord_leader'];
+
+const getAssignablePrimaryRoles = (assignableRoles = []) => assignableRoles.filter((role) => !LEADER_ROLES.includes(role));
+
+const canAssignLeaderRole = (assignableRoles = [], leaderRole) => assignableRoles.includes(leaderRole);
 
 // Check if current user can modify target user's role
 const canModifyRole = (currentUserRole, targetUserRole, isSelf, hasAdminAccess = false) => {
@@ -98,6 +106,7 @@ export default function Settings() {
   const [currentUser, setCurrentUser] = useState(null);
   const [moderators, setModerators] = useState([]);
   const [emailEdits, setEmailEdits] = useState({});
+  const [roleEdits, setRoleEdits] = useState({});
   const [passwordForm, setPasswordForm] = useState({
     old_password: "",
     new_password: "",
@@ -226,10 +235,33 @@ export default function Settings() {
       const response = await axios.get(`${API}/moderators`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setModerators(response.data);
+      const normalizedModerators = response.data.map((mod) => {
+        const roles = Array.isArray(mod.roles) && mod.roles.length > 0 ? mod.roles : [mod.role || "moderator"];
+        const primaryRole = mod.role && !LEADER_ROLES.includes(mod.role)
+          ? mod.role
+          : (roles.find((r) => !LEADER_ROLES.includes(r)) || "moderator");
+
+        return {
+          ...mod,
+          role: primaryRole,
+          roles
+        };
+      });
+      setModerators(normalizedModerators);
+      setRoleEdits(() => {
+        const next = {};
+        normalizedModerators.forEach((mod) => {
+          next[mod.username] = {
+            role: mod.role || "moderator",
+            in_game_leader: mod.roles.includes('in_game_leader'),
+            discord_leader: mod.roles.includes('discord_leader')
+          };
+        });
+        return next;
+      });
       setEmailEdits(() => {
         const next = {};
-        response.data.forEach((mod) => {
+        normalizedModerators.forEach((mod) => {
           // Only pre-populate email for Admins who can view emails
           // MMODs cannot view emails so start with empty field
           next[mod.username] = hasAdminAccess ? (mod.email || "") : "";
@@ -420,24 +452,46 @@ export default function Settings() {
     }
   };
 
-  const handleChangeRole = async (username, newRole) => {
-    if (!window.confirm(`Change ${username}'s role to ${newRole.replace('_', ' ')}?`)) {
+  const updateRoleEdit = (username, updates) => {
+    setRoleEdits(prev => ({
+      ...prev,
+      [username]: {
+        role: "moderator",
+        in_game_leader: false,
+        discord_leader: false,
+        ...(prev[username] || {}),
+        ...updates
+      }
+    }));
+  };
+
+  const handleSaveRoles = async (username) => {
+    const editState = roleEdits[username] || { role: 'moderator', in_game_leader: false, discord_leader: false };
+    const selectedRoles = [
+      editState.role || 'moderator',
+      ...(editState.in_game_leader ? ['in_game_leader'] : []),
+      ...(editState.discord_leader ? ['discord_leader'] : [])
+    ];
+
+    const prettyRoles = selectedRoles.map((r) => r.replaceAll('_', ' ')).join(', ');
+
+    if (!window.confirm(`Update ${username}'s role settings to: ${prettyRoles}?`)) {
       return;
     }
-    
+
     setLoading(true);
     try {
       const token = localStorage.getItem('moderator_token');
       await axios.patch(
         `${API}/moderators/${username}/role`,
-        { role: newRole },
+        { roles: selectedRoles },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success(`Role updated to ${newRole.replace('_', ' ')}!`);
+      toast.success('Role settings updated successfully!');
       fetchModerators();
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.detail || "Failed to update role");
+      toast.error(error.response?.data?.detail || "Failed to update role settings");
     } finally {
       setLoading(false);
     }
@@ -584,6 +638,8 @@ export default function Settings() {
       moderator: { color: "text-blue-400", label: "MODERATOR" },
       lmod: { color: "text-purple-400", label: "LMOD" },
       smod: { color: "text-pink-400", label: "SMOD" },
+      in_game_leader: { color: "text-cyan-400", label: "IN-GAME LEADER" },
+      discord_leader: { color: "text-indigo-400", label: "DISCORD LEADER" },
       developer: { color: "text-yellow-400", label: "DEVELOPER" }
     };
     const roleConfig = config[role] || { color: "text-slate-400", label: role };
@@ -1113,6 +1169,8 @@ export default function Settings() {
                         <SelectItem value="mmod" className="text-red-500">MMOD</SelectItem>
                         <SelectItem value="moderator" className="text-blue-400">Moderator</SelectItem>
                         <SelectItem value="lmod" className="text-purple-400">LMOD</SelectItem>
+                        <SelectItem value="in_game_leader" className="text-cyan-400">In-Game Leader</SelectItem>
+                        <SelectItem value="discord_leader" className="text-indigo-400">Discord Leader</SelectItem>
                         <SelectItem value="smod" className="text-pink-400">SMOD</SelectItem>
                         <SelectItem value="developer" className="text-yellow-400">Developer</SelectItem>
                       </SelectContent>
@@ -1178,7 +1236,12 @@ export default function Settings() {
                               Last login: <span className={mod.last_login ? 'text-slate-400' : 'text-slate-600 italic'}>{formatLastLogin(mod.last_login)}</span>
                             </span>
                           </div>
-                          <p className="text-sm mt-1">{getRoleBadge(mod.role)}</p>
+                          <div className="text-sm mt-1">{getRoleBadge(mod.role)}</div>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {(mod.roles || [mod.role]).map((r) => (
+                              <Badge key={`${mod.username}-${r}`} variant="outline" className="text-[10px] border-slate-600 text-slate-300">{r.replaceAll("_", " ").toUpperCase()}</Badge>
+                            ))}
+                          </div>
                           {currentUser?.hasAdminAccess && (
                             <p className="text-xs text-slate-400 mt-1">
                               Email: <span className={mod.email ? "text-slate-300" : "text-slate-600 italic"}>{mod.email || "No email on file"}</span>
@@ -1219,37 +1282,74 @@ export default function Settings() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Role Selection */}
                             {showRoleDropdown && (
-                              <div className="space-y-2">
-                                <Label className="text-slate-400 text-xs uppercase">Role</Label>
-                                <Select
-                                  value={mod.role}
-                                  onValueChange={(value) => handleChangeRole(mod.username, value)}
-                                  disabled={loading}
-                                >
-                                  <SelectTrigger className="bg-slate-900/50 border-slate-700 text-slate-200 rounded-sm">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-slate-900 border-slate-700">
-                                    {assignableRoles.includes('admin') && (
-                                      <SelectItem value="admin" className="text-red-400">Admin</SelectItem>
-                                    )}
-                                    {assignableRoles.includes('developer') && (
-                                      <SelectItem value="developer" className="text-yellow-400">Developer</SelectItem>
-                                    )}
-                                    {assignableRoles.includes('mmod') && (
-                                      <SelectItem value="mmod" className="text-red-500">MMOD</SelectItem>
-                                    )}
-                                    {assignableRoles.includes('smod') && (
-                                      <SelectItem value="smod" className="text-pink-400">SMOD</SelectItem>
-                                    )}
-                                    {assignableRoles.includes('lmod') && (
-                                      <SelectItem value="lmod" className="text-purple-400">LMOD</SelectItem>
-                                    )}
-                                    {assignableRoles.includes('moderator') && (
-                                      <SelectItem value="moderator" className="text-blue-400">Moderator</SelectItem>
-                                    )}
-                                  </SelectContent>
-                                </Select>
+                              <div className="space-y-2 md:col-span-2">
+                                <Label className="text-slate-400 text-xs uppercase">Role Settings</Label>
+                                <div className="rounded-sm border border-slate-700 bg-slate-900/40 p-3">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div className="space-y-2">
+                                      <Label className="text-[11px] text-slate-400 uppercase">Primary Role</Label>
+                                      <Select
+                                        value={(roleEdits[mod.username]?.role || mod.role || 'moderator')}
+                                        onValueChange={(value) => updateRoleEdit(mod.username, { role: value })}
+                                        disabled={loading}
+                                      >
+                                        <SelectTrigger className="bg-slate-900/50 border-slate-700 text-slate-200 rounded-sm">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-slate-900 border-slate-700">
+                                          {getAssignablePrimaryRoles(assignableRoles).map((roleOption) => (
+                                            <SelectItem key={`${mod.username}-role-${roleOption}`} value={roleOption} className="text-slate-200">
+                                              {roleOption.replaceAll('_', ' ').toUpperCase()}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                      <Label className="text-[11px] text-slate-400 uppercase">Leader Access</Label>
+                                      <div className="space-y-2 rounded-sm border border-slate-800 bg-slate-950/40 p-3">
+                                        {canAssignLeaderRole(assignableRoles, 'in_game_leader') && (
+                                          <label className="flex items-center gap-2 text-sm text-slate-300">
+                                            <input
+                                              type="checkbox"
+                                              checked={Boolean(roleEdits[mod.username]?.in_game_leader)}
+                                              onChange={(e) => updateRoleEdit(mod.username, { in_game_leader: e.target.checked })}
+                                              disabled={loading}
+                                              className="h-4 w-4 rounded border-slate-600 bg-slate-800"
+                                            />
+                                            <span>In-Game Leader</span>
+                                          </label>
+                                        )}
+                                        {canAssignLeaderRole(assignableRoles, 'discord_leader') && (
+                                          <label className="flex items-center gap-2 text-sm text-slate-300">
+                                            <input
+                                              type="checkbox"
+                                              checked={Boolean(roleEdits[mod.username]?.discord_leader)}
+                                              onChange={(e) => updateRoleEdit(mod.username, { discord_leader: e.target.checked })}
+                                              disabled={loading}
+                                              className="h-4 w-4 rounded border-slate-600 bg-slate-800"
+                                            />
+                                            <span>Discord Leader</span>
+                                          </label>
+                                        )}
+                                        {!canAssignLeaderRole(assignableRoles, 'in_game_leader') && !canAssignLeaderRole(assignableRoles, 'discord_leader') && (
+                                          <p className="text-xs text-slate-500 italic">No leader role access can be assigned by your account level.</p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    onClick={() => handleSaveRoles(mod.username)}
+                                    disabled={loading}
+                                    className="mt-3 bg-amber-500 hover:bg-amber-600 text-white rounded-sm"
+                                  >
+                                    Save Role Settings
+                                  </Button>
+                                </div>
                               </div>
                             )}
 

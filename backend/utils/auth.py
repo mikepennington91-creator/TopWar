@@ -1,7 +1,7 @@
 """Authentication utilities."""
 import os
 from datetime import datetime, timezone, timedelta
-from typing import List
+from typing import List, Iterable
 from passlib.context import CryptContext
 import jwt
 from fastapi import Depends, HTTPException
@@ -24,12 +24,44 @@ security = HTTPBearer()
 # Role hierarchy - higher number = higher rank
 ROLE_HIERARCHY = {
     'moderator': 0,
-    'lmod': 1,
-    'smod': 2,
-    'mmod': 3,
-    'developer': 4,
-    'admin': 5
+    'in_game_leader': 1,
+    'discord_leader': 1,
+    'lmod': 2,
+    'smod': 3,
+    'mmod': 4,
+    'developer': 5,
+    'admin': 6
 }
+
+
+def normalize_roles(role: str = "moderator", roles: list | None = None) -> list:
+    """Normalize and deduplicate roles while preserving a fallback role."""
+    merged = []
+    if role:
+        merged.append(role)
+    if roles:
+        merged.extend(roles)
+
+    normalized = []
+    for item in merged:
+        if item in ROLE_HIERARCHY and item not in normalized:
+            normalized.append(item)
+
+    return normalized or ["moderator"]
+
+
+def get_highest_role(roles: Iterable[str]) -> str:
+    """Get the highest-ranking role in the provided roles list."""
+    valid_roles = [item for item in roles if item in ROLE_HIERARCHY]
+    if not valid_roles:
+        return "moderator"
+    return max(valid_roles, key=get_role_rank)
+
+
+def has_any_role(user: dict, allowed_roles: Iterable[str]) -> bool:
+    """Check if a user has any role from allowed_roles."""
+    user_roles = set(normalize_roles(user.get("role", "moderator"), user.get("roles", [])))
+    return bool(user_roles.intersection(set(allowed_roles)))
 
 
 def create_access_token(data: dict):
@@ -48,10 +80,12 @@ async def get_current_moderator(credentials: HTTPAuthorizationCredentials = Depe
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         role: str = payload.get("role", "moderator")
+        roles: list = normalize_roles(role, payload.get("roles", []))
+        role = get_highest_role(roles)
         is_admin: bool = payload.get("is_admin", False)
         if username is None:
             raise HTTPException(status_code=401, detail="Invalid authentication credentials")
-        return {"username": username, "role": role, "is_admin": is_admin}
+        return {"username": username, "role": role, "roles": roles, "is_admin": is_admin}
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token has expired")
     except jwt.JWTError:
@@ -60,14 +94,14 @@ async def get_current_moderator(credentials: HTTPAuthorizationCredentials = Depe
 
 async def require_admin(current_user: dict = Depends(get_current_moderator)):
     """Require admin or MMOD role."""
-    if current_user["role"] not in ["admin", "mmod"] and not current_user.get("is_admin"):
+    if not has_any_role(current_user, ["admin", "mmod"]) and not current_user.get("is_admin"):
         raise HTTPException(status_code=403, detail="Admin or MMOD access required")
     return current_user
 
 
 async def require_admin_role(current_user: dict = Depends(get_current_moderator)):
     """Require admin role."""
-    if current_user["role"] != "admin":
+    if not has_any_role(current_user, ["admin"]):
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user
 
@@ -95,7 +129,7 @@ def can_modify_role(current_role: str, target_role: str, is_self: bool = False) 
 def get_assignable_roles(current_role: str) -> list:
     """Get roles that current user can assign."""
     if current_role == 'admin':
-        return ['admin', 'developer', 'mmod', 'smod', 'lmod', 'moderator']
+        return ['admin', 'developer', 'mmod', 'smod', 'lmod', 'in_game_leader', 'discord_leader', 'moderator']
     current_rank = get_role_rank(current_role)
     return [role for role, rank in ROLE_HIERARCHY.items() if rank < current_rank and role != 'admin']
 
