@@ -9,7 +9,7 @@ from models.schemas import (
     ModeratorInfo, ModeratorStatusUpdate, ModeratorRoleUpdate,
     ModeratorUsernameUpdate, ModeratorTrainingManagerUpdate,
     ModeratorAdminUpdate, ModeratorApplicationViewerUpdate,
-    ModeratorEmailUpdate
+    ModeratorEmailUpdate, ModeratorLeaderUpdate
 )
 from utils.auth import (
     get_current_moderator, require_admin, require_admin_role, get_role_rank,
@@ -40,6 +40,8 @@ async def get_moderators(current_user: dict = Depends(get_current_moderator)):
     for mod in moderators:
         mod["roles"] = normalize_roles(mod.get("role", "moderator"), mod.get("roles", []))
         mod["role"] = get_highest_role(mod["roles"])
+        mod["is_in_game_leader"] = mod.get("is_in_game_leader", "in_game_leader" in mod["roles"])
+        mod["is_discord_leader"] = mod.get("is_discord_leader", "discord_leader" in mod["roles"])
         if isinstance(mod.get('created_at'), str):
             mod['created_at'] = datetime.fromisoformat(mod['created_at'])
         if isinstance(mod.get('last_login'), str):
@@ -106,10 +108,17 @@ async def delete_moderator(username: str, current_user: dict = Depends(require_a
 
 @router.patch("/{username}/role")
 async def update_moderator_role(username: str, role_update: ModeratorRoleUpdate, current_user: dict = Depends(get_current_moderator)):
-    """Update moderator role."""
-    if role_update.role not in ["admin", "mmod", "moderator", "lmod", "smod", "developer", "in_game_leader", "discord_leader"]:
-        raise HTTPException(status_code=400, detail="Role must be 'admin', 'mmod', 'moderator', 'lmod', 'smod', 'developer', 'in_game_leader', or 'discord_leader'")
-    
+    """Update moderator primary hierarchy role."""
+    allowed_primary_roles = ["admin", "mmod", "moderator", "lmod", "smod", "developer"]
+
+    incoming_roles = role_update.roles or ([] if role_update.role is None else [role_update.role])
+    primary_roles = [role for role in incoming_roles if role in allowed_primary_roles]
+
+    chosen_primary_role = role_update.role if role_update.role in allowed_primary_roles else (primary_roles[0] if primary_roles else None)
+
+    if chosen_primary_role not in allowed_primary_roles:
+        raise HTTPException(status_code=400, detail="Role must be one of: 'admin', 'mmod', 'moderator', 'lmod', 'smod', 'developer'")
+
     moderator = await db.moderators.find_one({"username": username}, {"_id": 0})
     if not moderator:
         raise HTTPException(status_code=404, detail="Moderator not found")
@@ -122,20 +131,56 @@ async def update_moderator_role(username: str, role_update: ModeratorRoleUpdate,
         raise HTTPException(status_code=403, detail="You do not have permission to modify this user's role")
 
     assignable_roles = get_assignable_roles(current_user["role"])
-    for incoming_role in incoming_roles:
-        if incoming_role not in assignable_roles:
-            raise HTTPException(status_code=403, detail=f"You cannot assign the '{incoming_role}' role")
+    if chosen_primary_role not in assignable_roles:
+        raise HTTPException(status_code=403, detail=f"You cannot assign the '{chosen_primary_role}' role")
 
-    chosen_primary_role = primary_roles[0] if primary_roles else "moderator"
-    normalized_roles = normalize_roles(chosen_primary_role, incoming_roles)
-    primary_role = chosen_primary_role
+    existing_roles = normalize_roles(moderator.get("role", "moderator"), moderator.get("roles", []))
+    supplemental_roles = [r for r in existing_roles if r not in allowed_primary_roles]
+    normalized_roles = normalize_roles(chosen_primary_role, supplemental_roles)
 
     await db.moderators.update_one(
         {"username": username},
-        {"$set": {"role": primary_role, "roles": normalized_roles}}
+        {"$set": {"role": chosen_primary_role, "roles": normalized_roles}}
     )
 
-    return {"message": f"Moderator {username} roles updated", "role": primary_role, "roles": normalized_roles}
+    return {"message": f"Moderator {username} role updated", "role": chosen_primary_role, "roles": normalized_roles}
+
+
+@router.patch("/{username}/leader-roles")
+async def update_moderator_leader_roles(username: str, leader_update: ModeratorLeaderUpdate, current_user: dict = Depends(get_current_moderator)):
+    """Update moderator leader access flags."""
+    moderator = await db.moderators.find_one({"username": username}, {"_id": 0})
+    if not moderator:
+        raise HTTPException(status_code=404, detail="Moderator not found")
+
+    is_self = current_user["username"] == username
+    target_roles = normalize_roles(moderator.get("role", "moderator"), moderator.get("roles", []))
+    target_role = get_highest_role(target_roles)
+
+    if not can_modify_role(current_user["role"], target_role, is_self):
+        raise HTTPException(status_code=403, detail="You do not have permission to modify this user's leader roles")
+
+    existing_roles = normalize_roles(moderator.get("role", "moderator"), moderator.get("roles", []))
+    next_roles = [r for r in existing_roles if r not in ["in_game_leader", "discord_leader"]]
+    if leader_update.is_in_game_leader:
+        next_roles.append("in_game_leader")
+    if leader_update.is_discord_leader:
+        next_roles.append("discord_leader")
+
+    await db.moderators.update_one(
+        {"username": username},
+        {"$set": {
+            "is_in_game_leader": leader_update.is_in_game_leader,
+            "is_discord_leader": leader_update.is_discord_leader,
+            "roles": normalize_roles(moderator.get("role", "moderator"), next_roles)
+        }}
+    )
+
+    return {
+        "message": f"Moderator {username} leader roles updated",
+        "is_in_game_leader": leader_update.is_in_game_leader,
+        "is_discord_leader": leader_update.is_discord_leader
+    }
 
 
 @router.patch("/{username}/username")

@@ -18,8 +18,6 @@ const API = `${BACKEND_URL}/api`;
 // Role hierarchy - higher index = higher rank
 const ROLE_HIERARCHY = {
   'moderator': 0,
-  'in_game_leader': 1,
-  'discord_leader': 1,
   'lmod': 2,
   'smod': 3,
   'mmod': 4,
@@ -34,7 +32,7 @@ const getAssignableRoles = (currentUserRole, targetUserRole, hasAdminAccess = fa
   
   // Admin or users with admin access can assign any role
   if (currentUserRole === 'admin' || hasAdminAccess) {
-    return ['admin', 'developer', 'mmod', 'smod', 'lmod', 'in_game_leader', 'discord_leader', 'moderator'];
+    return ['admin', 'developer', 'mmod', 'smod', 'lmod', 'moderator'];
   }
   
   // Can only change roles of users with lower rank
@@ -54,10 +52,10 @@ const getAssignablePrimaryRoles = (assignableRoles = []) => assignableRoles.filt
 
 const canAssignLeaderRole = (assignableRoles = [], leaderRole) => assignableRoles.includes(leaderRole);
 
-const getDefaultRoleEditState = (role = 'moderator', roles = []) => ({
+const getDefaultRoleEditState = (role = 'moderator', roles = [], mod = null) => ({
   role: role || 'moderator',
-  in_game_leader: Array.isArray(roles) && roles.includes('in_game_leader'),
-  discord_leader: Array.isArray(roles) && roles.includes('discord_leader')
+  in_game_leader: Boolean(mod?.is_in_game_leader || (Array.isArray(roles) && roles.includes('in_game_leader'))),
+  discord_leader: Boolean(mod?.is_discord_leader || (Array.isArray(roles) && roles.includes('discord_leader')))
 });
 
 // Check if current user can modify target user's role
@@ -259,7 +257,7 @@ export default function Settings() {
       setRoleEdits(() => {
         const next = {};
         normalizedModerators.forEach((mod) => {
-          next[mod.username] = getDefaultRoleEditState(mod.role, mod.roles);
+          next[mod.username] = getDefaultRoleEditState(mod.role, mod.roles, mod);
         });
         return next;
       });
@@ -480,15 +478,8 @@ export default function Settings() {
 
   const handleSaveRoles = async (username) => {
     const editState = roleEdits[username] || getDefaultRoleEditState();
-    const selectedRoles = [
-      editState.role || 'moderator',
-      ...(editState.in_game_leader ? ['in_game_leader'] : []),
-      ...(editState.discord_leader ? ['discord_leader'] : [])
-    ];
 
-    const prettyRoles = selectedRoles.map((r) => r.replaceAll('_', ' ')).join(', ');
-
-    if (!window.confirm(`Update ${username}'s role settings to: ${prettyRoles}?`)) {
+    if (!window.confirm(`Update ${username}'s role settings?`)) {
       return;
     }
 
@@ -497,9 +488,19 @@ export default function Settings() {
       const token = localStorage.getItem('moderator_token');
       await axios.patch(
         `${API}/moderators/${username}/role`,
-        { roles: selectedRoles },
+        { role: editState.role || 'moderator' },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
+      await axios.patch(
+        `${API}/moderators/${username}/leader-roles`,
+        {
+          is_in_game_leader: Boolean(editState.in_game_leader),
+          is_discord_leader: Boolean(editState.discord_leader)
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
       toast.success('Role settings updated successfully!');
       fetchModerators();
     } catch (error) {

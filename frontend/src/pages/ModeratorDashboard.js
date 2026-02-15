@@ -29,7 +29,7 @@ export default function ModeratorDashboard() {
   const [selectedApp, setSelectedApp] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState({ username: "", role: "moderator", roles: ["moderator"], is_training_manager: false });
+  const [currentUser, setCurrentUser] = useState({ username: "", role: "moderator", roles: ["moderator"], is_training_manager: false, is_in_game_leader: false, is_discord_leader: false });
   const [newComment, setNewComment] = useState("");
   const [sortOrder, setSortOrder] = useState("newest"); // newest, oldest, most_positive_votes, most_negative_votes
   const [statusFilter, setStatusFilter] = useState(["all"]); // all, awaiting_review, pending, approved, rejected
@@ -69,12 +69,22 @@ export default function ModeratorDashboard() {
         role: currentMod?.role || role,
         roles,
         is_training_manager: currentMod?.is_training_manager || false,
+        is_in_game_leader: currentMod?.is_in_game_leader || false,
+        is_discord_leader: currentMod?.is_discord_leader || false,
         is_admin: currentMod?.is_admin || role === 'admin'
       });
     } catch (error) {
       // If can't fetch (non-admin), just set basic info
       const roles = storedRoles.length > 0 ? storedRoles : [role];
-      setCurrentUser({ username, role, roles, is_training_manager: false, is_admin: role === 'admin' });
+      setCurrentUser({
+        username,
+        role,
+        roles,
+        is_training_manager: localStorage.getItem('moderator_is_training_manager') === "true",
+        is_in_game_leader: localStorage.getItem('moderator_is_in_game_leader') === "true",
+        is_discord_leader: localStorage.getItem('moderator_is_discord_leader') === "true",
+        is_admin: role === 'admin'
+      });
     }
   };
 
@@ -330,7 +340,7 @@ export default function ModeratorDashboard() {
     };
   };
 
-  const canApplyIntermediateStatus = currentUser.role === 'admin' || currentUser.role === 'mmod' || currentUser.role === 'in_game_leader' || currentUser.role === 'discord_leader' || currentUser.is_training_manager;
+  const canApplyIntermediateStatus = currentUser.role === 'admin' || currentUser.role === 'mmod' || currentUser.is_training_manager || currentUser.is_in_game_leader || currentUser.is_discord_leader;
 
   const canApplyFinalApproval = canApplyIntermediateStatus && (selectedApp?.status === 'in_game_approved' || selectedApp?.status === 'discord_approved');
 
