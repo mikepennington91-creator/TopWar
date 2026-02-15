@@ -24,7 +24,6 @@ export default function ModeratorLogin() {
   const [needsEmailAfterPasswordChange, setNeedsEmailAfterPasswordChange] = useState(false);
   const [mustChangePassword, setMustChangePassword] = useState(false);
   const [showResetPasswordDialog, setShowResetPasswordDialog] = useState(false);
-  const [passwordResetUsername, setPasswordResetUsername] = useState("");
   const [passwordResetEmail, setPasswordResetEmail] = useState("");
   const [passwordResetLoading, setPasswordResetLoading] = useState(false);
   const [lastLoginError, setLastLoginError] = useState("");
@@ -198,18 +197,16 @@ export default function ModeratorLogin() {
 
     if (!passwordResetUsername.trim() || !passwordResetEmail.trim()) {
       toast.error("Please enter username and email");
+    if (!passwordResetEmail.trim()) {
+      toast.error("Please enter your email");
       return;
     }
 
     setPasswordResetLoading(true);
     try {
-      await axios.post(`${API}/auth/request-password-reset`, {
-        username: passwordResetUsername.trim(),
-        email: passwordResetEmail.trim()
-      });
-      toast.success("If that username/email pair exists, a reset link has been sent.");
+      await axios.post(`${API}/auth/request-password-reset`, { email: passwordResetEmail.trim() });
+      toast.success("If that email exists, a reset link has been sent.");
       setShowResetPasswordDialog(false);
-      setPasswordResetUsername("");
       setPasswordResetEmail("");
     } catch (error) {
       console.error(error);
@@ -229,24 +226,10 @@ export default function ModeratorLogin() {
             Reset Password by Email
           </DialogTitle>
           <DialogDescription className="text-slate-400">
-            Enter the username and email assigned to the account to request a password reset link.
+            Enter your account email to request a password reset link.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleRequestPasswordReset} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="password-reset-username" className="text-slate-300 font-medium">
-              Username
-            </Label>
-            <Input
-              id="password-reset-username"
-              type="text"
-              value={passwordResetUsername}
-              onChange={(e) => setPasswordResetUsername(e.target.value)}
-              required
-              className="bg-slate-950/60 border-slate-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-slate-200 rounded-sm"
-              placeholder="Enter your username"
-            />
-          </div>
           <div className="space-y-2">
             <Label htmlFor="password-reset-email" className="text-slate-300 font-medium">
               Email Address
@@ -272,7 +255,7 @@ export default function ModeratorLogin() {
             </Button>
             <Button
               type="submit"
-              disabled={passwordResetLoading || !passwordResetUsername.trim() || !passwordResetEmail.trim()}
+              disabled={passwordResetLoading || !passwordResetEmail.trim()}
               className="bg-amber-500 hover:bg-amber-600 text-white"
             >
               {passwordResetLoading ? "Sending..." : "Send Reset Link"}
@@ -464,11 +447,11 @@ export default function ModeratorLogin() {
               {loading ? "Authenticating..." : "Login"}
             </Button>
 
-            {isLockedAccountError && (
+            {lastLoginError.toLowerCase().includes("locked") && (
               <Button
                 type="button"
                 variant="outline"
-                onClick={openPasswordResetDialog}
+                onClick={() => setShowResetPasswordDialog(true)}
                 className="w-full border-amber-500/50 text-amber-400 hover:bg-amber-500/10"
               >
                 Account locked? Reset password via email
