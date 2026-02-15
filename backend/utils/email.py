@@ -9,28 +9,7 @@ from email.mime.multipart import MIMEMultipart
 GMAIL_USER = os.environ.get('GMAIL_USER', '')
 GMAIL_APP_PASSWORD = os.environ.get('GMAIL_APP_PASSWORD', '')
 
-def get_frontend_url() -> str:
-    """Resolve the public frontend URL used in email links.
-
-    Priority:
-    1) FRONTEND_URL (explicit override)
-    2) VERCEL_PROJECT_PRODUCTION_URL (stable production alias, if configured)
-    3) VERCEL_URL (current deployment URL)
-    4) localhost fallback for local development
-    """
-    explicit_url = os.environ.get('FRONTEND_URL', '').strip()
-    if explicit_url:
-        return explicit_url.rstrip('/')
-
-    vercel_prod = os.environ.get('VERCEL_PROJECT_PRODUCTION_URL', '').strip()
-    if vercel_prod:
-        return f"https://{vercel_prod.lstrip('/')}".rstrip('/')
-
-    vercel_url = os.environ.get('VERCEL_URL', '').strip()
-    if vercel_url:
-        return f"https://{vercel_url.lstrip('/')}".rstrip('/')
-
-    return 'http://localhost:3000'
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000').rstrip('/')
 
 
 def send_email(to_email: str, subject: str, body: str):
@@ -185,8 +164,7 @@ Top War Moderation Team"""
 
 def send_password_reset_email(to_email: str, username: str, reset_token: str):
     """Send password reset email with one-time reset link."""
-    frontend_url = get_frontend_url()
-    reset_link = f"{frontend_url}/moderator/reset-password?token={reset_token}"
+    reset_link = f"{FRONTEND_URL}/moderator/reset-password?token={reset_token}"
     subject = "Top War Moderator Portal – Password Reset Request"
     body = f"""Hi {username},
 
