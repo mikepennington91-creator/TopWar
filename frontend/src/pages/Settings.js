@@ -32,7 +32,7 @@ const getAssignableRoles = (currentUserRole, targetUserRole, hasAdminAccess = fa
   
   // Admin or users with admin access can assign any role
   if (currentUserRole === 'admin' || hasAdminAccess) {
-    return ['admin', 'developer', 'mmod', 'smod', 'lmod', 'moderator'];
+    return ['admin', 'developer', 'mmod', 'smod', 'lmod', 'moderator', ...LEADER_ROLES];
   }
   
   // Can only change roles of users with lower rank

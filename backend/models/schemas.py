@@ -178,6 +178,7 @@ class PasswordReset(BaseModel):
 
 
 class PasswordResetRequest(BaseModel):
+    username: str
     email: str
 
 
