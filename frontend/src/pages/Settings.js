@@ -390,14 +390,19 @@ export default function Settings() {
     setLoading(true);
     try {
       const token = localStorage.getItem('moderator_token');
+      const selectedRoles = [
+        addModForm.role || 'moderator',
+        ...(addModForm.in_game_leader ? ['in_game_leader'] : []),
+        ...(addModForm.discord_leader ? ['discord_leader'] : [])
+      ];
+
       await axios.post(
         `${API}/auth/register`,
         {
           username: addModForm.username,
           password: addModForm.password,
           role: addModForm.role,
-          is_in_game_leader: addModForm.in_game_leader,
-          is_discord_leader: addModForm.discord_leader
+          roles: selectedRoles
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -1194,18 +1199,6 @@ export default function Settings() {
                           className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-cyan-500 focus:ring-cyan-500"
                         />
                         In-Game Leader
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button type="button" className="text-slate-400 hover:text-cyan-400" aria-label="In-Game Leader info">
-                                <Info className="h-4 w-4" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Can apply in-game approval/rejection statuses.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
                       </label>
                       <label className="flex items-center gap-2 text-slate-300 text-sm">
                         <input
@@ -1215,18 +1208,6 @@ export default function Settings() {
                           className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-indigo-500 focus:ring-indigo-500"
                         />
                         Discord Leader
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button type="button" className="text-slate-400 hover:text-indigo-400" aria-label="Discord Leader info">
-                                <Info className="h-4 w-4" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Can apply discord approval/rejection statuses.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
                       </label>
                     </div>
                   </div>
@@ -1321,14 +1302,14 @@ export default function Settings() {
                         const canDeactivate = canDeactivateAccounts(currentUser.role, mod.role, isSelf, currentUser.hasAdminAccess);
                         const assignableRoles = getAssignableRoles(currentUser.role, mod.role, currentUser.hasAdminAccess);
                         const assignablePrimaryRoles = getAssignablePrimaryRoles(assignableRoles);
-                        const editState = roleEdits[mod.username] || getDefaultRoleEditState(mod.role, mod.roles, mod);
+                        const editState = roleEdits[mod.username] || getDefaultRoleEditState(mod.role, mod.roles);
                         // MMODs can edit emails but only Admins can VIEW emails
                         const canEditEmail = currentUser.hasAdminAccess || currentUser.role === 'mmod';
                         const canViewEmail = currentUser.hasAdminAccess; // Only Admins can see current email
                         
                         // Determine what to show
                         const showRoleDropdown = canChangeRole && assignablePrimaryRoles.length > 0;
-                        const showLeaderToggles = showRoleDropdown;
+                        const showLeaderToggles = showRoleDropdown && (canAssignLeaderRole(assignableRoles, 'in_game_leader') || canAssignLeaderRole(assignableRoles, 'discord_leader'));
                         const showPermissions = canChangePerms && !isSelf;
                         const showDeleteButton = canChangePerms && !isSelf; // Only admin can delete
                         
@@ -1373,50 +1354,30 @@ export default function Settings() {
 
                                 {showLeaderToggles && (
                                   <div className="space-y-2 pt-1">
-<label className="flex items-center gap-2 text-sm text-slate-300">
-                                      <input
-                                        type="checkbox"
-                                        checked={editState.in_game_leader}
-                                        onChange={(e) => updateRoleEdit(mod.username, { in_game_leader: e.target.checked })}
-                                        disabled={loading}
-                                        className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-cyan-500 focus:ring-cyan-500"
-                                      />
-                                      In-Game Leader
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <button type="button" className="text-slate-400 hover:text-cyan-400" aria-label="In-Game Leader info">
-                                              <Info className="h-4 w-4" />
-                                            </button>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <p>Can apply in-game approval/rejection statuses.</p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                    </label>
-<label className="flex items-center gap-2 text-sm text-slate-300">
-                                      <input
-                                        type="checkbox"
-                                        checked={editState.discord_leader}
-                                        onChange={(e) => updateRoleEdit(mod.username, { discord_leader: e.target.checked })}
-                                        disabled={loading}
-                                        className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-indigo-500 focus:ring-indigo-500"
-                                      />
-                                      Discord Leader
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <button type="button" className="text-slate-400 hover:text-indigo-400" aria-label="Discord Leader info">
-                                              <Info className="h-4 w-4" />
-                                            </button>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <p>Can apply discord approval/rejection statuses.</p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                    </label>
+                                    {canAssignLeaderRole(assignableRoles, 'in_game_leader') && (
+                                      <label className="flex items-center gap-2 text-sm text-slate-300">
+                                        <input
+                                          type="checkbox"
+                                          checked={editState.in_game_leader}
+                                          onChange={(e) => updateRoleEdit(mod.username, { in_game_leader: e.target.checked })}
+                                          disabled={loading}
+                                          className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-cyan-500 focus:ring-cyan-500"
+                                        />
+                                        In-Game Leader
+                                      </label>
+                                    )}
+                                    {canAssignLeaderRole(assignableRoles, 'discord_leader') && (
+                                      <label className="flex items-center gap-2 text-sm text-slate-300">
+                                        <input
+                                          type="checkbox"
+                                          checked={editState.discord_leader}
+                                          onChange={(e) => updateRoleEdit(mod.username, { discord_leader: e.target.checked })}
+                                          disabled={loading}
+                                          className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-indigo-500 focus:ring-indigo-500"
+                                        />
+                                        Discord Leader
+                                      </label>
+                                    )}
                                   </div>
                                 )}
 
