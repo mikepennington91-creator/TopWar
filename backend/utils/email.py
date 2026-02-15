@@ -9,6 +9,8 @@ from email.mime.multipart import MIMEMultipart
 GMAIL_USER = os.environ.get('GMAIL_USER', '')
 GMAIL_APP_PASSWORD = os.environ.get('GMAIL_APP_PASSWORD', '')
 
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000').rstrip('/')
+
 
 def send_email(to_email: str, subject: str, body: str):
     """Send email via Gmail SMTP."""
@@ -154,6 +156,24 @@ Thanks for confirming your email address for the Top War Moderator Portal.
 We'll only use this email to help you reset your password if you ever forget it. We won't use it for marketing or unrelated notifications.
 
 If you did not submit this email address, please contact an administrator immediately.
+
+Kind regards,
+Top War Moderation Team"""
+    send_email(to_email, subject, body)
+
+
+def send_password_reset_email(to_email: str, username: str, reset_token: str):
+    """Send password reset email with one-time reset link."""
+    reset_link = f"{FRONTEND_URL}/moderator/reset-password?token={reset_token}"
+    subject = "Top War Moderator Portal – Password Reset Request"
+    body = f"""Hi {username},
+
+We received a request to reset your Top War Moderator Portal password.
+
+Use the link below to set a new password:
+{reset_link}
+
+This link will expire in 1 hour. If you did not request this reset, you can safely ignore this message.
 
 Kind regards,
 Top War Moderation Team"""
