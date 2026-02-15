@@ -141,6 +141,8 @@ class Moderator(BaseModel):
     roles: List[str] = Field(default_factory=lambda: ["moderator"])
     status: str = "active"
     is_training_manager: bool = False
+    is_in_game_leader: bool = False
+    is_discord_leader: bool = False
     is_admin: bool = False
     can_view_applications: bool = True
     failed_login_attempts: int = 0
@@ -156,6 +158,8 @@ class ModeratorCreate(BaseModel):
     password: str
     role: str = "moderator"
     roles: Optional[List[str]] = None
+    is_in_game_leader: bool = False
+    is_discord_leader: bool = False
 
 
 class ModeratorLogin(BaseModel):
@@ -201,6 +205,8 @@ class Token(BaseModel):
     must_change_password: bool = False
     is_admin: bool = False
     is_training_manager: bool = False
+    is_in_game_leader: bool = False
+    is_discord_leader: bool = False
     needs_email: bool = False
 
 
@@ -210,6 +216,8 @@ class ModeratorInfo(BaseModel):
     roles: List[str] = Field(default_factory=list)
     status: str
     is_training_manager: bool
+    is_in_game_leader: bool = False
+    is_discord_leader: bool = False
     is_admin: bool
     can_view_applications: bool
     created_at: datetime
@@ -240,6 +248,11 @@ class ModeratorAdminUpdate(BaseModel):
 
 class ModeratorApplicationViewerUpdate(BaseModel):
     can_view_applications: bool
+
+
+class ModeratorLeaderUpdate(BaseModel):
+    is_in_game_leader: bool
+    is_discord_leader: bool
 
 
 # ============= Server Assignment Models =============

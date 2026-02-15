@@ -83,9 +83,11 @@ async def get_current_moderator(credentials: HTTPAuthorizationCredentials = Depe
         roles: list = normalize_roles(role, payload.get("roles", []))
         role = get_highest_role(roles)
         is_admin: bool = payload.get("is_admin", False)
+        is_in_game_leader: bool = payload.get("is_in_game_leader", "in_game_leader" in roles)
+        is_discord_leader: bool = payload.get("is_discord_leader", "discord_leader" in roles)
         if username is None:
             raise HTTPException(status_code=401, detail="Invalid authentication credentials")
-        return {"username": username, "role": role, "roles": roles, "is_admin": is_admin}
+        return {"username": username, "role": role, "roles": roles, "is_admin": is_admin, "is_in_game_leader": is_in_game_leader, "is_discord_leader": is_discord_leader}
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token has expired")
     except jwt.JWTError:
@@ -129,7 +131,7 @@ def can_modify_role(current_role: str, target_role: str, is_self: bool = False) 
 def get_assignable_roles(current_role: str) -> list:
     """Get roles that current user can assign."""
     if current_role == 'admin':
-        return ['admin', 'developer', 'mmod', 'smod', 'lmod', 'in_game_leader', 'discord_leader', 'moderator']
+        return ['admin', 'developer', 'mmod', 'smod', 'lmod', 'moderator']
     current_rank = get_role_rank(current_role)
     return [role for role, rank in ROLE_HIERARCHY.items() if rank < current_rank and role != 'admin']
 

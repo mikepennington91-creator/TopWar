@@ -18,8 +18,6 @@ const API = `${BACKEND_URL}/api`;
 // Role hierarchy - higher index = higher rank
 const ROLE_HIERARCHY = {
   'moderator': 0,
-  'in_game_leader': 1,
-  'discord_leader': 1,
   'lmod': 2,
   'smod': 3,
   'mmod': 4,
@@ -34,7 +32,7 @@ const getAssignableRoles = (currentUserRole, targetUserRole, hasAdminAccess = fa
   
   // Admin or users with admin access can assign any role
   if (currentUserRole === 'admin' || hasAdminAccess) {
-    return ['admin', 'developer', 'mmod', 'smod', 'lmod', 'in_game_leader', 'discord_leader', 'moderator'];
+    return ['admin', 'developer', 'mmod', 'smod', 'lmod', 'moderator'];
   }
   
   // Can only change roles of users with lower rank
@@ -54,10 +52,10 @@ const getAssignablePrimaryRoles = (assignableRoles = []) => assignableRoles.filt
 
 const canAssignLeaderRole = (assignableRoles = [], leaderRole) => assignableRoles.includes(leaderRole);
 
-const getDefaultRoleEditState = (role = 'moderator', roles = []) => ({
+const getDefaultRoleEditState = (role = 'moderator', roles = [], mod = null) => ({
   role: role || 'moderator',
-  in_game_leader: Array.isArray(roles) && roles.includes('in_game_leader'),
-  discord_leader: Array.isArray(roles) && roles.includes('discord_leader')
+  in_game_leader: Boolean(mod?.is_in_game_leader || (Array.isArray(roles) && roles.includes('in_game_leader'))),
+  discord_leader: Boolean(mod?.is_discord_leader || (Array.isArray(roles) && roles.includes('discord_leader')))
 });
 
 // Check if current user can modify target user's role
@@ -125,7 +123,9 @@ export default function Settings() {
   const [addModForm, setAddModForm] = useState({
     username: "",
     password: "",
-    role: "moderator"
+    role: "moderator",
+    in_game_leader: false,
+    discord_leader: false
   });
   const [changeUsernameForm, setChangeUsernameForm] = useState({
     old_username: "",
@@ -257,7 +257,7 @@ export default function Settings() {
       setRoleEdits(() => {
         const next = {};
         normalizedModerators.forEach((mod) => {
-          next[mod.username] = getDefaultRoleEditState(mod.role, mod.roles);
+          next[mod.username] = getDefaultRoleEditState(mod.role, mod.roles, mod);
         });
         return next;
       });
@@ -392,11 +392,17 @@ export default function Settings() {
       const token = localStorage.getItem('moderator_token');
       await axios.post(
         `${API}/auth/register`,
-        addModForm,
+        {
+          username: addModForm.username,
+          password: addModForm.password,
+          role: addModForm.role,
+          is_in_game_leader: addModForm.in_game_leader,
+          is_discord_leader: addModForm.discord_leader
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success(`Moderator ${addModForm.username} added successfully!`);
-      setAddModForm({ username: "", password: "", role: "moderator" });
+      setAddModForm({ username: "", password: "", role: "moderator", in_game_leader: false, discord_leader: false });
       fetchModerators();
     } catch (error) {
       console.error(error);
@@ -467,15 +473,8 @@ export default function Settings() {
 
   const handleSaveRoles = async (username) => {
     const editState = roleEdits[username] || getDefaultRoleEditState();
-    const selectedRoles = [
-      editState.role || 'moderator',
-      ...(editState.in_game_leader ? ['in_game_leader'] : []),
-      ...(editState.discord_leader ? ['discord_leader'] : [])
-    ];
 
-    const prettyRoles = selectedRoles.map((r) => r.replaceAll('_', ' ')).join(', ');
-
-    if (!window.confirm(`Update ${username}'s role settings to: ${prettyRoles}?`)) {
+    if (!window.confirm(`Update ${username}'s role settings?`)) {
       return;
     }
 
@@ -484,9 +483,19 @@ export default function Settings() {
       const token = localStorage.getItem('moderator_token');
       await axios.patch(
         `${API}/moderators/${username}/role`,
-        { roles: selectedRoles },
+        { role: editState.role || 'moderator' },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
+      await axios.patch(
+        `${API}/moderators/${username}/leader-roles`,
+        {
+          is_in_game_leader: Boolean(editState.in_game_leader),
+          is_discord_leader: Boolean(editState.discord_leader)
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
       toast.success('Role settings updated successfully!');
       fetchModerators();
     } catch (error) {
@@ -1156,7 +1165,7 @@ export default function Settings() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="add_role" className="text-slate-300">Role</Label>
+                    <Label htmlFor="add_role" className="text-slate-300">Primary Role</Label>
                     <Select
                       value={addModForm.role}
                       onValueChange={(value) => setAddModForm(prev => ({ ...prev, role: value }))}
@@ -1169,12 +1178,57 @@ export default function Settings() {
                         <SelectItem value="mmod" className="text-red-500">MMOD</SelectItem>
                         <SelectItem value="moderator" className="text-blue-400">Moderator</SelectItem>
                         <SelectItem value="lmod" className="text-purple-400">LMOD</SelectItem>
-                        <SelectItem value="in_game_leader" className="text-cyan-400">In-Game Leader</SelectItem>
-                        <SelectItem value="discord_leader" className="text-indigo-400">Discord Leader</SelectItem>
                         <SelectItem value="smod" className="text-pink-400">SMOD</SelectItem>
                         <SelectItem value="developer" className="text-yellow-400">Developer</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-300">Leader Roles</Label>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <label className="flex items-center gap-2 text-slate-300 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={addModForm.in_game_leader}
+                          onChange={(e) => setAddModForm((prev) => ({ ...prev, in_game_leader: e.target.checked }))}
+                          className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-cyan-500 focus:ring-cyan-500"
+                        />
+                        In-Game Leader
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button type="button" className="text-slate-400 hover:text-cyan-400" aria-label="In-Game Leader info">
+                                <Info className="h-4 w-4" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Can apply in-game approval/rejection statuses.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </label>
+                      <label className="flex items-center gap-2 text-slate-300 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={addModForm.discord_leader}
+                          onChange={(e) => setAddModForm((prev) => ({ ...prev, discord_leader: e.target.checked }))}
+                          className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-indigo-500 focus:ring-indigo-500"
+                        />
+                        Discord Leader
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button type="button" className="text-slate-400 hover:text-indigo-400" aria-label="Discord Leader info">
+                                <Info className="h-4 w-4" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Can apply discord approval/rejection statuses.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </label>
+                    </div>
                   </div>
                   <Button
                     data-testid="add-moderator-btn"
@@ -1266,12 +1320,15 @@ export default function Settings() {
                         const canChangePerms = canModifyPermissions(currentUser.role, currentUser.hasAdminAccess);
                         const canDeactivate = canDeactivateAccounts(currentUser.role, mod.role, isSelf, currentUser.hasAdminAccess);
                         const assignableRoles = getAssignableRoles(currentUser.role, mod.role, currentUser.hasAdminAccess);
+                        const assignablePrimaryRoles = getAssignablePrimaryRoles(assignableRoles);
+                        const editState = roleEdits[mod.username] || getDefaultRoleEditState(mod.role, mod.roles, mod);
                         // MMODs can edit emails but only Admins can VIEW emails
                         const canEditEmail = currentUser.hasAdminAccess || currentUser.role === 'mmod';
                         const canViewEmail = currentUser.hasAdminAccess; // Only Admins can see current email
                         
                         // Determine what to show
-                        const showRoleDropdown = canChangeRole && assignableRoles.length > 0;
+                        const showRoleDropdown = canChangeRole && assignablePrimaryRoles.length > 0;
+                        const showLeaderToggles = showRoleDropdown;
                         const showPermissions = canChangePerms && !isSelf;
                         const showDeleteButton = canChangePerms && !isSelf; // Only admin can delete
                         
@@ -1285,40 +1342,93 @@ export default function Settings() {
                               <div className="space-y-2">
                                 <Label className="text-slate-400 text-xs uppercase">Role</Label>
                                 <Select
-                                  value={mod.role}
-                                  onValueChange={(value) => handleChangeRole(mod.username, value)}
+                                  value={editState.role}
+                                  onValueChange={(value) => updateRoleEdit(mod.username, { role: value })}
                                   disabled={loading}
                                 >
                                   <SelectTrigger className="bg-slate-900/50 border-slate-700 text-slate-200 rounded-sm">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent className="bg-slate-900 border-slate-700">
-                                    {assignableRoles.includes('admin') && (
+                                    {assignablePrimaryRoles.includes('admin') && (
                                       <SelectItem value="admin" className="text-red-400">Admin</SelectItem>
                                     )}
-                                    {assignableRoles.includes('developer') && (
+                                    {assignablePrimaryRoles.includes('developer') && (
                                       <SelectItem value="developer" className="text-yellow-400">Developer</SelectItem>
                                     )}
-                                    {assignableRoles.includes('mmod') && (
+                                    {assignablePrimaryRoles.includes('mmod') && (
                                       <SelectItem value="mmod" className="text-red-500">MMOD</SelectItem>
                                     )}
-                                    {assignableRoles.includes('smod') && (
+                                    {assignablePrimaryRoles.includes('smod') && (
                                       <SelectItem value="smod" className="text-pink-400">SMOD</SelectItem>
                                     )}
-                                    {assignableRoles.includes('lmod') && (
+                                    {assignablePrimaryRoles.includes('lmod') && (
                                       <SelectItem value="lmod" className="text-purple-400">LMOD</SelectItem>
                                     )}
-                                    {assignableRoles.includes('in_game_leader') && (
-                                      <SelectItem value="in_game_leader" className="text-cyan-400">In-Game Leader</SelectItem>
-                                    )}
-                                    {assignableRoles.includes('discord_leader') && (
-                                      <SelectItem value="discord_leader" className="text-indigo-400">Discord Leader</SelectItem>
-                                    )}
-                                    {assignableRoles.includes('moderator') && (
+                                    {assignablePrimaryRoles.includes('moderator') && (
                                       <SelectItem value="moderator" className="text-blue-400">Moderator</SelectItem>
                                     )}
                                   </SelectContent>
                                 </Select>
+
+                                {showLeaderToggles && (
+                                  <div className="space-y-2 pt-1">
+<label className="flex items-center gap-2 text-sm text-slate-300">
+                                      <input
+                                        type="checkbox"
+                                        checked={editState.in_game_leader}
+                                        onChange={(e) => updateRoleEdit(mod.username, { in_game_leader: e.target.checked })}
+                                        disabled={loading}
+                                        className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-cyan-500 focus:ring-cyan-500"
+                                      />
+                                      In-Game Leader
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <button type="button" className="text-slate-400 hover:text-cyan-400" aria-label="In-Game Leader info">
+                                              <Info className="h-4 w-4" />
+                                            </button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>Can apply in-game approval/rejection statuses.</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    </label>
+<label className="flex items-center gap-2 text-sm text-slate-300">
+                                      <input
+                                        type="checkbox"
+                                        checked={editState.discord_leader}
+                                        onChange={(e) => updateRoleEdit(mod.username, { discord_leader: e.target.checked })}
+                                        disabled={loading}
+                                        className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-indigo-500 focus:ring-indigo-500"
+                                      />
+                                      Discord Leader
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <button type="button" className="text-slate-400 hover:text-indigo-400" aria-label="Discord Leader info">
+                                              <Info className="h-4 w-4" />
+                                            </button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>Can apply discord approval/rejection statuses.</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    </label>
+                                  </div>
+                                )}
+
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  onClick={() => handleSaveRoles(mod.username)}
+                                  disabled={loading}
+                                  className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-sm"
+                                >
+                                  Save Roles
+                                </Button>
                               </div>
                             )}
 

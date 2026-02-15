@@ -20,9 +20,10 @@ from utils.email import (
 router = APIRouter(prefix="/applications", tags=["Applications"])
 
 async def require_application_status_manager(current_user: dict = Depends(get_current_moderator)):
-    """Allow elevated moderators and leader roles to change application statuses."""
-    allowed_roles = {"admin", "mmod", "in_game_leader", "discord_leader"}
-    if current_user.get("role") not in allowed_roles and not current_user.get("is_admin"):
+    """Allow elevated moderators and leader-permission users to change application statuses."""
+    allowed_roles = {"admin", "mmod"}
+    has_leader_access = current_user.get("is_in_game_leader", False) or current_user.get("is_discord_leader", False)
+    if current_user.get("role") not in allowed_roles and not current_user.get("is_admin") and not has_leader_access:
         raise HTTPException(status_code=403, detail="Not authorized to change application statuses")
     return current_user
 

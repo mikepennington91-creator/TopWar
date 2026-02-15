@@ -74,12 +74,15 @@ async def register_moderator(moderator: ModeratorCreate, background_tasks: Backg
     hashed_password = pwd_context.hash(moderator.password)
     
     # Create moderator with must_change_password=True for new users
+    normalized_roles = normalize_roles(moderator.role, moderator.roles)
     mod_obj = Moderator(
         username=moderator.username,
         email=normalized_email,
         hashed_password=hashed_password,
         role=moderator.role,
-        roles=normalize_roles(moderator.role, moderator.roles),
+        roles=normalized_roles,
+        is_in_game_leader=moderator.is_in_game_leader or ("in_game_leader" in normalized_roles),
+        is_discord_leader=moderator.is_discord_leader or ("discord_leader" in normalized_roles),
         must_change_password=True
     )
     doc = mod_obj.model_dump()
@@ -134,11 +137,15 @@ async def login_moderator(credentials: ModeratorLogin, background_tasks: Backgro
     is_admin = moderator.get("is_admin", False)
     roles = normalize_roles(moderator.get("role", "moderator"), moderator.get("roles", []))
     primary_role = get_highest_role(roles)
+    is_in_game_leader = moderator.get("is_in_game_leader", "in_game_leader" in roles)
+    is_discord_leader = moderator.get("is_discord_leader", "discord_leader" in roles)
     access_token = create_access_token(data={
         "sub": credentials.username, 
         "role": primary_role,
         "roles": roles,
-        "is_admin": is_admin
+        "is_admin": is_admin,
+        "is_in_game_leader": is_in_game_leader,
+        "is_discord_leader": is_discord_leader
     })
     return {
         "access_token": access_token,
@@ -149,6 +156,8 @@ async def login_moderator(credentials: ModeratorLogin, background_tasks: Backgro
         "must_change_password": moderator.get("must_change_password", False),
         "is_admin": is_admin,
         "is_training_manager": moderator.get("is_training_manager", False),
+        "is_in_game_leader": is_in_game_leader,
+        "is_discord_leader": is_discord_leader,
         "needs_email": not has_valid_email(moderator.get("email"))
     }
 

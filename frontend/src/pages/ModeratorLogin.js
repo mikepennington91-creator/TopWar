@@ -87,6 +87,8 @@ export default function ModeratorLogin() {
       localStorage.setItem('moderator_username', response.data.username);
       localStorage.setItem('moderator_is_admin', response.data.is_admin ? 'true' : 'false');
       localStorage.setItem('moderator_is_training_manager', response.data.is_training_manager ? 'true' : 'false');
+      localStorage.setItem('moderator_is_in_game_leader', response.data.is_in_game_leader ? 'true' : 'false');
+      localStorage.setItem('moderator_is_discord_leader', response.data.is_discord_leader ? 'true' : 'false');
       
       // Check if password change is required
       if (response.data.must_change_password) {
