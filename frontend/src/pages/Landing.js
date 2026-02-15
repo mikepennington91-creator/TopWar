@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Shield, Users, CheckCircle } from "lucide-react";
+import { Shield, Users, CheckCircle, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import HolidayOverlay from "@/components/HolidayOverlay";
 import SeasonalOverlay from "@/components/SeasonalOverlay";
@@ -61,6 +61,11 @@ export default function Landing() {
               Moderator Login
             </Button>
           </div>
+        </div>
+
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1 text-slate-300 md:hidden pointer-events-none">
+          <p className="text-xs uppercase tracking-[0.2em]">More details below</p>
+          <ChevronDown className="w-5 h-5 text-amber-500 animate-bounce" />
         </div>
       </div>
 
