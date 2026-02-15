@@ -188,6 +188,8 @@ export default function ModeratorLogin() {
   const handleRequestPasswordReset = async (e) => {
     e.preventDefault();
 
+    if (!passwordResetUsername.trim() || !passwordResetEmail.trim()) {
+      toast.error("Please enter username and email");
     if (!passwordResetEmail.trim()) {
       toast.error("Please enter your email");
       return;
