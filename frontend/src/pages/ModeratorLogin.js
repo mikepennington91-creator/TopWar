@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Shield, ArrowLeft, AlertTriangle, Mail } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -23,6 +23,10 @@ export default function ModeratorLogin() {
   const [emailPromptLoading, setEmailPromptLoading] = useState(false);
   const [needsEmailAfterPasswordChange, setNeedsEmailAfterPasswordChange] = useState(false);
   const [mustChangePassword, setMustChangePassword] = useState(false);
+  const [showResetPasswordDialog, setShowResetPasswordDialog] = useState(false);
+  const [passwordResetEmail, setPasswordResetEmail] = useState("");
+  const [passwordResetLoading, setPasswordResetLoading] = useState(false);
+  const [lastLoginError, setLastLoginError] = useState("");
   const [passwordChangeForm, setPasswordChangeForm] = useState({
     old_password: "",
     new_password: "",
@@ -42,6 +46,7 @@ export default function ModeratorLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setLastLoginError("");
     
     // Check for easter egg credentials first
     try {
@@ -111,7 +116,9 @@ export default function ModeratorLogin() {
       navigate('/moderator/portal');
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.detail || "Invalid credentials");
+      const errorDetail = error.response?.data?.detail || "Invalid credentials";
+      setLastLoginError(errorDetail);
+      toast.error(errorDetail);
     } finally {
       setLoading(false);
     }
@@ -176,6 +183,79 @@ export default function ModeratorLogin() {
       setLoading(false);
     }
   };
+
+
+  const handleRequestPasswordReset = async (e) => {
+    e.preventDefault();
+
+    if (!passwordResetEmail.trim()) {
+      toast.error("Please enter your email");
+      return;
+    }
+
+    setPasswordResetLoading(true);
+    try {
+      await axios.post(`${API}/auth/request-password-reset`, { email: passwordResetEmail.trim() });
+      toast.success("If that email exists, a reset link has been sent.");
+      setShowResetPasswordDialog(false);
+      setPasswordResetEmail("");
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.detail || "Failed to request password reset");
+    } finally {
+      setPasswordResetLoading(false);
+    }
+  };
+
+
+  const passwordResetDialog = (
+    <Dialog open={showResetPasswordDialog} onOpenChange={setShowResetPasswordDialog}>
+      <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-amber-400 flex items-center gap-2">
+            <Mail className="h-5 w-5" />
+            Reset Password by Email
+          </DialogTitle>
+          <DialogDescription className="text-slate-400">
+            Enter your account email to request a password reset link.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleRequestPasswordReset} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="password-reset-email" className="text-slate-300 font-medium">
+              Email Address
+            </Label>
+            <Input
+              id="password-reset-email"
+              type="email"
+              value={passwordResetEmail}
+              onChange={(e) => setPasswordResetEmail(e.target.value)}
+              required
+              className="bg-slate-950/60 border-slate-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-slate-200 rounded-sm"
+              placeholder="Enter your email address"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowResetPasswordDialog(false)}
+              className="border-slate-600 text-slate-200 hover:bg-slate-800"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={passwordResetLoading || !passwordResetEmail.trim()}
+              className="bg-amber-500 hover:bg-amber-600 text-white"
+            >
+              {passwordResetLoading ? "Sending..." : "Send Reset Link"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
 
   const emailPromptDialog = (
     <Dialog open={emailPromptOpen} onOpenChange={() => {}}>
@@ -304,6 +384,7 @@ export default function ModeratorLogin() {
     <div className="min-h-screen bg-slate-950 text-slate-200 flex items-center justify-center px-3 sm:px-4 pt-14 py-6 grid-texture">
       <div className="w-full max-w-md">
         {emailPromptDialog}
+        {passwordResetDialog}
         <div className="glass-card rounded-lg p-5 sm:p-8">
           <div className="text-center mb-6 sm:mb-8">
             <Shield className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-amber-500 mb-3 sm:mb-4" />
@@ -356,6 +437,17 @@ export default function ModeratorLogin() {
             >
               {loading ? "Authenticating..." : "Login"}
             </Button>
+
+            {lastLoginError.toLowerCase().includes("locked") && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowResetPasswordDialog(true)}
+                className="w-full border-amber-500/50 text-amber-400 hover:bg-amber-500/10"
+              >
+                Account locked? Reset password via email
+              </Button>
+            )}
           </form>
         </div>
       </div>
