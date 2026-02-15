@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Landing from "@/pages/Landing";
 import ApplicationForm from "@/pages/ApplicationForm";
 import ModeratorLogin from "@/pages/ModeratorLogin";
+import ModeratorResetPassword from "@/pages/ModeratorResetPassword";
 import ModeratorDashboard from "@/pages/ModeratorDashboard";
 import ModeratorPortal from "@/pages/ModeratorPortal";
 import Settings from "@/pages/Settings";
@@ -66,6 +67,7 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/apply" element={<ApplicationForm />} />
           <Route path="/moderator/login" element={<ModeratorLogin />} />
+          <Route path="/moderator/reset-password" element={<ModeratorResetPassword />} />
           <Route path="/moderator/portal" element={<ModeratorPortal />} />
           <Route path="/moderator/dashboard" element={<ModeratorDashboard />} />
           <Route path="/moderator/settings" element={<Settings />} />
