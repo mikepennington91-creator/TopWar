@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "build": "cd frontend && yarn build"
+  },
   "dependencies": {
     "puppeteer": "^24.34.0"
   }

@@ -17,7 +17,7 @@ from utils.auth import (
     validate_password_strength, check_password_history, PASSWORD_HISTORY_COUNT,
     MAX_LOGIN_ATTEMPTS, normalize_roles, get_highest_role
 )
-from utils.email import send_moderator_email_confirmation
+from utils.email import send_moderator_email_confirmation, send_password_reset_email
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -239,22 +239,34 @@ async def reset_password(username: str, password_data: PasswordReset, current_us
 
 
 @router.post("/request-password-reset")
-async def request_password_reset(request: PasswordResetRequest):
-    """Request a password reset via email."""
+async def request_password_reset(request: PasswordResetRequest, background_tasks: BackgroundTasks):
+    """Request a password reset via email.
+
+    A reset token is only generated when the provided username/email pair matches
+    the moderator record on file.
+    """
     normalized_email = normalize_email_address(request.email)
-    moderator = await db.moderators.find_one({"email": normalized_email}, {"_id": 0})
+    moderator = await db.moderators.find_one(
+        {"username": request.username, "email": normalized_email},
+        {"_id": 0}
+    )
     if moderator:
         reset_token = str(uuid.uuid4())
         reset_expires = datetime.now(timezone.utc) + timedelta(hours=1)
         await db.moderators.update_one(
-            {"email": normalized_email},
+            {"username": request.username, "email": normalized_email},
             {"$set": {
                 "password_reset_token": reset_token,
                 "password_reset_expires": reset_expires.isoformat()
             }}
         )
-        # TODO: send reset_token via email integration.
-    return {"message": "If the email exists, a reset link will be sent."}
+        background_tasks.add_task(
+            send_password_reset_email,
+            normalized_email,
+            request.username,
+            reset_token
+        )
+    return {"message": "If the username/email pair exists, a reset link will be sent."}
 
 
 @router.post("/reset-password-by-email")
@@ -293,6 +305,8 @@ async def reset_password_by_email(payload: PasswordResetByEmail):
             "hashed_password": new_hashed,
             "password_history": new_history,
             "must_change_password": False,
+            "failed_login_attempts": 0,
+            "locked_at": None,
             "password_reset_token": None,
             "password_reset_expires": None
         }}
