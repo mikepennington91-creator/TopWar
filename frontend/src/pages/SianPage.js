@@ -8,13 +8,16 @@ import {
   Star,
   Sparkles,
   Crown,
-  MessageCircle,
   ArrowLeft,
   RefreshCw,
   Smile,
   Trophy,
   Users,
-  Shield
+  Shield,
+  Lock,
+  X,
+  Eye,
+  EyeOff
 } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -79,6 +82,47 @@ const JOKES = [
   "Scientists are still trying to figure out how Sian is everywhere at once 🔬"
 ];
 
+// Secret area content - heartfelt messages about Sian
+const SECRET_MESSAGES = [
+  {
+    title: "Your Smile",
+    text: "A smile to die for that lights up every room and every conversation. When Sian smiles, the whole world feels just a little bit brighter.",
+    emoji: "😊"
+  },
+  {
+    title: "Those Eyes",
+    text: "Eyes you can get lost in - deep, beautiful, and full of warmth. They tell stories of kindness and genuine care.",
+    emoji: "✨"
+  },
+  {
+    title: "Natural Charisma",
+    text: "Charisma that politicians would die for. The way you command attention and make everyone feel valued is truly a rare gift.",
+    emoji: "🌟"
+  },
+  {
+    title: "Wonderful Mum",
+    text: "A fantastic mum to Mia - patient, loving, and endlessly devoted. Mia is so lucky to have someone as amazing as you.",
+    emoji: "💕"
+  },
+  {
+    title: "Authentically You",
+    text: "So honest and so truthful - in a world full of facades, your authenticity is a breath of fresh air that everyone treasures.",
+    emoji: "💎"
+  },
+  {
+    title: "That Adorable Scream",
+    text: "Your funny, cute scream that makes everyone laugh! It's become legendary and one of the many things that make you uniquely wonderful.",
+    emoji: "😆"
+  }
+];
+
+// User uploaded images
+const SECRET_IMAGES = {
+  hero: "https://customer-assets.emergentagent.com/job_f55fb419-be1a-4743-9d45-fe811badb52c/artifacts/p15so8dh_ChatGPT%20Image%20Feb%2017%2C%202026%2C%2009_28_35%20PM.png",
+  image1: "https://customer-assets.emergentagent.com/job_f55fb419-be1a-4743-9d45-fe811badb52c/artifacts/b477z7bd_ChatGPT%20Image%20Feb%2017%2C%202026%2C%2009_27_52%20PM.png",
+  image2: "https://customer-assets.emergentagent.com/job_f55fb419-be1a-4743-9d45-fe811badb52c/artifacts/vr6rqyiz_ChatGPT%20Image%20Feb%2017%2C%202026%2C%2009_28_30%20PM.png"
+};
+
 const getColorClasses = (color) => {
   const colors = {
     pink: "from-pink-500/20 to-pink-600/20 border-pink-500/30 text-pink-400",
@@ -91,6 +135,263 @@ const getColorClasses = (color) => {
   return colors[color] || colors.pink;
 };
 
+// Password Modal Component
+function PasswordModal({ isOpen, onClose, onSuccess }) {
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [isShaking, setIsShaking] = useState(false);
+
+  const SECRET_PASSWORD = "Mia is a terror";
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (password === SECRET_PASSWORD) {
+      setError("");
+      onSuccess();
+      onClose();
+    } else {
+      setError("Incorrect password");
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 500);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      
+      {/* Modal */}
+      <div 
+        className={`relative bg-gradient-to-br from-rose-950/95 via-slate-900/95 to-pink-950/95 border-2 border-rose-400/30 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl shadow-rose-500/20 ${isShaking ? 'animate-shake' : ''}`}
+        data-testid="password-modal"
+      >
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
+          data-testid="close-modal-btn"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        {/* Decorative heart lock icon */}
+        <div className="flex justify-center mb-6">
+          <div className="relative">
+            <div className="w-20 h-20 bg-gradient-to-br from-rose-400/20 to-pink-500/20 rounded-full flex items-center justify-center border-2 border-rose-400/40 animate-pulse-slow">
+              <Heart className="w-10 h-10 text-rose-400 fill-rose-400/50" />
+            </div>
+            <div className="absolute -bottom-1 -right-1 bg-slate-900 rounded-full p-1.5 border border-rose-400/40">
+              <Lock className="w-4 h-4 text-rose-300" />
+            </div>
+          </div>
+        </div>
+
+        <h2 className="text-2xl font-bold text-center text-rose-300 mb-2" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+          Secret Area
+        </h2>
+        <p className="text-center text-slate-400 mb-6 text-sm">
+          Enter the password to unlock something special...
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          <div className="relative mb-4">
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setError("");
+              }}
+              placeholder="Enter password..."
+              className="w-full bg-slate-800/50 border border-rose-400/30 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-rose-400/60 focus:ring-1 focus:ring-rose-400/30 pr-10"
+              data-testid="password-input"
+              autoFocus
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-300 transition-colors"
+              data-testid="toggle-password-btn"
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+
+          {error && (
+            <p className="text-red-400 text-sm text-center mb-4" data-testid="password-error">
+              {error}
+            </p>
+          )}
+
+          <Button
+            type="submit"
+            className="w-full bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-medium py-3 rounded-lg transition-all duration-300 shadow-lg shadow-rose-500/30"
+            data-testid="submit-password-btn"
+          >
+            <Heart className="w-4 h-4 mr-2" />
+            Unlock with Love
+          </Button>
+        </form>
+
+        {/* Decorative sparkles */}
+        <Sparkles className="absolute top-6 left-6 w-4 h-4 text-rose-300/50 animate-pulse" />
+        <Sparkles className="absolute bottom-6 right-6 w-4 h-4 text-pink-300/50 animate-pulse" style={{ animationDelay: '0.5s' }} />
+      </div>
+    </div>
+  );
+}
+
+// Secret Content Component
+function SecretContent() {
+  return (
+    <div className="mt-12" data-testid="secret-content">
+      {/* Secret Area Header */}
+      <div className="text-center mb-10">
+        <div className="inline-flex items-center gap-2 bg-rose-500/10 border border-rose-500/30 rounded-full px-6 py-3 mb-6">
+          <Heart className="w-5 h-5 text-rose-400 fill-rose-400 animate-pulse" />
+          <span className="text-rose-300 text-lg font-medium tracking-wider">For Sian's Eyes Only</span>
+          <Heart className="w-5 h-5 text-rose-400 fill-rose-400 animate-pulse" />
+        </div>
+      </div>
+
+      {/* Hero Watercolour Image with Message */}
+      <div className="mb-12">
+        <Card className="bg-gradient-to-br from-rose-950/40 via-slate-900/60 to-pink-950/40 border-rose-400/30 overflow-hidden backdrop-blur-sm">
+          <CardContent className="p-0">
+            <div className="relative">
+              {/* Watercolour Hero Image */}
+              <div className="relative w-full flex justify-center bg-gradient-to-b from-rose-900/20 to-transparent p-6 sm:p-10">
+                <div className="relative max-w-2xl w-full">
+                  <img 
+                    src={SECRET_IMAGES.hero}
+                    alt="Beautiful watercolour painting"
+                    className="w-full h-auto rounded-xl shadow-2xl shadow-rose-500/30 border-4 border-white/10"
+                    data-testid="hero-image"
+                  />
+                  {/* Decorative frame corners */}
+                  <div className="absolute -top-2 -left-2 w-8 h-8 border-t-4 border-l-4 border-rose-400/50 rounded-tl-lg" />
+                  <div className="absolute -top-2 -right-2 w-8 h-8 border-t-4 border-r-4 border-rose-400/50 rounded-tr-lg" />
+                  <div className="absolute -bottom-2 -left-2 w-8 h-8 border-b-4 border-l-4 border-rose-400/50 rounded-bl-lg" />
+                  <div className="absolute -bottom-2 -right-2 w-8 h-8 border-b-4 border-r-4 border-rose-400/50 rounded-br-lg" />
+                </div>
+              </div>
+              
+              {/* Main Message Below Image */}
+              <div className="p-6 sm:p-10 text-center">
+                <Crown className="w-12 h-12 text-amber-400 mx-auto mb-4" />
+                <h3 className="text-3xl sm:text-4xl font-bold text-rose-300 mb-4" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                  You Are Absolutely Wonderful
+                </h3>
+                <p className="text-xl text-slate-300 leading-relaxed max-w-2xl mx-auto">
+                  This beautiful moment captures everything magical about you - a wonderful mum creating memories with Mia. 
+                  Your love, your warmth, your light... it shines through in everything you do.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Heartfelt Messages Grid */}
+      <h3 className="text-2xl font-bold text-center text-rose-300 mb-8" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+        All The Things That Make You Amazing
+      </h3>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+        {SECRET_MESSAGES.map((msg, index) => (
+          <Card 
+            key={index}
+            className="bg-gradient-to-br from-rose-950/30 to-slate-900/50 border-rose-400/20 backdrop-blur-sm hover:border-rose-400/40 transition-all duration-300 hover:scale-[1.02]"
+            data-testid={`secret-message-${index}`}
+          >
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-3xl">{msg.emoji}</span>
+                <h4 className="text-xl font-bold text-rose-200">{msg.title}</h4>
+              </div>
+              <p className="text-slate-300 leading-relaxed">{msg.text}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Additional Images Gallery */}
+      <h3 className="text-2xl font-bold text-center text-rose-300 mb-8" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+        More Beautiful Moments
+      </h3>
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12">
+        <Card className="bg-gradient-to-br from-rose-950/30 to-slate-900/50 border-rose-400/20 overflow-hidden group">
+          <CardContent className="p-4">
+            <div className="relative overflow-hidden rounded-lg">
+              <img 
+                src={SECRET_IMAGES.image1}
+                alt="Sian and pet"
+                className="w-full h-auto rounded-lg transition-transform duration-500 group-hover:scale-105"
+                data-testid="gallery-image-1"
+              />
+            </div>
+            <p className="text-center text-rose-200 mt-4 font-medium">Fun & Playful</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-gradient-to-br from-rose-950/30 to-slate-900/50 border-rose-400/20 overflow-hidden group">
+          <CardContent className="p-4">
+            <div className="relative overflow-hidden rounded-lg">
+              <img 
+                src={SECRET_IMAGES.image2}
+                alt="Sian with cats"
+                className="w-full h-auto rounded-lg transition-transform duration-500 group-hover:scale-105"
+                data-testid="gallery-image-2"
+              />
+            </div>
+            <p className="text-center text-rose-200 mt-4 font-medium">Cat Lady Extraordinaire</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Final Love Message */}
+      <Card className="bg-gradient-to-r from-rose-950/40 via-pink-900/30 to-rose-950/40 border-rose-400/30 mb-8">
+        <CardContent className="p-8 sm:p-12 text-center">
+          <div className="flex justify-center gap-3 mb-6">
+            {['💕', '🌸', '💖', '🌸', '💕'].map((emoji, i) => (
+              <span key={i} className="text-3xl animate-bounce" style={{ animationDelay: `${i * 0.1}s` }}>{emoji}</span>
+            ))}
+          </div>
+          
+          <h3 className="text-3xl font-bold text-rose-300 mb-6" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+            You Are Truly One of a Kind
+          </h3>
+          
+          <p className="text-xl text-slate-300 max-w-2xl mx-auto mb-6 leading-relaxed">
+            Sian, you are gorgeous inside and out. Your beauty, your humor, your honesty, and your incredible heart 
+            make you the most amazing person. Mia is so blessed to have you as her mum.
+          </p>
+          
+          <p className="text-rose-200 text-lg font-medium mb-6">
+            Never forget how special you are.
+          </p>
+          
+          <div className="text-4xl mb-4">
+            💝 🌹 👑 🌟 💎
+          </div>
+          
+          <p className="text-rose-400 font-bold text-xl">
+            With all the love in the world
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export default function SianPage() {
   const navigate = useNavigate();
   const [currentJoke, setCurrentJoke] = useState(0);
@@ -98,6 +399,8 @@ export default function SianPage() {
   const [cartoonImage, setCartoonImage] = useState(null);
   const [imageLoading, setImageLoading] = useState(true);
   const [showHearts, setShowHearts] = useState([]);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [secretUnlocked, setSecretUnlocked] = useState(false);
 
   // Generate cartoon image on load
   useEffect(() => {
@@ -147,6 +450,10 @@ export default function SianPage() {
     return () => clearInterval(interval);
   }, []);
 
+  const handleSecretUnlock = () => {
+    setSecretUnlocked(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-pink-950/20 to-slate-950 text-slate-200 py-6 sm:py-12 px-3 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Animated styles */}
@@ -190,6 +497,19 @@ export default function SianPage() {
             0% { filter: hue-rotate(0deg); }
             100% { filter: hue-rotate(360deg); }
           }
+          @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+          }
+          @keyframes pulse-slow {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+          }
+          @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(244, 63, 94, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(244, 63, 94, 0.6); }
+          }
           .float-1 { animation: float 6s ease-in-out infinite; }
           .float-2 { animation: float 8s ease-in-out infinite 1s; }
           .float-3 { animation: float 7s ease-in-out infinite 2s; }
@@ -222,8 +542,18 @@ export default function SianPage() {
           .joke-card {
             transition: all 0.5s ease-in-out;
           }
+          .animate-shake { animation: shake 0.5s ease-in-out; }
+          .animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
+          .animate-glow { animation: glow 2s ease-in-out infinite; }
         `}
       </style>
+
+      {/* Password Modal */}
+      <PasswordModal 
+        isOpen={showPasswordModal} 
+        onClose={() => setShowPasswordModal(false)}
+        onSuccess={handleSecretUnlock}
+      />
 
       {/* Floating hearts */}
       {showHearts.map(heart => (
@@ -385,6 +715,30 @@ export default function SianPage() {
           </div>
         </div>
 
+        {/* Secret Area Unlock Button */}
+        {!secretUnlocked && (
+          <div className="text-center mb-8">
+            <button
+              onClick={() => setShowPasswordModal(true)}
+              className="group relative inline-flex items-center gap-3 bg-gradient-to-r from-rose-900/40 to-pink-900/40 hover:from-rose-800/50 hover:to-pink-800/50 border-2 border-rose-400/40 hover:border-rose-400/60 rounded-full px-8 py-4 transition-all duration-300 animate-glow"
+              data-testid="unlock-secret-btn"
+            >
+              <div className="relative">
+                <Heart className="w-8 h-8 text-rose-400 fill-rose-400/50 group-hover:scale-110 transition-transform" />
+                <Lock className="absolute -bottom-1 -right-1 w-4 h-4 text-rose-300" />
+              </div>
+              <div className="text-left">
+                <span className="block text-rose-200 font-bold text-lg">Something Extra Special</span>
+                <span className="block text-rose-300/70 text-sm">Click to unlock with password</span>
+              </div>
+              <Sparkles className="w-5 h-5 text-rose-300 animate-pulse" />
+            </button>
+          </div>
+        )}
+
+        {/* Secret Content - Only shown when unlocked */}
+        {secretUnlocked && <SecretContent />}
+
         {/* Easter Egg Message */}
         <Card className="bg-slate-900/50 border-slate-700/50 mb-8">
           <CardContent className="p-4 text-center">
@@ -401,6 +755,7 @@ export default function SianPage() {
             onClick={() => navigate('/moderator/login')}
             variant="outline"
             className="border-pink-500/30 text-pink-400 hover:text-pink-300 hover:border-pink-500/50 hover:bg-pink-500/10"
+            data-testid="back-to-login-btn"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Login
