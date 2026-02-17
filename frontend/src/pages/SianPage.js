@@ -74,7 +74,7 @@ const APPRECIATION_MESSAGES = [
 ];
 
 const JOKES = [
-  "Why did Sian cross the road? To moderate the chicken's behavior! 🐔",
+  "Why did Sian cross the road? To moderate the chicken's behaviour! 🐔",
   "Sian doesn't read the rules - the rules read themselves to her! 📜",
   "When Sian enters a chat, spam runs away crying 😭",
   "Legends say Sian once moderated a server so well, it moderated itself forever after ✨",
@@ -371,7 +371,7 @@ function SecretContent() {
           </h3>
           
           <p className="text-xl text-slate-300 max-w-2xl mx-auto mb-6 leading-relaxed">
-            Sian, you are gorgeous inside and out. Your beauty, your humor, your honesty, and your incredible heart 
+            Sian, you are gorgeous inside and out. Your beauty, your humour, your honesty, and your incredible heart 
             make you the most amazing person. Mia is so blessed to have you as her mum.
           </p>
           
@@ -407,7 +407,7 @@ export default function SianPage() {
     const generateCartoonImage = async () => {
       try {
         const response = await axios.post(`${API}/images/generate`, {
-          prompt: "A fun cartoon-style portrait illustration of a friendly young woman with long light brown/blonde hair, blue-green eyes, warm smile, in a colorful illustrated style with hearts and stars around her, cheerful and vibrant colors, digital art illustration style, cute and wholesome aesthetic"
+          prompt: "A fun cartoon-style portrait illustration of a friendly young woman with long light brown/blonde hair, blue-green eyes, warm smile, in a colourful illustrated style with hearts and stars around her, cheerful and vibrant colours, digital art illustration style, cute and wholesome aesthetic"
         });
         setCartoonImage(response.data.image_base64);
       } catch (error) {
