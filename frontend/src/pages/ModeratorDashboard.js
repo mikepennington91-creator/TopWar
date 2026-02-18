@@ -136,6 +136,11 @@ export default function ModeratorDashboard() {
       filtered = filtered.filter(app => statusFilter.includes(app.status));
     }
     
+    // Apply position filter
+    if (!positionFilter.includes("all")) {
+      filtered = filtered.filter(app => positionFilter.includes(app.position));
+    }
+    
     // Apply sort order
     filtered.sort((a, b) => {
       const dateA = new Date(a.submitted_at);
