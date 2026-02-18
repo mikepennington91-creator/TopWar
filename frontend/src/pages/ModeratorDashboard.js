@@ -184,6 +184,28 @@ export default function ModeratorDashboard() {
     }
   };
 
+  const togglePositionFilter = (position) => {
+    if (position === "all") {
+      setPositionFilter(["all"]);
+    } else {
+      setPositionFilter(prev => {
+        // Remove "all" if selecting specific position
+        let newFilter = prev.filter(p => p !== "all");
+        
+        if (newFilter.includes(position)) {
+          // Remove position if already selected
+          newFilter = newFilter.filter(p => p !== position);
+        } else {
+          // Add position
+          newFilter = [...newFilter, position];
+        }
+        
+        // If no filters selected, default to "all"
+        return newFilter.length === 0 ? ["all"] : newFilter;
+      });
+    }
+  };
+
   const fetchApplications = async () => {
     try {
       const token = localStorage.getItem('moderator_token');
