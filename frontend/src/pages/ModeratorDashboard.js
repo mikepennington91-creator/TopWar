@@ -828,7 +828,65 @@ export default function ModeratorDashboard() {
             </TabsTrigger>
           </TabsList>
 
-        {/* Applications - Mobile Card View */}
+          {/* Position Filter Buttons - Multiselect */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            <span className="text-slate-400 text-xs uppercase tracking-wide flex items-center mr-2" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+              <Filter className="h-3 w-3 mr-1" /> Position:
+            </span>
+            <Button
+              data-testid="filter-all-positions"
+              onClick={() => togglePositionFilter("all")}
+              variant="outline"
+              size="sm"
+              className={`rounded-sm text-xs uppercase tracking-wide transition-all ${
+                positionFilter.includes("all")
+                  ? "bg-slate-500/30 border-slate-400 text-slate-200"
+                  : "bg-slate-900/50 border-slate-700 text-slate-500 hover:border-slate-500 hover:text-slate-300"
+              }`}
+            >
+              All
+            </Button>
+            <Button
+              data-testid="filter-discord"
+              onClick={() => togglePositionFilter("Discord")}
+              variant="outline"
+              size="sm"
+              className={`rounded-sm text-xs uppercase tracking-wide transition-all ${
+                positionFilter.includes("Discord")
+                  ? "bg-indigo-500/30 border-indigo-400 text-indigo-300"
+                  : "bg-slate-900/50 border-slate-700 text-slate-500 hover:border-indigo-500 hover:text-indigo-400"
+              }`}
+            >
+              Discord
+            </Button>
+            <Button
+              data-testid="filter-in-game"
+              onClick={() => togglePositionFilter("In-Game")}
+              variant="outline"
+              size="sm"
+              className={`rounded-sm text-xs uppercase tracking-wide transition-all ${
+                positionFilter.includes("In-Game")
+                  ? "bg-cyan-500/30 border-cyan-400 text-cyan-300"
+                  : "bg-slate-900/50 border-slate-700 text-slate-500 hover:border-cyan-500 hover:text-cyan-400"
+              }`}
+            >
+              In-Game
+            </Button>
+            <Button
+              data-testid="filter-both"
+              onClick={() => togglePositionFilter("Both")}
+              variant="outline"
+              size="sm"
+              className={`rounded-sm text-xs uppercase tracking-wide transition-all ${
+                positionFilter.includes("Both")
+                  ? "bg-amber-500/30 border-amber-400 text-amber-300"
+                  : "bg-slate-900/50 border-slate-700 text-slate-500 hover:border-amber-500 hover:text-amber-400"
+              }`}
+            >
+              Both
+            </Button>
+          </div>
+
         <div className="sm:hidden space-y-3" data-testid="applications-mobile">
           {filteredApplications.length === 0 ? (
             <div className="glass-card p-6 text-center text-slate-400 rounded-lg">
