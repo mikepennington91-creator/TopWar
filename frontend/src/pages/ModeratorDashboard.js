@@ -33,6 +33,7 @@ export default function ModeratorDashboard() {
   const [newComment, setNewComment] = useState("");
   const [sortOrder, setSortOrder] = useState("newest"); // newest, oldest, most_positive_votes, most_negative_votes
   const [statusFilter, setStatusFilter] = useState(["all"]); // all, awaiting_review, pending, approved, rejected
+  const [positionFilter, setPositionFilter] = useState(["all"]); // all, Discord, In-Game, Both
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showStatusChangeDialog, setShowStatusChangeDialog] = useState(false);
   const [statusChangeData, setStatusChangeData] = useState({ status: "", comment: "" });
@@ -135,6 +136,11 @@ export default function ModeratorDashboard() {
       filtered = filtered.filter(app => statusFilter.includes(app.status));
     }
     
+    // Apply position filter
+    if (!positionFilter.includes("all")) {
+      filtered = filtered.filter(app => positionFilter.includes(app.position));
+    }
+    
     // Apply sort order
     filtered.sort((a, b) => {
       const dateA = new Date(a.submitted_at);
@@ -154,7 +160,7 @@ export default function ModeratorDashboard() {
     });
     
     setFilteredApplications(filtered);
-  }, [searchQuery, applications, sortOrder, statusFilter, activeTab]);
+  }, [searchQuery, applications, sortOrder, statusFilter, positionFilter, activeTab]);
 
   const toggleStatusFilter = (status) => {
     if (status === "all") {
@@ -170,6 +176,28 @@ export default function ModeratorDashboard() {
         } else {
           // Add status
           newFilter = [...newFilter, status];
+        }
+        
+        // If no filters selected, default to "all"
+        return newFilter.length === 0 ? ["all"] : newFilter;
+      });
+    }
+  };
+
+  const togglePositionFilter = (position) => {
+    if (position === "all") {
+      setPositionFilter(["all"]);
+    } else {
+      setPositionFilter(prev => {
+        // Remove "all" if selecting specific position
+        let newFilter = prev.filter(p => p !== "all");
+        
+        if (newFilter.includes(position)) {
+          // Remove position if already selected
+          newFilter = newFilter.filter(p => p !== position);
+        } else {
+          // Add position
+          newFilter = [...newFilter, position];
         }
         
         // If no filters selected, default to "all"
@@ -799,6 +827,65 @@ export default function ModeratorDashboard() {
               <Badge className="ml-1 sm:ml-2 bg-red-500/20 text-red-400 text-xs h-5 px-1.5">{applications.filter(a => a.status === 'rejected').length}</Badge>
             </TabsTrigger>
           </TabsList>
+
+          {/* Position Filter Buttons - Multiselect */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            <span className="text-slate-400 text-xs uppercase tracking-wide flex items-center mr-2" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+              <Filter className="h-3 w-3 mr-1" /> Position:
+            </span>
+            <Button
+              data-testid="filter-all-positions"
+              onClick={() => togglePositionFilter("all")}
+              variant="outline"
+              size="sm"
+              className={`rounded-sm text-xs uppercase tracking-wide transition-all ${
+                positionFilter.includes("all")
+                  ? "bg-slate-500/30 border-slate-400 text-slate-200"
+                  : "bg-slate-900/50 border-slate-700 text-slate-500 hover:border-slate-500 hover:text-slate-300"
+              }`}
+            >
+              All
+            </Button>
+            <Button
+              data-testid="filter-discord"
+              onClick={() => togglePositionFilter("Discord")}
+              variant="outline"
+              size="sm"
+              className={`rounded-sm text-xs uppercase tracking-wide transition-all ${
+                positionFilter.includes("Discord")
+                  ? "bg-indigo-500/30 border-indigo-400 text-indigo-300"
+                  : "bg-slate-900/50 border-slate-700 text-slate-500 hover:border-indigo-500 hover:text-indigo-400"
+              }`}
+            >
+              Discord
+            </Button>
+            <Button
+              data-testid="filter-in-game"
+              onClick={() => togglePositionFilter("In-Game")}
+              variant="outline"
+              size="sm"
+              className={`rounded-sm text-xs uppercase tracking-wide transition-all ${
+                positionFilter.includes("In-Game")
+                  ? "bg-cyan-500/30 border-cyan-400 text-cyan-300"
+                  : "bg-slate-900/50 border-slate-700 text-slate-500 hover:border-cyan-500 hover:text-cyan-400"
+              }`}
+            >
+              In-Game
+            </Button>
+            <Button
+              data-testid="filter-both"
+              onClick={() => togglePositionFilter("Both")}
+              variant="outline"
+              size="sm"
+              className={`rounded-sm text-xs uppercase tracking-wide transition-all ${
+                positionFilter.includes("Both")
+                  ? "bg-amber-500/30 border-amber-400 text-amber-300"
+                  : "bg-slate-900/50 border-slate-700 text-slate-500 hover:border-amber-500 hover:text-amber-400"
+              }`}
+            >
+              Both
+            </Button>
+          </div>
 
         {/* Applications - Mobile Card View */}
         <div className="sm:hidden space-y-3" data-testid="applications-mobile">
