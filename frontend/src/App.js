@@ -18,6 +18,7 @@ import DevSecrets from "@/pages/DevSecrets";
 import TrollPage from "@/pages/TrollPage";
 import GarudaPage from "@/pages/GarudaPage";
 import SianPage from "@/pages/SianPage";
+import SethPage from "@/pages/SethPage";
 import { Toaster } from "@/components/ui/sonner";
 import useFavicon from "@/hooks/useFavicon";
 import Navigation from "@/components/Navigation";
@@ -81,6 +82,7 @@ function App() {
           <Route path="/troll-detected" element={<TrollPage />} />
           <Route path="/garuda-tribute" element={<GarudaPage />} />
           <Route path="/sian-appreciation" element={<SianPage />} />
+          <Route path="/seth-appreciation" element={<SethPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
