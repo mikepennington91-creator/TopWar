@@ -887,6 +887,7 @@ export default function ModeratorDashboard() {
             </Button>
           </div>
 
+        {/* Applications - Mobile Card View */}
         <div className="sm:hidden space-y-3" data-testid="applications-mobile">
           {filteredApplications.length === 0 ? (
             <div className="glass-card p-6 text-center text-slate-400 rounded-lg">
