@@ -160,7 +160,7 @@ export default function ModeratorDashboard() {
     });
     
     setFilteredApplications(filtered);
-  }, [searchQuery, applications, sortOrder, statusFilter, activeTab]);
+  }, [searchQuery, applications, sortOrder, statusFilter, positionFilter, activeTab]);
 
   const toggleStatusFilter = (status) => {
     if (status === "all") {
