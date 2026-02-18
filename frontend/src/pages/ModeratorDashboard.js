@@ -33,6 +33,7 @@ export default function ModeratorDashboard() {
   const [newComment, setNewComment] = useState("");
   const [sortOrder, setSortOrder] = useState("newest"); // newest, oldest, most_positive_votes, most_negative_votes
   const [statusFilter, setStatusFilter] = useState(["all"]); // all, awaiting_review, pending, approved, rejected
+  const [positionFilter, setPositionFilter] = useState(["all"]); // all, Discord, In-Game, Both
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showStatusChangeDialog, setShowStatusChangeDialog] = useState(false);
   const [statusChangeData, setStatusChangeData] = useState({ status: "", comment: "" });
