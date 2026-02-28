@@ -444,6 +444,11 @@ export default function ModeratorLogin() {
       <div className="w-full max-w-md">
         {emailPromptDialog}
         {passwordResetDialog}
+        <CModPrompt 
+          open={showCModPrompt} 
+          onClose={handleCModDecline} 
+          onEnable={handleCModEnable} 
+        />
         <div className="glass-card rounded-lg p-5 sm:p-8">
           <div className="text-center mb-6 sm:mb-8">
             <Shield className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-amber-500 mb-3 sm:mb-4" />
