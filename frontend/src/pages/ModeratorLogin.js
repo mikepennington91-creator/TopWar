@@ -15,6 +15,7 @@ const API = `${BACKEND_URL}/api`;
 
 export default function ModeratorLogin() {
   const navigate = useNavigate();
+  const { enableCMod } = useCMod();
   const [loading, setLoading] = useState(false);
   const [credentials, setCredentials] = useState({
     username: "",
@@ -35,6 +36,8 @@ export default function ModeratorLogin() {
     new_password: "",
     confirm_password: ""
   });
+  const [showCModPrompt, setShowCModPrompt] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState(null);
 
   const isLockedAccountError = lastLoginError.toLowerCase().includes("locked");
 
