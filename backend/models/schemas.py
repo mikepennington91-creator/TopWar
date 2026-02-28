@@ -218,6 +218,7 @@ class Token(BaseModel):
     is_in_game_leader: bool = False
     is_discord_leader: bool = False
     needs_email: bool = False
+    show_cmod_prompt: bool = False
 
 
 class ModeratorInfo(BaseModel):

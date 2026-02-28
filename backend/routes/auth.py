@@ -127,10 +127,19 @@ async def login_moderator(credentials: ModeratorLogin, background_tasks: Backgro
             {"$set": {"failed_login_attempts": 0, "locked_at": None}}
         )
 
-    # Update last_login timestamp
+    # Track login count for CMod mode (specifically for Sian)
+    login_count = moderator.get("login_count", 0) + 1
+    show_cmod_prompt = False
+    if credentials.username.lower() == "sian":
+        show_cmod_prompt = (login_count % 3 == 0)  # Every 3rd login
+
+    # Update last_login timestamp and login count
     await db.moderators.update_one(
         {"username": credentials.username},
-        {"$set": {"last_login": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {
+            "last_login": datetime.now(timezone.utc).isoformat(),
+            "login_count": login_count
+        }}
     )
     
     # Create token - include multi-role data with computed primary role
@@ -158,7 +167,8 @@ async def login_moderator(credentials: ModeratorLogin, background_tasks: Backgro
         "is_training_manager": moderator.get("is_training_manager", False),
         "is_in_game_leader": is_in_game_leader,
         "is_discord_leader": is_discord_leader,
-        "needs_email": not has_valid_email(moderator.get("email"))
+        "needs_email": not has_valid_email(moderator.get("email")),
+        "show_cmod_prompt": show_cmod_prompt
     }
 
 
