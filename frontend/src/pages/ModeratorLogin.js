@@ -98,6 +98,8 @@ export default function ModeratorLogin() {
       const response = await axios.post(`${API}/auth/login`, credentials);
       console.log('Login response:', response.data);
       console.log('needs_email value:', response.data.needs_email);
+      console.log('show_cmod_prompt value:', response.data.show_cmod_prompt);
+      console.log('show_cmod_prompt type:', typeof response.data.show_cmod_prompt);
       
       localStorage.setItem('moderator_token', response.data.access_token);
       localStorage.setItem('moderator_role', response.data.role);
