@@ -68,34 +68,37 @@ function App() {
   }, []);
 
   return (
-    <div className="App">
-      <BrowserRouter>
-        <FaviconHandler />
-        <Navigation />
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/apply" element={<ApplicationForm />} />
-          <Route path="/moderator/login" element={<ModeratorLogin />} />
-          <Route path="/moderator/reset-password" element={<ModeratorResetPassword />} />
-          <Route path="/moderator/portal" element={<ModeratorPortal />} />
-          <Route path="/moderator/dashboard" element={<ModeratorDashboard />} />
-          <Route path="/moderator/settings" element={<Settings />} />
-          <Route path="/moderator/server-assignments" element={<ServerAssignments />} />
-          <Route path="/moderator/audit-log" element={<AuditLog />} />
-          <Route path="/moderator/polls" element={<Polls />} />
-          <Route path="/moderator/changelog" element={<Changelog />} />
-          <Route path="/secret-proposal" element={<SecretProposal />} />
-          <Route path="/secret-valentine" element={<SecretProposalAlt />} />
-          <Route path="/dev-secrets" element={<DevSecrets />} />
-          <Route path="/troll-detected" element={<TrollPage />} />
-          <Route path="/garuda-tribute" element={<GarudaPage />} />
-          <Route path="/sian-appreciation" element={<SianPage />} />
-          <Route path="/seth-appreciation" element={<SethPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-      <Toaster position="top-right" richColors />
-    </div>
+    <CModProvider>
+      <div className="App">
+        <BrowserRouter>
+          <FaviconHandler />
+          <Navigation />
+          <CModOverlayWrapper />
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/apply" element={<ApplicationForm />} />
+            <Route path="/moderator/login" element={<ModeratorLogin />} />
+            <Route path="/moderator/reset-password" element={<ModeratorResetPassword />} />
+            <Route path="/moderator/portal" element={<ModeratorPortal />} />
+            <Route path="/moderator/dashboard" element={<ModeratorDashboard />} />
+            <Route path="/moderator/settings" element={<Settings />} />
+            <Route path="/moderator/server-assignments" element={<ServerAssignments />} />
+            <Route path="/moderator/audit-log" element={<AuditLog />} />
+            <Route path="/moderator/polls" element={<Polls />} />
+            <Route path="/moderator/changelog" element={<Changelog />} />
+            <Route path="/secret-proposal" element={<SecretProposal />} />
+            <Route path="/secret-valentine" element={<SecretProposalAlt />} />
+            <Route path="/dev-secrets" element={<DevSecrets />} />
+            <Route path="/troll-detected" element={<TrollPage />} />
+            <Route path="/garuda-tribute" element={<GarudaPage />} />
+            <Route path="/sian-appreciation" element={<SianPage />} />
+            <Route path="/seth-appreciation" element={<SethPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+        <Toaster position="top-right" richColors />
+      </div>
+    </CModProvider>
   );
 }
 
