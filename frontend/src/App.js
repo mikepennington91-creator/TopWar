@@ -34,6 +34,12 @@ function FaviconHandler() {
   return null;
 }
 
+// Component to render CMod overlay
+function CModOverlayWrapper() {
+  const { cmodEnabled } = useCMod();
+  return <CModOverlay isActive={cmodEnabled} />;
+}
+
 function App() {
   useEffect(() => {
     // Set initial timestamp if not exists
