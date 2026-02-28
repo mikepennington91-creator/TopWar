@@ -74,6 +74,7 @@ export default function Navigation() {
   };
   
   const handleLogout = () => {
+    disableCMod(); // Disable CMod mode on logout
     localStorage.removeItem('moderator_token');
     localStorage.removeItem('moderator_role');
     localStorage.removeItem('moderator_username');
