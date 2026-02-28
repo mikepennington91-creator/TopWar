@@ -20,6 +20,7 @@ const API = `${BACKEND_URL}/api`;
 
 export default function ModeratorPortal() {
   const navigate = useNavigate();
+  const { disableCMod } = useCMod();
   const [currentUser, setCurrentUser] = useState(null);
   const [announcements, setAnnouncements] = useState([]);
   const [allAnnouncements, setAllAnnouncements] = useState([]);
