@@ -166,6 +166,23 @@ export default function ModeratorLogin() {
     }
   };
 
+  const handleCModEnable = () => {
+    enableCMod();
+    setShowCModPrompt(false);
+    toast.success("CMod Mode enabled! 🎩");
+    if (pendingNavigation) {
+      navigate(pendingNavigation);
+    }
+  };
+
+  const handleCModDecline = () => {
+    setShowCModPrompt(false);
+    toast.success("Login successful!");
+    if (pendingNavigation) {
+      navigate(pendingNavigation);
+    }
+  };
+
   const handlePasswordChange = async (e) => {
     e.preventDefault();
     
