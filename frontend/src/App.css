@@ -37,3 +37,70 @@ h1, h2, h3, h4, h5, h6, .heading {
   box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
   transform: translateY(-2px);
 }
+
+/* CMod Mode - Lime Green Theme */
+:root.cmod-theme {
+  --cmod-primary: #32cd32;
+  --cmod-primary-dark: #228b22;
+  --cmod-bg: #0a1f0a;
+  --cmod-card-bg: rgba(50, 205, 50, 0.1);
+}
+
+.cmod-theme body,
+.cmod-theme .App {
+  background-color: var(--cmod-bg) !important;
+}
+
+.cmod-theme .min-h-screen {
+  background-color: var(--cmod-bg) !important;
+}
+
+.cmod-theme .bg-slate-950,
+.cmod-theme .bg-slate-900 {
+  background-color: var(--cmod-bg) !important;
+}
+
+.cmod-theme .glass-card {
+  background: var(--cmod-card-bg) !important;
+  border-color: rgba(50, 205, 50, 0.3) !important;
+}
+
+.cmod-theme .text-amber-500,
+.cmod-theme .text-amber-400 {
+  color: var(--cmod-primary) !important;
+}
+
+.cmod-theme .bg-amber-500,
+.cmod-theme .bg-amber-600 {
+  background-color: var(--cmod-primary) !important;
+}
+
+.cmod-theme .bg-amber-500:hover,
+.cmod-theme .hover\:bg-amber-600:hover {
+  background-color: var(--cmod-primary-dark) !important;
+}
+
+.cmod-theme .border-amber-500,
+.cmod-theme .border-amber-400 {
+  border-color: var(--cmod-primary) !important;
+}
+
+.cmod-theme .focus\:border-amber-500:focus {
+  border-color: var(--cmod-primary) !important;
+}
+
+.cmod-theme .focus\:ring-amber-500:focus {
+  --tw-ring-color: var(--cmod-primary) !important;
+}
+
+.cmod-theme .btn-glow {
+  box-shadow: 0 0 10px rgba(50, 205, 50, 0.3) !important;
+}
+
+.cmod-theme .btn-glow:hover {
+  box-shadow: 0 0 20px rgba(50, 205, 50, 0.5) !important;
+}
+
+.cmod-theme .grid-texture {
+  background-image: radial-gradient(circle, rgba(50, 205, 50, 0.1) 1px, transparent 1px) !important;
+}
