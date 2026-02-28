@@ -1,0 +1,52 @@
+{
+  "summary": "Completed comprehensive testing of CMod mode feature for user Sian. Backend API correctly returns show_cmod_prompt flag every 3rd login. Frontend CMod prompt dialog, theme, and falling top hats animation are working correctly. However, CMod mode is not properly disabled on logout.",
+  
+  "backend_issues": {
+    "critical_bugs": [],
+    "flaky_endpoints": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "ModeratorPortal logout functionality",
+        "issue": "CMod mode (theme, localStorage, overlay) not properly disabled on logout despite calling disableCMod()",
+        "selector": "text=Logout",
+        "fix_priority": "MEDIUM"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "CMod mode logout cleanup",
+        "issue": "After logout, CMod theme class remains on document.documentElement and localStorage still contains cmod_enabled=true",
+        "affected_selectors": ["document.documentElement.className", "localStorage.getItem('cmod_enabled')"]
+      }
+    ],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "Backend API returns show_cmod_prompt: true every 3rd login for Sian (confirmed pattern: login 3, 6, 9, etc.)",
+    "CMod prompt dialog appears correctly with proper text and buttons",
+    "Enable CMod Mode button works - applies lime green theme successfully",
+    "CMod theme (cmod-theme class) applies correctly to document.documentElement",
+    "CMod mode persists in localStorage when enabled",
+    "Falling top hats animation (CModOverlay) renders correctly with 25+ animated elements",
+    "CMod prompt decline functionality works (Maybe Later button)",
+    "Every 3rd login rule working correctly - prompt appears on logins 3, 6, 9 but not on 1, 2, 4, 5, 7, 8"
+  ],
+
+  "test_report_links": ["/app/backend_test.py"],
+
+  "success_percentage": {
+    "backend": "100%",
+    "frontend": "85%"
+  },
+
+  "updated_files": ["/app/frontend/src/pages/ModeratorPortal.js"],
+
+  "action_item_for_main_agent": "Fix CMod mode logout cleanup - the disableCMod() function is being called but CMod theme class and localStorage persistence are not being properly cleared on logout. The issue may be related to timing between localStorage.clear() and disableCMod() or the useCMod hook cleanup logic.",
+
+  "should_call_test_agent_after_fix": "true",
+  "should_main_agent_test_itself": "false"
+}
