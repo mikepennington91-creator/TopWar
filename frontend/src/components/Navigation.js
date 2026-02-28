@@ -53,6 +53,7 @@ export default function Navigation() {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { disableCMod } = useCMod();
   
   const currentPath = location.pathname;
   
