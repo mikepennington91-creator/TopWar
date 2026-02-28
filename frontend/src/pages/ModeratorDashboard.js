@@ -369,6 +369,7 @@ export default function ModeratorDashboard() {
 
   const handleLogout = () => {
     localStorage.clear();
+    disableCMod(); // Disable CMod mode on logout
     toast.success("Logged out successfully");
     navigate('/');
   };
