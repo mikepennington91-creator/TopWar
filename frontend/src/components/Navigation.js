@@ -16,6 +16,7 @@ import {
   ClipboardList,
   ArrowLeft
 } from "lucide-react";
+import { useCMod } from "@/hooks/useCMod";
 
 // Pages that should show the navigation
 const SHOW_NAV_ROUTES = [
