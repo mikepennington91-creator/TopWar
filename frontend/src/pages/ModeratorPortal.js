@@ -305,6 +305,7 @@ export default function ModeratorPortal() {
   };
 
   const handleLogout = () => {
+    disableCMod(); // Disable CMod mode on logout
     localStorage.clear();
     toast.success("Logged out successfully");
     navigate('/');
