@@ -368,8 +368,8 @@ export default function ModeratorDashboard() {
   // Audit log fetch moved to separate page
 
   const handleLogout = () => {
+    disableCMod(); // Disable CMod mode on logout (must be before localStorage.clear)
     localStorage.clear();
-    disableCMod(); // Disable CMod mode on logout
     toast.success("Logged out successfully");
     navigate('/');
   };
