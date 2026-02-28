@@ -125,6 +125,14 @@ export default function ModeratorLogin() {
         return;
       }
 
+      // Check if CMod prompt should be shown (for Sian every 3rd login)
+      if (response.data.show_cmod_prompt) {
+        setShowCModPrompt(true);
+        setPendingNavigation('/moderator/portal');
+        setLoading(false);
+        return;
+      }
+
       toast.success("Login successful!");
       navigate('/moderator/portal');
     } catch (error) {
