@@ -24,6 +24,7 @@ const API = `${BACKEND_URL}/api`;
 
 export default function ModeratorDashboard() {
   const navigate = useNavigate();
+  const { disableCMod } = useCMod();
   const [applications, setApplications] = useState([]);
   const [filteredApplications, setFilteredApplications] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
