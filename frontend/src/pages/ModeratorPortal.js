@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import HolidayOverlay from "@/components/HolidayOverlay";
 import SeasonalOverlay from "@/components/SeasonalOverlay";
 import { useCMod } from "@/hooks/useCMod";
+import useTranslation from "@/hooks/useTranslation";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -21,6 +22,7 @@ const API = `${BACKEND_URL}/api`;
 export default function ModeratorPortal() {
   const navigate = useNavigate();
   const { disableCMod } = useCMod();
+  const { t } = useTranslation();
   const [currentUser, setCurrentUser] = useState(null);
   const [announcements, setAnnouncements] = useState([]);
   const [allAnnouncements, setAllAnnouncements] = useState([]);
