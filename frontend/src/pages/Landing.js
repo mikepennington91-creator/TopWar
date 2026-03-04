@@ -3,9 +3,11 @@ import { Shield, Users, CheckCircle, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import HolidayOverlay from "@/components/HolidayOverlay";
 import SeasonalOverlay from "@/components/SeasonalOverlay";
+import useTranslation from "@/hooks/useTranslation";
 
 export default function Landing() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 grid-texture">
@@ -33,15 +35,15 @@ export default function Landing() {
           <div className="mb-8">
             <Shield className="w-20 h-20 mx-auto text-amber-500 mb-6" />
             <h1 className="text-5xl md:text-7xl font-bold uppercase tracking-wider mb-4 text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-              TOP WAR
+              {t('landing.title')}
             </h1>
             <h2 className="text-3xl md:text-5xl font-semibold uppercase tracking-wider mb-6" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-              Moderator Recruitment
+              {t('landing.subtitle')}
             </h2>
           </div>
 
           <p className="text-lg md:text-xl text-slate-300 mb-12 leading-relaxed max-w-2xl mx-auto">
-            Join our elite moderation team. Help maintain order, enforce community guidelines, and shape the future of Top War's player experience.
+            {t('landing.description')}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center">
@@ -50,7 +52,7 @@ export default function Landing() {
               onClick={() => navigate('/apply')}
               className="bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide px-8 py-6 text-lg rounded-sm btn-glow"
             >
-              Apply Now
+              {t('landing.applyNow')}
             </Button>
             <Button
               data-testid="moderator-login-btn"
@@ -58,13 +60,13 @@ export default function Landing() {
               variant="outline"
               className="border-2 border-emerald-500 text-emerald-500 hover:bg-emerald-500/20 font-bold uppercase tracking-wide px-8 py-6 text-lg rounded-sm"
             >
-              Moderator Login
+              {t('landing.moderatorLogin')}
             </Button>
           </div>
         </div>
 
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1 text-slate-300 md:hidden pointer-events-none">
-          <p className="text-xs uppercase tracking-[0.2em]">More details below</p>
+          <p className="text-xs uppercase tracking-[0.2em]">{t('landing.moreDetailsBelow')}</p>
           <ChevronDown className="w-5 h-5 text-amber-500 animate-bounce" />
         </div>
       </div>
@@ -73,37 +75,37 @@ export default function Landing() {
       <div className="py-24 px-8 bg-slate-900/50">
         <div className="max-w-6xl mx-auto">
           <h3 className="text-4xl font-bold uppercase tracking-wider text-center mb-16 text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-            Mission Brief
+            {t('landing.missionBrief')}
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="glass-card p-8 rounded-lg hover:border-amber-500/50 transition-all duration-300">
               <Shield className="w-12 h-12 text-amber-500 mb-4" />
               <h4 className="text-2xl font-semibold uppercase tracking-wide mb-3" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                Enforce Guidelines
+                {t('landing.enforceGuidelines')}
               </h4>
               <p className="text-slate-400 leading-relaxed">
-                Maintain community standards and ensure all players follow the rules. Your authority shapes the battlefield.
+                {t('landing.enforceGuidelinesDesc')}
               </p>
             </div>
 
             <div className="glass-card p-8 rounded-lg hover:border-emerald-500/50 transition-all duration-300">
               <Users className="w-12 h-12 text-emerald-500 mb-4" />
               <h4 className="text-2xl font-semibold uppercase tracking-wide mb-3" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                Support Players
+                {t('landing.supportPlayers')}
               </h4>
               <p className="text-slate-400 leading-relaxed">
-                Guide new recruits, answer questions, and create a welcoming environment for the Top War community.
+                {t('landing.supportPlayersDesc')}
               </p>
             </div>
 
             <div className="glass-card p-8 rounded-lg hover:border-amber-500/50 transition-all duration-300">
               <CheckCircle className="w-12 h-12 text-amber-500 mb-4" />
               <h4 className="text-2xl font-semibold uppercase tracking-wide mb-3" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                Resolve Conflicts
+                {t('landing.resolveConflicts')}
               </h4>
               <p className="text-slate-400 leading-relaxed">
-                Handle disputes professionally, mediate conflicts, and maintain peace across all servers and channels.
+                {t('landing.resolveConflictsDesc')}
               </p>
             </div>
           </div>
