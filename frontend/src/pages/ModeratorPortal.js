@@ -406,7 +406,7 @@ export default function ModeratorPortal() {
       <div className="bg-slate-900/50 border-b border-slate-800 py-2 px-3 sm:px-6">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-xs sm:text-sm text-slate-400">Welcome, <span className="text-amber-400">{currentUser.username}</span></span>
+            <span className="text-xs sm:text-sm text-slate-400">{t('portal.welcome')} <span className="text-amber-400">{currentUser.username}</span></span>
             {getRoleBadge(currentUser.role)}
           </div>
         </div>
@@ -420,7 +420,7 @@ export default function ModeratorPortal() {
             className="bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide py-4 sm:py-6 rounded-sm btn-glow text-xs sm:text-sm"
           >
             <FileText className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
-            Apps
+            {t('nav.apps')}
           </Button>
           <Button
             onClick={() => navigate('/moderator/server-assignments')}
@@ -428,7 +428,7 @@ export default function ModeratorPortal() {
             className="border-2 border-emerald-500 text-emerald-500 hover:bg-emerald-500/20 font-bold uppercase tracking-wide py-4 sm:py-6 rounded-sm text-xs sm:text-sm"
           >
             <Calendar className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
-            Servers
+            {t('nav.servers')}
           </Button>
           <Button
             onClick={() => navigate('/moderator/polls')}
@@ -440,7 +440,7 @@ export default function ModeratorPortal() {
             }`}
           >
             <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
-            Polls
+            {t('nav.polls')}
             {hasNewPolls && <span className="ml-1 w-2 h-2 bg-red-500 rounded-full"></span>}
           </Button>
           <Button
@@ -449,7 +449,7 @@ export default function ModeratorPortal() {
             className="border-2 border-slate-600 text-slate-300 hover:bg-slate-800 font-bold uppercase tracking-wide py-4 sm:py-6 rounded-sm text-xs sm:text-sm"
           >
             <Settings className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
-            Settings
+            {t('nav.settings')}
           </Button>
           <Button
             onClick={() => navigate('/moderator/changelog')}
@@ -457,7 +457,7 @@ export default function ModeratorPortal() {
             className="border-2 border-purple-500 text-purple-400 hover:bg-purple-500/20 font-bold uppercase tracking-wide py-4 sm:py-6 rounded-sm text-xs sm:text-sm"
           >
             <ScrollText className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
-            Changelog
+            {t('nav.changelog')}
           </Button>
           <Button
             onClick={() => navigate('/apply')}
@@ -465,7 +465,7 @@ export default function ModeratorPortal() {
             className="border-2 border-blue-500 text-blue-400 hover:bg-blue-500/20 font-bold uppercase tracking-wide py-4 sm:py-6 rounded-sm text-xs sm:text-sm"
           >
             <Users className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
-            Apply
+            {t('nav.apply')}
           </Button>
         </div>
 
