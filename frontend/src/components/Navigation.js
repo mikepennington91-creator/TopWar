@@ -167,7 +167,7 @@ export default function Navigation() {
               >
                 <Shield className="w-6 h-6" />
                 <span className="font-bold" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                  TOP WAR PORTAL
+                  {t('nav.topWarPortal')}
                 </span>
               </button>
               
@@ -191,6 +191,8 @@ export default function Navigation() {
                 
                 <div className="w-px h-6 bg-slate-700 mx-2" />
                 
+                <LanguageToggle className="mr-2" />
+                
                 <Button
                   onClick={handleLogout}
                   variant="ghost"
@@ -198,7 +200,7 @@ export default function Navigation() {
                   className="text-slate-400 hover:text-red-400 text-xs"
                 >
                   <LogOut className="w-4 h-4 mr-1" />
-                  Logout
+                  {t('nav.logout')}
                 </Button>
               </div>
             </div>
@@ -227,19 +229,22 @@ export default function Navigation() {
                 >
                   <Shield className="w-5 h-5" />
                   <span className="font-bold text-sm" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                    TW PORTAL
+                    {t('nav.twPortal')}
                   </span>
                 </button>
               </div>
               
-              <Button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                variant="ghost"
-                size="sm"
-                className="text-slate-400"
-              >
-                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </Button>
+              <div className="flex items-center gap-2">
+                <LanguageToggle />
+                <Button
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  variant="ghost"
+                  size="sm"
+                  className="text-slate-400"
+                >
+                  {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                </Button>
+              </div>
             </div>
           </div>
           
@@ -275,7 +280,7 @@ export default function Navigation() {
                   className="w-full justify-start text-slate-400 hover:text-red-400 text-xs"
                 >
                   <LogOut className="w-4 h-4 mr-2" />
-                  Logout
+                  {t('nav.logout')}
                 </Button>
               </div>
             </div>
