@@ -17,6 +17,8 @@ import {
   ArrowLeft
 } from "lucide-react";
 import { useCMod } from "@/hooks/useCMod";
+import LanguageToggle from "@/components/LanguageToggle";
+import useTranslation from "@/hooks/useTranslation";
 
 // Pages that should show the navigation
 const SHOW_NAV_ROUTES = [
