@@ -484,9 +484,9 @@ export default function ModeratorPortal() {
                   <BarChart3 className="h-5 w-5 text-cyan-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-cyan-400">New Poll{newPollCount > 1 ? 's' : ''} Available!</h3>
+                  <h3 className="font-semibold text-cyan-400">{t('portal.pollsAvailable')}</h3>
                   <p className="text-sm text-slate-400">
-                    {newPollCount} poll{newPollCount > 1 ? 's' : ''} waiting for your vote
+                    {newPollCount} {t('portal.pollsWaiting')}
                   </p>
                 </div>
               </div>
@@ -494,7 +494,7 @@ export default function ModeratorPortal() {
                 onClick={() => navigate('/moderator/polls')}
                 className="bg-cyan-500 hover:bg-cyan-600 text-white rounded-sm ml-0 sm:ml-auto"
               >
-                View Polls
+                {t('portal.viewPolls')}
               </Button>
             </div>
           </div>
