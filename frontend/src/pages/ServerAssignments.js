@@ -50,6 +50,7 @@ const TAG_OPTIONS = [
 
 export default function ServerAssignments() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [assignments, setAssignments] = useState([]);
   const [moderators, setModerators] = useState([]);
