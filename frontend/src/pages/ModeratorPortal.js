@@ -505,7 +505,7 @@ export default function ModeratorPortal() {
           <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <CardTitle className="text-xl sm:text-2xl font-bold uppercase tracking-wide text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
               <Megaphone className="inline-block mr-2 h-5 w-5 sm:h-6 sm:w-6" />
-              Announcements
+              {t('portal.announcements')}
             </CardTitle>
             {canManageAnnouncements && (
               <Button
@@ -513,7 +513,7 @@ export default function ModeratorPortal() {
                 className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-sm text-sm w-full sm:w-auto"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                New Announcement
+                {t('portal.newAnnouncement')}
               </Button>
             )}
           </CardHeader>
@@ -523,7 +523,7 @@ export default function ModeratorPortal() {
               <form onSubmit={handleCreateAnnouncement} className="mb-6 p-4 bg-slate-900/50 rounded border border-slate-700">
                 <div className="space-y-4">
                   <div>
-                    <Label className="text-slate-300">Title</Label>
+                    <Label className="text-slate-300">{t('portal.title')}</Label>
                     <Input
                       value={newAnnouncement.title}
                       onChange={(e) => setNewAnnouncement(prev => ({ ...prev, title: e.target.value }))}
@@ -532,7 +532,7 @@ export default function ModeratorPortal() {
                     />
                   </div>
                   <div>
-                    <Label className="text-slate-300">Message</Label>
+                    <Label className="text-slate-300">{t('portal.message')}</Label>
                     <Textarea
                       value={newAnnouncement.message}
                       onChange={(e) => setNewAnnouncement(prev => ({ ...prev, message: e.target.value }))}
@@ -542,10 +542,10 @@ export default function ModeratorPortal() {
                   </div>
                   <div className="flex gap-2">
                     <Button type="submit" disabled={loading} className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-sm">
-                      {loading ? "Creating..." : "Create Announcement"}
+                      {loading ? t('portal.creating') : t('portal.createAnnouncement')}
                     </Button>
                     <Button type="button" onClick={() => setShowAnnouncementForm(false)} variant="outline" className="border-slate-600 text-slate-300 rounded-sm">
-                      Cancel
+                      {t('common.cancel')}
                     </Button>
                   </div>
                 </div>
