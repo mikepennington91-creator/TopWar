@@ -101,6 +101,7 @@ function App() {
         <Toaster position="top-right" richColors />
       </div>
     </CModProvider>
+    </LanguageProvider>
   );
 }
 
