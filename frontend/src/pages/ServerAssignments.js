@@ -389,7 +389,7 @@ export default function ServerAssignments() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="start_date" className="text-slate-300">Start Date *</Label>
+                  <Label htmlFor="start_date" className="text-slate-300">{t('serverAssignments.startDate')} *</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -418,7 +418,7 @@ export default function ServerAssignments() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="end_date" className="text-slate-300">End Date</Label>
+                  <Label htmlFor="end_date" className="text-slate-300">{t('serverAssignments.endDate')}</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -447,7 +447,7 @@ export default function ServerAssignments() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="reason" className="text-slate-300">Reason *</Label>
+                  <Label htmlFor="reason" className="text-slate-300">{t('serverAssignments.reason')} *</Label>
                   <Select
                     value={formData.reason}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, reason: value }))}
@@ -470,7 +470,7 @@ export default function ServerAssignments() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="moderator_name" className="text-slate-300">Moderator on Server *</Label>
+                  <Label htmlFor="moderator_name" className="text-slate-300">{t('serverAssignments.assignedMod')} *</Label>
                   <Select
                     value={formData.moderator_name}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, moderator_name: value }))}
