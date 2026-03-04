@@ -457,15 +457,15 @@ export default function ModeratorLogin() {
           <div className="text-center mb-6 sm:mb-8">
             <Shield className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-amber-500 mb-3 sm:mb-4" />
             <h1 className="text-2xl sm:text-3xl font-bold uppercase tracking-wider text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-              Moderator Access
+              {t('login.title')}
             </h1>
-            <p className="text-slate-400 mt-2 text-sm">Authorized personnel only</p>
+            <p className="text-slate-400 mt-2 text-sm">{t('login.subtitle')}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6" data-testid="login-form">
             <div className="space-y-2">
               <Label htmlFor="username" className="text-slate-300 font-medium">
-                Username
+                {t('login.username')}
               </Label>
               <Input
                 id="username"
@@ -482,7 +482,7 @@ export default function ModeratorLogin() {
 
             <div className="space-y-2">
               <Label htmlFor="password" className="text-slate-300 font-medium">
-                Password
+                {t('login.password')}
               </Label>
               <Input
                 id="password"
@@ -503,7 +503,7 @@ export default function ModeratorLogin() {
               disabled={loading}
               className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide py-6 text-lg rounded-sm btn-glow"
             >
-              {loading ? "Authenticating..." : "Login"}
+              {loading ? t('login.authenticating') : t('login.loginButton')}
             </Button>
 
             {lastLoginError.toLowerCase().includes("locked") && (
@@ -513,7 +513,7 @@ export default function ModeratorLogin() {
                 onClick={() => setShowResetPasswordDialog(true)}
                 className="w-full border-amber-500/50 text-amber-400 hover:bg-amber-500/10"
               >
-                Account locked? Reset password via email
+                {t('login.accountLocked')}
               </Button>
             )}
           </form>
