@@ -1,60 +1,75 @@
 # Top War Moderator Portal - PRD
 
 ## Original Problem Statement
-User requested a CMod mode feature for user "Sian" where:
-- A popup appears asking if Sian wants to enable CMod mode
-- The popup appears every 3rd login (3, 6, 9, etc.)
-- CMod mode transforms the site into a lime green theme
-- Falling top hats 🎩 animate across the screen
+Add Japanese (Hiragana/Natural Japanese) translation to the full website except application form and viewing/voting on applications. Translation toggled via flag buttons (Japanese Flag for Japanese, Great British Flag for English). Flags should be in navigation consistently across pages. Menus should change language when toggle is selected.
 
-## Architecture & Implementation
+## Architecture
 
-### Backend Changes
-- **File**: `/app/backend/routes/auth.py`
-  - Added `login_count` tracking for all users
-  - Added `show_cmod_prompt` field in login response
-  - Logic: Shows popup when `login_count % 3 == 0` for user "Sian"
+### Translation System
+- **LanguageContext** (`/src/contexts/LanguageContext.js`) - React context for language state management
+- **Translations** (`/src/i18n/translations.js`) - Comprehensive English/Japanese translation mappings
+- **useTranslation Hook** (`/src/hooks/useTranslation.js`) - Custom hook for accessing translations
+- **LanguageToggle** (`/src/components/LanguageToggle.js`) - Flag button component (🇬🇧 / 🇯🇵)
 
-- **File**: `/app/backend/models/schemas.py`
-  - Added `show_cmod_prompt: bool = False` to Token model
+### Translated Pages
+- ✅ Landing.js - Hero section, mission brief, buttons
+- ✅ ModeratorLogin.js - Form labels, buttons, password requirements
+- ✅ ModeratorPortal.js - Quick actions, announcements, feature requests
+- ✅ ServerAssignments.js - Page titles, form labels, table headers
+- ✅ Navigation.js - All menu items (Portal, Apps, Servers, Polls, etc.)
 
-### Frontend Changes
-- **New Files**:
-  - `/app/frontend/src/components/CModPrompt.js` - Popup dialog component
-  - `/app/frontend/src/components/CModOverlay.js` - Falling top hats animation
-  - `/app/frontend/src/hooks/useCMod.js` - Context for CMod state management
-
-- **Modified Files**:
-  - `/app/frontend/src/App.js` - Added CModProvider and CModOverlay
-  - `/app/frontend/src/App.css` - Added lime green theme CSS (.cmod-theme)
-  - `/app/frontend/src/pages/ModeratorLogin.js` - Added CMod prompt handling
-  - `/app/frontend/src/components/Navigation.js` - Added disableCMod on logout
-  - `/app/frontend/src/pages/ModeratorDashboard.js` - Added disableCMod on logout
-  - `/app/frontend/src/pages/ModeratorPortal.js` - Added disableCMod import
-
-## Core Requirements (Static)
-- ✅ Popup appears every 3rd login for Sian
-- ✅ Lime green theme applied to entire site when enabled
-- ✅ Falling top hats animation visible
-- ✅ CMod mode persists until logout
-- ✅ CMod mode disabled on logout
+### Excluded from Translation (per user request)
+- ApplicationForm.js - Keeps original English for form content
+- ModeratorDashboard.js - Application viewing/voting remains English
 
 ## User Personas
-- **Sian**: Special moderator user who receives CMod mode offer every 3rd login
-- **Other Moderators**: Standard login flow without CMod prompt
+- **Applicants**: Japanese or English speakers applying for moderator positions
+- **Moderators**: Team members using portal in preferred language
+- **Admins**: Managing announcements, settings in preferred language
+
+## Core Requirements
+- [x] Japanese translation toggle using flag buttons
+- [x] Great Britain flag for English
+- [x] Japan flag for Japanese  
+- [x] Language preference persisted in localStorage
+- [x] Consistent flag placement in navigation across all pages
+- [x] Natural Japanese (Hiragana + Katakana + Kanji mix)
 
 ## What's Been Implemented
-- [2026-02-28] CMod mode feature for user Sian
-  - Popup dialog on every 3rd login
-  - Lime green theme transformation
-  - Falling top hats animation (🎩)
-  - Proper cleanup on logout
+**Date: March 2026**
+- Created translation system with React Context
+- Implemented LanguageToggle component with SVG flags
+- Added comprehensive Japanese translations for:
+  - Navigation menu items
+  - Landing page content
+  - Login page form and labels
+  - Moderator Portal quick actions and sections
+  - Server Assignments page titles and labels
+  - Settings, Polls, Changelog, Audit Log sections
+- Updated 5 main components/pages to use translations
+- Language persists across sessions via localStorage
 
 ## Prioritized Backlog
-- P0: None (MVP complete)
-- P1: None
-- P2: Optional settings to let users toggle CMod on/off manually
+
+### P0 - Critical (Done)
+- [x] Language toggle in navigation
+- [x] Landing page translation
+- [x] Login page translation
+- [x] Portal menu buttons translation
+
+### P1 - High Priority
+- [ ] Complete Settings.js translation integration
+- [ ] Complete Polls.js translation integration
+- [ ] Complete Changelog.js translation integration
+- [ ] Complete AuditLog.js translation integration
+
+### P2 - Nice to Have
+- [ ] Auto-detect browser language preference
+- [ ] Add more languages (e.g., Chinese, Korean)
+- [ ] Translate form placeholders
+- [ ] Translate toast messages
 
 ## Next Tasks
-- User testing and feedback collection
-- Consider adding CMod toggle in Settings for Sian
+1. Apply useTranslation to remaining pages (Settings, Polls, Changelog, AuditLog)
+2. Consider adding browser language auto-detection
+3. Test on mobile devices for flag button usability
