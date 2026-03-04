@@ -528,10 +528,10 @@ export default function ServerAssignments() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <CardTitle className="text-lg sm:text-2xl font-bold uppercase tracking-wide text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                  Server Assignment Records
+                  {t('serverAssignments.title')}
                 </CardTitle>
                 <CardDescription className="text-slate-400 text-sm">
-                  {sortedAssignments.length} record{sortedAssignments.length !== 1 ? 's' : ''} found
+                  {sortedAssignments.length} {t('serverAssignments.records')}
                 </CardDescription>
               </div>
               {currentUser.is_admin && (
@@ -542,7 +542,7 @@ export default function ServerAssignments() {
                   className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-sm text-xs sm:text-sm w-full sm:w-auto"
                 >
                   <Download className="h-4 w-4 mr-1 sm:mr-2" />
-                  Download Excel
+                  {t('serverAssignments.downloadExcel')}
                 </Button>
               )}
             </div>
@@ -554,7 +554,7 @@ export default function ServerAssignments() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-500" />
                 <Input
                   type="text"
-                  placeholder="Search by server, moderator, reason..."
+                  placeholder={t('serverAssignments.search')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="bg-slate-900/50 border-slate-700 focus:border-amber-500 text-slate-200 pl-10 rounded-sm"
@@ -571,7 +571,7 @@ export default function ServerAssignments() {
                   }}
                 >
                   <SelectTrigger className="bg-slate-900/50 border-slate-700 text-slate-200 rounded-sm">
-                    <SelectValue placeholder="Sort by..." />
+                    <SelectValue placeholder={t('serverAssignments.sortBy')} />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-900 border-slate-700">
                     <SelectItem value="server-asc" className="text-slate-200">Server ↑</SelectItem>
@@ -590,7 +590,7 @@ export default function ServerAssignments() {
             {/* Mobile Card View */}
             <div className="sm:hidden space-y-3">
               {sortedAssignments.length === 0 ? (
-                <p className="text-center text-slate-400 py-8">No server assignments found</p>
+                <p className="text-center text-slate-400 py-8">{t('serverAssignments.noAssignments')}</p>
               ) : (
                 sortedAssignments.map((assignment) => {
                   const modInfo = moderators.find(m => m.username === assignment.moderator_name);
