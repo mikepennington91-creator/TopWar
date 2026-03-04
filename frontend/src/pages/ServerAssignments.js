@@ -320,7 +320,7 @@ export default function ServerAssignments() {
       <div className="max-w-7xl mx-auto">
         <h1 className="text-2xl sm:text-4xl font-bold uppercase tracking-wider mb-3 sm:mb-4 text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
           <Server className="inline-block mr-2 sm:mr-3 h-6 w-6 sm:h-10 sm:w-10" />
-          Server Assignments
+          {t('serverAssignments.title')}
         </h1>
 
         {/* Instruction Text */}
@@ -340,17 +340,17 @@ export default function ServerAssignments() {
           <CardHeader>
             <CardTitle className="text-2xl font-bold uppercase tracking-wide text-emerald-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
               <Plus className="inline-block mr-2 h-6 w-6" />
-              Add New Server Assignment
+              {t('serverAssignments.addAssignment')}
             </CardTitle>
             <CardDescription className="text-slate-400">
-              Record a new server assignment
+              {t('serverAssignments.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4" data-testid="server-assignment-form">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="server" className="text-slate-300">Server *</Label>
+                  <Label htmlFor="server" className="text-slate-300">{t('serverAssignments.server')} *</Label>
                   <Input
                     id="server"
                     name="server"
@@ -366,7 +366,7 @@ export default function ServerAssignments() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="tag" className="text-slate-300">Tag *</Label>
+                  <Label htmlFor="tag" className="text-slate-300">{t('serverAssignments.tag')} *</Label>
                   <Select
                     value={formData.tag}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, tag: value }))}
