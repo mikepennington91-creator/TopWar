@@ -369,16 +369,16 @@ export default function ModeratorPortal() {
           <DialogHeader>
             <DialogTitle className="text-amber-400 flex items-center gap-2">
               <Mail className="h-5 w-5" />
-              Confirm your email
+              {t('portal.confirmEmailTitle')}
             </DialogTitle>
             <DialogDescription className="text-slate-400">
-              Please enter a valid email address. We only use this to help you reset your password in the future.
+              {t('portal.confirmEmailDesc')}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEmailPromptSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email-prompt" className="text-slate-300 font-medium">
-                Email Address
+                {t('settings.email')}
               </Label>
               <Input
                 id="email-prompt"
@@ -396,7 +396,7 @@ export default function ModeratorPortal() {
               disabled={emailPromptLoading}
               className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide py-5 text-base rounded-sm btn-glow"
             >
-              {emailPromptLoading ? "Saving..." : "Save Email"}
+              {emailPromptLoading ? t('login.saving') : t('portal.saveEmail')}
             </Button>
           </form>
         </DialogContent>
