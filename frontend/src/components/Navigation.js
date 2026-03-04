@@ -119,12 +119,13 @@ export default function Navigation() {
               >
                 <Shield className="w-6 h-6" />
                 <span className="font-bold text-sm sm:text-base" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                  TW APPLICATIONS
+                  {t('nav.twApplications')}
                 </span>
               </button>
             </div>
             
             <div className="flex items-center gap-2">
+              <LanguageToggle />
               {currentPath !== '/apply' && (
                 <Button
                   onClick={() => navigate('/apply')}
@@ -132,7 +133,7 @@ export default function Navigation() {
                   className="bg-amber-500 hover:bg-amber-600 text-white text-xs sm:text-sm"
                 >
                   <Users className="w-4 h-4 mr-1" />
-                  Apply
+                  {t('nav.apply')}
                 </Button>
               )}
               {currentPath !== '/moderator/login' && (
@@ -142,7 +143,7 @@ export default function Navigation() {
                   size="sm"
                   className="border-slate-600 text-slate-300 hover:bg-slate-800 text-xs sm:text-sm"
                 >
-                  {isLoggedIn ? 'Portal' : 'Login'}
+                  {isLoggedIn ? t('nav.portal') : t('nav.login')}
                 </Button>
               )}
             </div>
