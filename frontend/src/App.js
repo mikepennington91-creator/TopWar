@@ -24,6 +24,7 @@ import useFavicon from "@/hooks/useFavicon";
 import Navigation from "@/components/Navigation";
 import CModOverlay from "@/components/CModOverlay";
 import { CModProvider, useCMod } from "@/hooks/useCMod";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 
 const REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 const LAST_REFRESH_KEY = "lastPageRefresh";
