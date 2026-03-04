@@ -86,13 +86,13 @@ export default function Navigation() {
   };
 
   const navItems = [
-    { path: '/moderator/portal', label: 'Portal', icon: Home, color: 'text-amber-500' },
-    { path: '/moderator/dashboard', label: 'Apps', icon: FileText, color: 'text-amber-400' },
-    { path: '/moderator/server-assignments', label: 'Servers', icon: Calendar, color: 'text-emerald-400' },
-    { path: '/moderator/polls', label: 'Polls', icon: BarChart3, color: 'text-cyan-400' },
-    { path: '/moderator/audit-log', label: 'Audit', icon: ClipboardList, color: 'text-orange-400' },
-    { path: '/moderator/settings', label: 'Settings', icon: Settings, color: 'text-slate-400' },
-    { path: '/moderator/changelog', label: 'Changelog', icon: ScrollText, color: 'text-purple-400' },
+    { path: '/moderator/portal', label: t('nav.portal'), icon: Home, color: 'text-amber-500' },
+    { path: '/moderator/dashboard', label: t('nav.apps'), icon: FileText, color: 'text-amber-400' },
+    { path: '/moderator/server-assignments', label: t('nav.servers'), icon: Calendar, color: 'text-emerald-400' },
+    { path: '/moderator/polls', label: t('nav.polls'), icon: BarChart3, color: 'text-cyan-400' },
+    { path: '/moderator/audit-log', label: t('nav.audit'), icon: ClipboardList, color: 'text-orange-400' },
+    { path: '/moderator/settings', label: t('nav.settings'), icon: Settings, color: 'text-slate-400' },
+    { path: '/moderator/changelog', label: t('nav.changelog'), icon: ScrollText, color: 'text-purple-400' },
   ];
 
   // For limited nav pages (landing, apply, login)
