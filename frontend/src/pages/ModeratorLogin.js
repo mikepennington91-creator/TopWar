@@ -9,6 +9,7 @@ import { Shield, ArrowLeft, AlertTriangle, Mail } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import CModPrompt from "@/components/CModPrompt";
 import { useCMod } from "@/hooks/useCMod";
+import useTranslation from "@/hooks/useTranslation";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -16,6 +17,7 @@ const API = `${BACKEND_URL}/api`;
 export default function ModeratorLogin() {
   const navigate = useNavigate();
   const { enableCMod } = useCMod();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [credentials, setCredentials] = useState({
     username: "",
