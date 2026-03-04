@@ -69,13 +69,14 @@ function App() {
   }, []);
 
   return (
-    <CModProvider>
-      <div className="App">
-        <BrowserRouter>
-          <FaviconHandler />
-          <Navigation />
-          <CModOverlayWrapper />
-          <Routes>
+    <LanguageProvider>
+      <CModProvider>
+        <div className="App">
+          <BrowserRouter>
+            <FaviconHandler />
+            <Navigation />
+            <CModOverlayWrapper />
+            <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/apply" element={<ApplicationForm />} />
             <Route path="/moderator/login" element={<ModeratorLogin />} />
