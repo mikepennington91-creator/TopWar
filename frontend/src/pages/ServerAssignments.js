@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { toast } from "sonner";
 import { ArrowLeft, Server, Plus, Trash2, Download, Info, ArrowUpDown, ArrowUp, ArrowDown, Search, CalendarIcon } from "lucide-react";
 import { format, parse } from "date-fns";
+import useTranslation from "@/hooks/useTranslation";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
