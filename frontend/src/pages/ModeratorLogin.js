@@ -378,16 +378,16 @@ export default function ModeratorLogin() {
             <div className="text-center mb-6 sm:mb-8">
               <AlertTriangle className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-amber-500 mb-3 sm:mb-4" />
               <h1 className="text-2xl sm:text-3xl font-bold uppercase tracking-wider text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-                Password Change Required
+                {t('login.passwordChangeRequired')}
               </h1>
-              <p className="text-slate-400 mt-2 text-sm">You must change your password before continuing</p>
+              <p className="text-slate-400 mt-2 text-sm">{t('login.mustChangePassword')}</p>
             </div>
 
             {!emailPromptOpen && (
               <form onSubmit={handlePasswordChange} className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="new_password" className="text-slate-300 font-medium">
-                    New Password
+                    {t('login.newPassword')}
                   </Label>
                   <Input
                     id="new_password"
@@ -403,7 +403,7 @@ export default function ModeratorLogin() {
 
                 <div className="space-y-2">
                   <Label htmlFor="confirm_password" className="text-slate-300 font-medium">
-                    Confirm New Password
+                    {t('login.confirmNewPassword')}
                   </Label>
                   <Input
                     id="confirm_password"
@@ -418,13 +418,13 @@ export default function ModeratorLogin() {
                 </div>
 
                 <div className="bg-slate-800/50 border border-slate-700 rounded-md p-3 text-sm text-slate-400">
-                  <p className="font-medium text-slate-300 mb-2">Password requirements:</p>
+                  <p className="font-medium text-slate-300 mb-2">{t('login.passwordRequirements')}</p>
                   <ul className="list-disc list-inside space-y-1">
-                    <li>Minimum 8 characters</li>
-                    <li>At least one uppercase letter</li>
-                    <li>At least one lowercase letter</li>
-                    <li>At least one number</li>
-                    <li>At least one special character</li>
+                    <li>{t('login.minChars')}</li>
+                    <li>{t('login.upperCase')}</li>
+                    <li>{t('login.lowerCase')}</li>
+                    <li>{t('login.oneNumber')}</li>
+                    <li>{t('login.specialChar')}</li>
                   </ul>
                 </div>
 
@@ -433,7 +433,7 @@ export default function ModeratorLogin() {
                   disabled={loading}
                   className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide py-6 text-lg rounded-sm btn-glow"
                 >
-                  {loading ? "Changing Password..." : "Change Password"}
+                  {loading ? t('login.changingPassword') : t('login.changePassword')}
                 </Button>
               </form>
             )}
