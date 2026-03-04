@@ -60,14 +60,14 @@ export default function Navigation() {
   
   const currentPath = location.pathname;
   
-  // Don't show nav on Easter egg pages or no-nav pages
-  if (HIDDEN_PAGES.includes(currentPath) || NO_NAV_PAGES.includes(currentPath)) {
+  // Don't show nav on Easter egg pages only
+  if (HIDDEN_PAGES.includes(currentPath)) {
     return null;
   }
   
   const isLoggedIn = !!localStorage.getItem('moderator_token');
   const showFullNav = SHOW_NAV_ROUTES.includes(currentPath);
-  const showLimitedNav = SHOW_LIMITED_NAV.includes(currentPath);
+  const showLimitedNav = SHOW_LIMITED_NAV.includes(currentPath) || NO_NAV_PAGES.includes(currentPath);
   
   // Check if we can go back (has history)
   const canGoBack = window.history.length > 1;
