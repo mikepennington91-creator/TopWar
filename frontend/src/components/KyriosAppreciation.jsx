@@ -1,6 +1,26 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useCallback } from "react";
 import { Shield, MessageCircle, Bug, Heart, Star, Award, Swords, Users, ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
+function useScrollReveal(threshold = 0.15) {
+  const ref = useRef(null);
+  const observe = useCallback((node) => {
+    if (!node) return;
+    ref.current = node;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+          observer.unobserve(entry.target);
+        }
+      },
+      { threshold }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [threshold]);
+  return observe;
+}
 
 const SAMURAI_AVATAR = "https://images.pexels.com/photos/29145665/pexels-photo-29145665.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940";
 
@@ -71,11 +91,13 @@ function CherryBlossoms() {
 }
 
 function QuoteCard({ text, author, index }) {
+  const reveal = useScrollReveal(0.2);
   return (
     <div
+      ref={reveal}
       data-testid={`quote-card-${index}`}
-      className="glass-card p-8 rounded-lg hover:border-amber-500/50 transition-all duration-500 group"
-      style={{ animationDelay: `${index * 150}ms` }}
+      className="reveal glass-card p-8 rounded-lg hover:border-amber-500/50 transition-all duration-500 group"
+      style={{ transitionDelay: `${index * 120}ms` }}
     >
       <div className="flex items-start gap-4">
         <MessageCircle className="w-8 h-8 text-amber-500 shrink-0 mt-1 opacity-60 group-hover:opacity-100 transition-opacity" />
@@ -91,10 +113,13 @@ function QuoteCard({ text, author, index }) {
 }
 
 function AchievementBadge({ icon: Icon, label, desc, color, index }) {
+  const reveal = useScrollReveal(0.15);
   return (
     <div
+      ref={reveal}
       data-testid={`achievement-badge-${index}`}
-      className="glass-card p-6 rounded-lg hover:border-amber-500/30 transition-all duration-300 text-center group"
+      className="reveal-scale glass-card p-6 rounded-lg hover:border-amber-500/30 transition-all duration-300 text-center group"
+      style={{ transitionDelay: `${index * 100}ms` }}
     >
       <div className="flex justify-center mb-4">
         <div className="w-16 h-16 rounded-full bg-slate-800/80 flex items-center justify-center border border-slate-700/50 group-hover:border-amber-500/40 transition-colors">
@@ -111,6 +136,14 @@ function AchievementBadge({ icon: Icon, label, desc, color, index }) {
 
 export default function KyriosAppreciation() {
   const navigate = useNavigate();
+  const revealQuotesHeading = useScrollReveal();
+  const revealAchievementsHeading = useScrollReveal();
+  const revealIntelHeading = useScrollReveal();
+  const revealFact0 = useScrollReveal(0.2);
+  const revealFact1 = useScrollReveal(0.2);
+  const revealFact2 = useScrollReveal(0.2);
+  const revealFact3 = useScrollReveal(0.2);
+  const revealFooter = useScrollReveal();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -211,7 +244,7 @@ export default function KyriosAppreciation() {
       {/* Team Quotes Section */}
       <section className="py-24 px-8 bg-slate-900/50" data-testid="quotes-section">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-center gap-4 mb-16">
+          <div ref={revealQuotesHeading} className="reveal flex items-center justify-center gap-4 mb-16">
             <Award className="w-8 h-8 text-amber-500" />
             <h3
               data-testid="quotes-heading"
@@ -232,7 +265,7 @@ export default function KyriosAppreciation() {
       {/* Achievements Section */}
       <section className="py-24 px-8" data-testid="achievements-section">
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-center gap-4 mb-16">
+          <div ref={revealAchievementsHeading} className="reveal flex items-center justify-center gap-4 mb-16">
             <Star className="w-8 h-8 text-amber-500" />
             <h3
               data-testid="achievements-heading"
@@ -253,7 +286,7 @@ export default function KyriosAppreciation() {
       {/* Fun Facts Section */}
       <section className="py-24 px-8 bg-slate-900/50" data-testid="fun-facts-section">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-center gap-4 mb-16">
+          <div ref={revealIntelHeading} className="reveal flex items-center justify-center gap-4 mb-16">
             <Swords className="w-8 h-8 text-amber-500" />
             <h3
               data-testid="fun-facts-heading"
@@ -264,7 +297,7 @@ export default function KyriosAppreciation() {
             </h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="glass-card p-6 rounded-lg" data-testid="fun-fact-0">
+            <div ref={revealFact0} className="reveal-left glass-card p-6 rounded-lg" data-testid="fun-fact-0">
               <h4 className="text-lg font-bold uppercase tracking-wide text-emerald-500 mb-2" style={{ fontFamily: "Rajdhani, sans-serif" }}>
                 Bug Detection Specialist
               </h4>
@@ -272,7 +305,7 @@ export default function KyriosAppreciation() {
                 Known as one of the first to always report in-game issues. If there's a bug, Kyrios has probably already filed it.
               </p>
             </div>
-            <div className="glass-card p-6 rounded-lg" data-testid="fun-fact-1">
+            <div ref={revealFact1} className="reveal-right glass-card p-6 rounded-lg" style={{ transitionDelay: "100ms" }} data-testid="fun-fact-1">
               <h4 className="text-lg font-bold uppercase tracking-wide text-emerald-500 mb-2" style={{ fontFamily: "Rajdhani, sans-serif" }}>
                 Event Veteran
               </h4>
@@ -280,7 +313,7 @@ export default function KyriosAppreciation() {
                 Whether it's a small question or a server-wide event, Kyrios is always there lending a hand. Reliability is his middle name.
               </p>
             </div>
-            <div className="glass-card p-6 rounded-lg" data-testid="fun-fact-2">
+            <div ref={revealFact2} className="reveal-left glass-card p-6 rounded-lg" style={{ transitionDelay: "200ms" }} data-testid="fun-fact-2">
               <h4 className="text-lg font-bold uppercase tracking-wide text-emerald-500 mb-2" style={{ fontFamily: "Rajdhani, sans-serif" }}>
                 The Samurai Spirit
               </h4>
@@ -288,7 +321,7 @@ export default function KyriosAppreciation() {
                 Rocking a samurai avatar that perfectly reflects his disciplined, honourable approach to moderation. Bushido runs through his veins.
               </p>
             </div>
-            <div className="glass-card p-6 rounded-lg" data-testid="fun-fact-3">
+            <div ref={revealFact3} className="reveal-right glass-card p-6 rounded-lg" style={{ transitionDelay: "300ms" }} data-testid="fun-fact-3">
               <h4 className="text-lg font-bold uppercase tracking-wide text-emerald-500 mb-2" style={{ fontFamily: "Rajdhani, sans-serif" }}>
                 Knowledge Base Walking
               </h4>
@@ -301,7 +334,7 @@ export default function KyriosAppreciation() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-8 text-center border-t border-slate-800/50" data-testid="appreciation-footer">
+      <footer ref={revealFooter} className="reveal py-12 px-8 text-center border-t border-slate-800/50" data-testid="appreciation-footer">
         <Shield className="w-10 h-10 text-amber-500 mx-auto mb-4" />
         <p className="text-slate-400 text-sm uppercase tracking-[0.2em]" style={{ fontFamily: "Rajdhani, sans-serif" }}>
           Top War Mod Team — Team Appreciation
