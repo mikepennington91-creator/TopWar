@@ -16,8 +16,11 @@ Create a team appreciation page for Kyrios, a Discord moderator on the Twapplica
 - Cherry blossom particle animation
 - Back navigation button
 - Accessible at both `/` and `/appreciation/kyrios` routes
-- 27 data-testid attributes for full test coverage
-- All tests passed (100% frontend)
+- 31 data-testid attributes for full test coverage
+- Open Graph meta tags (og:title, og:description, og:image, og:site_name, etc.) for Discord/social embeds
+- Twitter Card meta tags (summary_large_image) for Twitter/X previews
+- Scroll-triggered entrance animations using IntersectionObserver (reveal, reveal-left, reveal-right, reveal-scale)
+- All tests passed (100% frontend, iterations 1 & 2)
 
 ## Core Requirements
 - Match Twapplications.com design (dark theme, amber/emerald accents, Rajdhani font, glass-cards)
@@ -32,5 +35,4 @@ Create a team appreciation page for Kyrios, a Discord moderator on the Twapplica
 
 ## Backlog
 - P2: Add link from main Twapplications.com navigation to this page
-- P2: Add animation on scroll (entrance reveals)
-- P3: Social share meta tags for Discord embeds
+- P3: Add a "Share on Discord" button that copies a formatted link
