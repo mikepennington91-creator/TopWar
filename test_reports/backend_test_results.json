@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-04-12T15:22:45.722844",
+  "total_tests": 6,
+  "passed_tests": 6,
+  "success_rate": "100.0%",
+  "results": [
+    {
+      "test": "Moderator Login",
+      "success": true,
+      "details": "Logged in as Sian",
+      "timestamp": "2026-04-12T15:22:44.966460"
+    },
+    {
+      "test": "Get Applications",
+      "success": true,
+      "details": "Retrieved 1 applications",
+      "timestamp": "2026-04-12T15:22:45.120565"
+    },
+    {
+      "test": "Email Function Parameters",
+      "success": true,
+      "details": "Backend email functions accept manager_comment parameter (verified in code)",
+      "timestamp": "2026-04-12T15:22:45.121196"
+    },
+    {
+      "test": "Vote approve on Application",
+      "success": true,
+      "details": "Voted approve on application 876961ac-31e2-4d09-8fb7-b90ae1436b09",
+      "timestamp": "2026-04-12T15:22:45.470547"
+    },
+    {
+      "test": "Status Update to rejected with Comment",
+      "success": true,
+      "details": "Updated application 876961ac-31e2-4d09-8fb7-b90ae1436b09",
+      "timestamp": "2026-04-12T15:22:45.600767"
+    },
+    {
+      "test": "Status Update to approved with Comment",
+      "success": true,
+      "details": "Updated application 876961ac-31e2-4d09-8fb7-b90ae1436b09",
+      "timestamp": "2026-04-12T15:22:45.721915"
+    }
+  ]
+}

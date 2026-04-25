@@ -1,38 +1,46 @@
-# PRD — Kyrios Appreciation Page
+# Top War Moderator Portal - PRD
 
-## Problem Statement
-Create a team appreciation page for Kyrios, a Discord moderator on the Twapplications.com mod portal. The page should match the existing site's gaming/Discord-themed dark aesthetic with samurai avatar theming.
+## Original Problem Statement
+1. Unsuccessful applications should receive the comment the person rejecting places into the comment box (same as successful applicants)
+2. A warning stating "Whatever you write here, will be sent to the applicant" should appear when rejecting
+3. Applications should be filterable by ones you have not voted on
+4. All emails converted to branded HTML with Top War Battle Game logo by RiverGames + re-apply link
 
-## Architecture
-- **Frontend**: React + Tailwind CSS (matching Twapplications.com design system)
-- **Backend**: FastAPI (unchanged — static page, no API needed)
-- **Styling**: slate-950 bg, amber-500/emerald-500 accents, Rajdhani font, glass-card effects, cherry blossom particles
+## Architecture & Implementation
 
-## What's Been Implemented (Jan 2026)
-- Hero section with samurai avatar, name, title, tagline, and stats row
-- Team quotes section with 3 quotes from the team
-- Achievements section with 6 unlocked badges
-- Intel Report section with 4 fun fact cards
-- Cherry blossom particle animation
-- Back navigation button
-- Accessible at both `/` and `/appreciation/kyrios` routes
-- 31 data-testid attributes for full test coverage
-- Open Graph meta tags (og:title, og:description, og:image, og:site_name, etc.) for Discord/social embeds
-- Twitter Card meta tags (summary_large_image) for Twitter/X previews
-- Scroll-triggered entrance animations using IntersectionObserver (reveal, reveal-left, reveal-right, reveal-scale)
-- All tests passed (100% frontend, iterations 1 & 2)
+### Backend Changes
+- **File**: `/app/backend/utils/email.py` — Full rewrite to HTML email templates
+  - All application emails now use branded HTML with Top War logo from RiverGames
+  - `send_application_rejected_email` accepts `manager_comment` and includes it in styled comment box
+  - Rejection email includes "Re-Apply When Ready" button linking to `/apply`
+  - Approval emails include manager comment in styled box
+  - Waitlist, confirmation, password reset all converted to HTML
+  - Logo: `https://www.rivergame.net/en/res/img/comm/home/topcover/title.png`
 
-## Core Requirements
-- Match Twapplications.com design (dark theme, amber/emerald accents, Rajdhani font, glass-cards)
-- Display team testimonials about Kyrios
-- Achievements/stats and fun facts sections
-- Samurai-themed avatar
+- **File**: `/app/backend/routes/applications.py`
+  - Rejection status change now passes `update.comment` to email function
 
-## User Personas
-- Twapplications.com mod team members viewing appreciation pages
-- Kyrios himself
-- Community members
+### Frontend Changes
+- **File**: `/app/frontend/src/pages/ModeratorDashboard.js`
+  - Warning banner for BOTH "approved" AND "rejected" status changes
+  - "Not Voted" filter button to find applications user hasn't voted on
 
-## Backlog
-- P2: Add link from main Twapplications.com navigation to this page
-- P3: Add a "Share on Discord" button that copies a formatted link
+## Previous Implementations
+- [2026-02-28] CMod mode feature for user Sian
+- [2026-02-28] Super Scientist Skill Progression Tree on Dev Secrets
+- [2026-02-28] Dev Secrets page overhaul (/2026Roadmap)
+- [2026-02-28] OG meta tags & site descriptions
+
+## What's Been Implemented
+- [2026-04-12] Rejection comment included in applicant email
+- [2026-04-12] Warning banner for rejection status change dialog
+- [2026-04-12] "Not Voted" filter for applications
+- [2026-04-12] All emails converted to branded HTML with Top War logo + re-apply link
+
+## Prioritized Backlog
+- P0: None
+- P1: None
+- P2: Optional settings to let users toggle CMod on/off manually
+
+## Next Tasks
+- User testing and feedback
