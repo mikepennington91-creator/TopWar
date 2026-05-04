@@ -19,7 +19,7 @@ router = APIRouter(prefix="/organogram", tags=["Organogram"])
 
 # ============ Models ============
 ORG_RANKS = ["CMod", "MMod", "SMod", "LMod", "Mod"]
-ORG_TEAMS = ["in_game", "discord", "both"]
+ORG_TEAMS = ["in_game", "discord", "both", "training"]
 
 
 class OrgNode(BaseModel):

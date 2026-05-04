@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toPng } from "html-to-image";
-import { Network, Plus, Trash2, Pencil, Upload, Shield, X, UserPlus, Gamepad2, MessageCircle, Download, Send, Settings as SettingsIcon } from "lucide-react";
+import { Network, Plus, Trash2, Pencil, Upload, Shield, X, UserPlus, Gamepad2, MessageCircle, Download, Send, Settings as SettingsIcon, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,7 @@ const TEAM_OPTIONS = [
   { value: "in_game", label: "In-Game", icon: Gamepad2, badge: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" },
   { value: "discord", label: "Discord", icon: MessageCircle, badge: "bg-indigo-500/20 text-indigo-300 border-indigo-500/40" },
   { value: "both", label: "In-Game + Discord", icon: Shield, badge: "bg-amber-500/20 text-amber-300 border-amber-500/40" },
+  { value: "training", label: "Training", icon: GraduationCap, badge: "bg-orange-500/20 text-orange-300 border-orange-500/40" },
 ];
 
 const TEAM_MAP = TEAM_OPTIONS.reduce((acc, t) => {
