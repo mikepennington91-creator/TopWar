@@ -1,12 +1,18 @@
 """Organogram (org chart) management routes."""
+import base64
+import binascii
+import io
+import re
 import uuid
 from datetime import datetime, timezone
 from typing import List, Optional
+
+import httpx
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field, ConfigDict
 
 from database import db
-from utils.auth import get_current_moderator
+from utils.auth import get_current_moderator, require_admin_role
 
 router = APIRouter(prefix="/organogram", tags=["Organogram"])
 
@@ -261,3 +267,155 @@ async def delete_node(node_id: str, current_user: dict = Depends(require_org_edi
     )
     await db.organogram_nodes.delete_one({"id": node_id})
     return {"message": f"Node {node['username']} removed from organogram"}
+
+
+
+# ============ Discord Webhook Sharing ============
+WEBHOOK_SETTINGS_ID = "organogram_webhook"
+DISCORD_WEBHOOK_REGEX = re.compile(
+    r"^https://(?:ptb\.|canary\.)?discord(?:app)?\.com/api/webhooks/\d+/[A-Za-z0-9_\-]+/?$"
+)
+
+
+class WebhookConfig(BaseModel):
+    webhook_url: str  # raw URL
+
+
+class WebhookConfigResponse(BaseModel):
+    configured: bool
+    masked_url: Optional[str] = None
+    updated_by: Optional[str] = None
+    updated_at: Optional[datetime] = None
+
+
+class ShareRequest(BaseModel):
+    image_data_url: str  # data:image/png;base64,...
+    message: Optional[str] = None  # optional extra text
+
+
+def mask_webhook_url(url: str) -> str:
+    """Return a partially obscured webhook URL safe for display."""
+    if not url:
+        return ""
+    parts = url.rstrip("/").split("/")
+    if len(parts) < 2:
+        return "***"
+    token = parts[-1]
+    masked_token = token[:4] + "…" + token[-4:] if len(token) > 8 else "…"
+    parts[-1] = masked_token
+    return "/".join(parts)
+
+
+@router.get("/webhook", response_model=WebhookConfigResponse)
+async def get_webhook_config(current_user: dict = Depends(require_admin_role)):
+    """Get masked webhook config (admin only)."""
+    doc = await db.app_settings.find_one({"id": WEBHOOK_SETTINGS_ID}, {"_id": 0})
+    if not doc or not doc.get("webhook_url"):
+        return WebhookConfigResponse(configured=False)
+    updated_at = doc.get("updated_at")
+    if isinstance(updated_at, str):
+        try:
+            updated_at = datetime.fromisoformat(updated_at)
+        except ValueError:
+            updated_at = None
+    return WebhookConfigResponse(
+        configured=True,
+        masked_url=mask_webhook_url(doc["webhook_url"]),
+        updated_by=doc.get("updated_by"),
+        updated_at=updated_at,
+    )
+
+
+@router.put("/webhook")
+async def set_webhook_config(payload: WebhookConfig, current_user: dict = Depends(require_admin_role)):
+    """Set or update the Discord webhook URL (admin only)."""
+    url = payload.webhook_url.strip()
+    if not DISCORD_WEBHOOK_REGEX.match(url):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid Discord webhook URL. Expected format: https://discord.com/api/webhooks/<id>/<token>"
+        )
+    await db.app_settings.update_one(
+        {"id": WEBHOOK_SETTINGS_ID},
+        {"$set": {
+            "id": WEBHOOK_SETTINGS_ID,
+            "webhook_url": url,
+            "updated_by": current_user["username"],
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }},
+        upsert=True,
+    )
+    return {"message": "Webhook configured", "masked_url": mask_webhook_url(url)}
+
+
+@router.delete("/webhook")
+async def delete_webhook_config(current_user: dict = Depends(require_admin_role)):
+    """Remove the Discord webhook URL (admin only)."""
+    await db.app_settings.delete_one({"id": WEBHOOK_SETTINGS_ID})
+    return {"message": "Webhook removed"}
+
+
+@router.get("/webhook/status")
+async def get_webhook_status(current_user: dict = Depends(require_org_editor)):
+    """Lightweight check used by editors to know if Share is available."""
+    doc = await db.app_settings.find_one({"id": WEBHOOK_SETTINGS_ID}, {"_id": 0, "webhook_url": 1})
+    return {"configured": bool(doc and doc.get("webhook_url"))}
+
+
+@router.post("/share")
+async def share_to_discord(payload: ShareRequest, current_user: dict = Depends(require_org_editor)):
+    """Post the org chart PNG to the configured Discord webhook."""
+    doc = await db.app_settings.find_one({"id": WEBHOOK_SETTINGS_ID}, {"_id": 0})
+    if not doc or not doc.get("webhook_url"):
+        raise HTTPException(status_code=400, detail="Discord webhook is not configured. Ask an admin to set it up.")
+
+    # Decode base64 PNG
+    data_url = payload.image_data_url or ""
+    if not data_url.startswith("data:image/"):
+        raise HTTPException(status_code=400, detail="image_data_url must be a data:image/...;base64 URL")
+    try:
+        _, b64 = data_url.split(",", 1)
+        image_bytes = base64.b64decode(b64)
+    except (ValueError, binascii.Error):
+        raise HTTPException(status_code=400, detail="Could not decode image data")
+
+    if len(image_bytes) > 8 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Image exceeds Discord's 8 MB upload limit")
+
+    # Count nodes for embed metadata
+    node_count = await db.organogram_nodes.count_documents({})
+    cmod_count = await db.organogram_nodes.count_documents({"rank": "CMod"})
+
+    embed = {
+        "title": "Top War Moderator Organogram",
+        "description": payload.message or f"Updated by **{current_user['username']}**",
+        "color": 0xF59E0B,  # amber
+        "fields": [
+            {"name": "Total Members", "value": str(node_count), "inline": True},
+            {"name": "CMods", "value": str(cmod_count), "inline": True},
+        ],
+        "image": {"url": "attachment://organogram.png"},
+        "footer": {"text": "Top War Moderator Portal"},
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+    files = {
+        "files[0]": ("organogram.png", io.BytesIO(image_bytes), "image/png"),
+        "payload_json": (None, _json_dump({"username": "Top War Org Chart", "embeds": [embed]}), "application/json"),
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=20.0) as client_http:
+            resp = await client_http.post(doc["webhook_url"], files=files)
+        if resp.status_code >= 400:
+            raise HTTPException(status_code=502, detail=f"Discord rejected the upload ({resp.status_code}): {resp.text[:200]}")
+    except httpx.RequestError as exc:
+        raise HTTPException(status_code=502, detail=f"Failed to reach Discord: {exc}") from exc
+
+    return {"message": "Posted to Discord", "size_bytes": len(image_bytes)}
+
+
+def _json_dump(obj: dict) -> str:
+    """Local helper to keep imports tidy."""
+    import json
+    return json.dumps(obj)

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toPng } from "html-to-image";
-import { Network, Plus, Trash2, Pencil, Upload, Shield, X, UserPlus, Gamepad2, MessageCircle, Download } from "lucide-react";
+import { Network, Plus, Trash2, Pencil, Upload, Shield, X, UserPlus, Gamepad2, MessageCircle, Download, Send, Settings as SettingsIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -68,6 +68,17 @@ export default function Organogram() {
   const [dragOverRoot, setDragOverRoot] = useState(false);
   const [exporting, setExporting] = useState(false);
 
+  // Discord webhook
+  const [webhookConfigured, setWebhookConfigured] = useState(false);
+  const [showWebhookDialog, setShowWebhookDialog] = useState(false);
+  const [webhookConfig, setWebhookConfig] = useState({ masked_url: null, updated_by: null, updated_at: null });
+  const [webhookInput, setWebhookInput] = useState("");
+  const [webhookSaving, setWebhookSaving] = useState(false);
+  const [shareDialog, setShareDialog] = useState(false);
+  const [shareMessage, setShareMessage] = useState("");
+  const [sharing, setSharing] = useState(false);
+  const isAdmin = currentUser?.role === "admin" || localStorage.getItem("moderator_is_admin") === "true";
+
   // Auth & initial load
   useEffect(() => {
     const token = localStorage.getItem("moderator_token");
@@ -92,6 +103,17 @@ export default function Organogram() {
       setNodes(nodesRes.data || []);
       setCanEdit(canEditRes.data?.can_edit || false);
       setPortalUsers(usersRes.data || []);
+      // Webhook status (editor-only). Ignore failure if not editor.
+      if (canEditRes.data?.can_edit) {
+        try {
+          const statusRes = await axios.get(`${API}/organogram/webhook/status`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setWebhookConfigured(!!statusRes.data?.configured);
+        } catch {
+          setWebhookConfigured(false);
+        }
+      }
     } catch (err) {
       console.error(err);
       toast.error(err.response?.data?.detail || "Failed to load organogram");
@@ -371,16 +393,21 @@ export default function Organogram() {
   };
 
   // ===== Export PNG =====
+  const buildChartPng = async () => {
+    if (!chartRef.current) return null;
+    return await toPng(chartRef.current, {
+      cacheBust: true,
+      backgroundColor: "#020617",
+      pixelRatio: 2,
+      style: { padding: "32px" },
+    });
+  };
+
   const handleExportPng = async () => {
     if (!chartRef.current) return;
     setExporting(true);
     try {
-      const dataUrl = await toPng(chartRef.current, {
-        cacheBust: true,
-        backgroundColor: "#020617",
-        pixelRatio: 2,
-        style: { padding: "32px" },
-      });
+      const dataUrl = await buildChartPng();
       const link = document.createElement("a");
       link.download = `organogram-${new Date().toISOString().slice(0, 10)}.png`;
       link.href = dataUrl;
@@ -391,6 +418,92 @@ export default function Organogram() {
       toast.error("Failed to export image");
     } finally {
       setExporting(false);
+    }
+  };
+
+  // ===== Discord Webhook =====
+  const openWebhookDialog = async () => {
+    const token = localStorage.getItem("moderator_token");
+    try {
+      const res = await axios.get(`${API}/organogram/webhook`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setWebhookConfig(res.data);
+      setWebhookInput("");
+      setShowWebhookDialog(true);
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Failed to load webhook config");
+    }
+  };
+
+  const handleSaveWebhook = async (e) => {
+    e.preventDefault();
+    setWebhookSaving(true);
+    const token = localStorage.getItem("moderator_token");
+    try {
+      await axios.put(
+        `${API}/organogram/webhook`,
+        { webhook_url: webhookInput.trim() },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Webhook saved");
+      setShowWebhookDialog(false);
+      setWebhookConfigured(true);
+      setWebhookInput("");
+      // Refresh masked config
+      const res = await axios.get(`${API}/organogram/webhook`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setWebhookConfig(res.data);
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Failed to save webhook");
+    } finally {
+      setWebhookSaving(false);
+    }
+  };
+
+  const handleRemoveWebhook = async () => {
+    if (!window.confirm("Remove the configured Discord webhook?")) return;
+    const token = localStorage.getItem("moderator_token");
+    try {
+      await axios.delete(`${API}/organogram/webhook`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success("Webhook removed");
+      setWebhookConfigured(false);
+      setWebhookConfig({ masked_url: null, updated_by: null, updated_at: null });
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Failed to remove webhook");
+    }
+  };
+
+  const openShareDialog = () => {
+    if (!webhookConfigured) {
+      toast.error("Discord webhook is not configured. Ask an admin to set it up.");
+      return;
+    }
+    setShareMessage("");
+    setShareDialog(true);
+  };
+
+  const handleShareToDiscord = async () => {
+    setSharing(true);
+    const token = localStorage.getItem("moderator_token");
+    try {
+      const dataUrl = await buildChartPng();
+      if (!dataUrl) throw new Error("Could not capture chart");
+      await axios.post(
+        `${API}/organogram/share`,
+        { image_data_url: dataUrl, message: shareMessage || null },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Posted to Discord");
+      setShareDialog(false);
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.detail || "Failed to share");
+    } finally {
+      setSharing(false);
     }
   };
 
@@ -407,7 +520,30 @@ export default function Organogram() {
             </h1>
           </div>
           {canEdit && (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                onClick={openShareDialog}
+                disabled={nodes.length === 0}
+                variant="outline"
+                className="border-indigo-500/60 text-indigo-300 hover:bg-indigo-500/10 rounded-sm"
+                data-testid="organogram-share-btn"
+                title={webhookConfigured ? "Post to Discord" : "Webhook not configured"}
+              >
+                <Send className="h-4 w-4 mr-2" />
+                Share to Discord
+              </Button>
+              {isAdmin && (
+                <Button
+                  onClick={openWebhookDialog}
+                  variant="outline"
+                  size="sm"
+                  className="border-slate-700 text-slate-400 hover:bg-slate-800 rounded-sm"
+                  title="Configure Discord webhook"
+                  data-testid="organogram-webhook-config-btn"
+                >
+                  <SettingsIcon className="h-4 w-4" />
+                </Button>
+              )}
               <Button
                 onClick={handleExportPng}
                 disabled={exporting || nodes.length === 0}
@@ -618,9 +754,126 @@ export default function Organogram() {
         )}
       </div>
 
+      {/* Webhook Config Dialog */}
+      <Dialog open={showWebhookDialog} onOpenChange={setShowWebhookDialog}>
+        <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 sm:max-w-lg" data-testid="organogram-webhook-dialog">
+          <DialogHeader>
+            <DialogTitle className="text-amber-400">Discord Webhook</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              Paste a Discord webhook URL. Create one in Discord: Server Settings → Integrations → Webhooks → New Webhook → Copy URL.
+            </DialogDescription>
+          </DialogHeader>
+          {webhookConfig?.configured && (
+            <div className="rounded-sm border border-slate-700 bg-slate-950/60 p-3 text-xs space-y-1">
+              <p className="text-slate-300">
+                <span className="text-slate-500">Current:</span> <span className="font-mono break-all">{webhookConfig.masked_url}</span>
+              </p>
+              <p className="text-slate-500">
+                Updated by <span className="text-slate-300">{webhookConfig.updated_by}</span>
+                {webhookConfig.updated_at && (
+                  <> on {new Date(webhookConfig.updated_at).toLocaleString()}</>
+                )}
+              </p>
+            </div>
+          )}
+          <form onSubmit={handleSaveWebhook} className="space-y-4">
+            <div>
+              <Label className="text-slate-300">Webhook URL</Label>
+              <Input
+                type="url"
+                value={webhookInput}
+                onChange={(e) => setWebhookInput(e.target.value)}
+                placeholder="https://discord.com/api/webhooks/…/…"
+                className="bg-slate-950/60 border-slate-700 text-slate-200 rounded-sm font-mono text-xs"
+                data-testid="organogram-webhook-input"
+                required
+              />
+            </div>
+            <div className="flex justify-between items-center pt-2">
+              {webhookConfig?.configured ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleRemoveWebhook}
+                  className="border-red-500/40 text-red-400 hover:bg-red-500/10 rounded-sm"
+                  data-testid="organogram-webhook-remove-btn"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" /> Remove
+                </Button>
+              ) : <span />}
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowWebhookDialog(false)}
+                  className="border-slate-700 text-slate-300 hover:bg-slate-800 rounded-sm"
+                >
+                  Close
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={webhookSaving || !webhookInput.trim()}
+                  className="bg-amber-500 hover:bg-amber-600 text-white rounded-sm btn-glow"
+                  data-testid="organogram-webhook-save-btn"
+                >
+                  {webhookSaving ? "Saving…" : "Save"}
+                </Button>
+              </div>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Share to Discord Dialog */}
+      <Dialog open={shareDialog} onOpenChange={setShareDialog}>
+        <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 sm:max-w-lg" data-testid="organogram-share-dialog">
+          <DialogHeader>
+            <DialogTitle className="text-indigo-300 flex items-center gap-2">
+              <Send className="h-5 w-5" /> Share to Discord
+            </DialogTitle>
+            <DialogDescription className="text-slate-400">
+              Posts a PNG of the current org chart with an embed to your configured Discord channel.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-slate-300">Optional message</Label>
+              <Textarea
+                value={shareMessage}
+                onChange={(e) => setShareMessage(e.target.value)}
+                placeholder="e.g. Promotions this week — congrats Sasha and Lex!"
+                className="bg-slate-950/60 border-slate-700 text-slate-200 rounded-sm min-h-[80px]"
+                maxLength={500}
+                data-testid="organogram-share-message-input"
+              />
+              <p className="text-xs text-slate-500 mt-1">{shareMessage.length}/500</p>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShareDialog(false)}
+                className="border-slate-700 text-slate-300 hover:bg-slate-800 rounded-sm"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleShareToDiscord}
+                disabled={sharing}
+                className="bg-indigo-500 hover:bg-indigo-600 text-white rounded-sm"
+                data-testid="organogram-share-confirm-btn"
+              >
+                <Send className="h-4 w-4 mr-2" />
+                {sharing ? "Posting…" : "Post Now"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
       {/* Add/Edit Dialog */}
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 sm:max-w-lg" data-testid="organogram-dialog">
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>        <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 sm:max-w-lg" data-testid="organogram-dialog">
           <DialogHeader>
             <DialogTitle className="text-amber-400">
               {editingNode ? "Edit Member" : "Add Member to Organogram"}

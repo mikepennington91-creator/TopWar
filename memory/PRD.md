@@ -31,22 +31,27 @@ Pull latest code from https://github.com/mikepennington91-creator/TopWar and add
 - Pulled latest TopWar repo into `/app`, configured backend/frontend `.env`, restored services
 - Seeded test users: Admin, CModUser, SampleSMod, SampleLMod, SampleMod1, SampleMod2
 - New `organogram_nodes` collection with cycle prevention, rank-vs-parent validation, duplicate user guard
-- Frontend Organogram page: tiered layout (5 rank rows), SVG connectors, profile picture preview, base64 upload, admin/CMod edit/delete with hover controls, view-only for everyone else
+- Frontend Organogram page: tiered layout (5 rank rows), SVG connectors, profile picture preview, base64 upload, admin/CMod edit/delete with always-visible icons, view-only for everyone else
+- Bio (≤400 chars) + Team (in_game / discord / both) per node, rendered on cards
+- Drag-and-drop re-parenting with cycle/rank validation; "drop to make root" zone during drag
+- Export PNG via `html-to-image` (2x pixel ratio)
+- **Discord webhook integration**: admin-configurable webhook URL stored in `app_settings`; Share to Discord button posts the chart PNG with rich embed (member count, CMod count, custom message, amber color, timestamp)
 - Added `Org Chart` to navigation menu and Moderator Portal quick actions
 - Permission gate `can-edit` exposed via API and used in UI to toggle admin controls
 - 23/23 backend pytest pass; all frontend flows verified by testing agent
 
 ### Files Changed/Added
-- NEW `/app/backend/routes/organogram.py`
+- NEW `/app/backend/routes/organogram.py` (nodes CRUD + webhook config + share endpoint)
 - MOD `/app/backend/server.py` (router include)
 - NEW `/app/frontend/src/pages/Organogram.js`
 - MOD `/app/frontend/src/App.js` (route + import)
 - MOD `/app/frontend/src/components/Navigation.js` (Network nav item)
 - MOD `/app/frontend/src/pages/ModeratorPortal.js` (quick action button)
+- MOD `/app/frontend/package.json` (`html-to-image` dependency)
 - NEW `/app/backend/tests/test_organogram.py` (regression suite)
 
 ### Backlog
 - P2: Server-side cap on profile_picture size to prevent abuse via direct API
-- P2: Drag-and-drop to re-parent nodes within the chart
-- P2: Export org chart as image (PNG via html-to-image)
-- P3: Show department/team labels alongside rank
+- P3: Filter org chart by Team (e.g. "Show only Discord team")
+- P3: Click-card to open profile dialog showing full bio + recent activity
+- P3: Send a Discord message when nodes are added/promoted (auto-publish events)
