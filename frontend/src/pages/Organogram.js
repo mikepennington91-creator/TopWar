@@ -19,11 +19,11 @@ const API = `${BACKEND_URL}/api`;
 
 const RANKS = ["CMod", "MMod", "SMod", "LMod", "Mod"];
 const RANK_STYLES = {
-  CMod: { ring: "ring-rose-500/60", badge: "bg-rose-500/20 text-rose-300 border-rose-500/40", glow: "shadow-rose-500/20" },
-  MMod: { ring: "ring-amber-500/60", badge: "bg-amber-500/20 text-amber-300 border-amber-500/40", glow: "shadow-amber-500/20" },
-  SMod: { ring: "ring-fuchsia-500/60", badge: "bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/40", glow: "shadow-fuchsia-500/20" },
-  LMod: { ring: "ring-violet-500/60", badge: "bg-violet-500/20 text-violet-300 border-violet-500/40", glow: "shadow-violet-500/20" },
-  Mod: { ring: "ring-cyan-500/60", badge: "bg-cyan-500/20 text-cyan-300 border-cyan-500/40", glow: "shadow-cyan-500/20" },
+  CMod: { ring: "ring-emerald-500/60", badge: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40", glow: "shadow-emerald-500/20" },
+  MMod: { ring: "ring-red-500/60", badge: "bg-red-500/20 text-red-300 border-red-500/40", glow: "shadow-red-500/20" },
+  SMod: { ring: "ring-pink-500/60", badge: "bg-pink-500/20 text-pink-300 border-pink-500/40", glow: "shadow-pink-500/20" },
+  LMod: { ring: "ring-purple-500/60", badge: "bg-purple-500/20 text-purple-300 border-purple-500/40", glow: "shadow-purple-500/20" },
+  Mod: { ring: "ring-blue-500/60", badge: "bg-blue-500/20 text-blue-300 border-blue-500/40", glow: "shadow-blue-500/20" },
 };
 
 const TEAM_OPTIONS = [
