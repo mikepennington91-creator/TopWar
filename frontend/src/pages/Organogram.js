@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Network, Plus, Trash2, Pencil, Upload, Shield, X, UserPlus, Gamepad2, MessageCircle } from "lucide-react";
+import { toPng } from "html-to-image";
+import { Network, Plus, Trash2, Pencil, Upload, Shield, X, UserPlus, Gamepad2, MessageCircle, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -59,8 +60,13 @@ export default function Organogram() {
   const [form, setForm] = useState(emptyForm);
 
   const containerRef = useRef(null);
+  const chartRef = useRef(null);
   const nodeRefs = useRef({});
   const [lines, setLines] = useState([]);
+  const [dragNodeId, setDragNodeId] = useState(null);
+  const [dragOverNodeId, setDragOverNodeId] = useState(null);
+  const [dragOverRoot, setDragOverRoot] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   // Auth & initial load
   useEffect(() => {
@@ -259,6 +265,135 @@ export default function Organogram() {
     return portalUsers.filter((u) => !u.is_assigned);
   }, [portalUsers, editingNode]);
 
+  // ===== Drag & Drop =====
+  const nodesById = useMemo(() => {
+    const map = {};
+    nodes.forEach((n) => (map[n.id] = n));
+    return map;
+  }, [nodes]);
+
+  const isDescendant = useCallback(
+    (ancestorId, candidateId) => {
+      let current = nodesById[candidateId];
+      while (current && current.parent_id) {
+        if (current.parent_id === ancestorId) return true;
+        current = nodesById[current.parent_id];
+      }
+      return false;
+    },
+    [nodesById]
+  );
+
+  const handleDragStart = (e, node) => {
+    if (!canEdit) return;
+    setDragNodeId(node.id);
+    e.dataTransfer.effectAllowed = "move";
+    try {
+      e.dataTransfer.setData("text/plain", node.id);
+    } catch {
+      /* some browsers throw on certain drag types */
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDragNodeId(null);
+    setDragOverNodeId(null);
+    setDragOverRoot(false);
+  };
+
+  const isValidDropTarget = (targetNode) => {
+    if (!dragNodeId) return false;
+    const dragNode = nodesById[dragNodeId];
+    if (!dragNode) return false;
+    if (targetNode.id === dragNode.id) return false;
+    // target rank must be strictly higher (lower index) than drag rank
+    if (RANKS.indexOf(targetNode.rank) >= RANKS.indexOf(dragNode.rank)) return false;
+    // target cannot be a descendant of drag node (cycle)
+    if (isDescendant(dragNode.id, targetNode.id)) return false;
+    return true;
+  };
+
+  const handleDragOverNode = (e, targetNode) => {
+    if (!canEdit || !dragNodeId) return;
+    if (!isValidDropTarget(targetNode)) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverNodeId(targetNode.id);
+  };
+
+  const handleDragLeaveNode = (targetNode) => {
+    if (dragOverNodeId === targetNode.id) setDragOverNodeId(null);
+  };
+
+  const persistParentChange = async (nodeId, newParentId) => {
+    const token = localStorage.getItem("moderator_token");
+    try {
+      await axios.patch(
+        `${API}/organogram/nodes/${nodeId}`,
+        { parent_id: newParentId || "" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Reporting line updated");
+      await fetchAll();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Failed to update parent");
+    }
+  };
+
+  const handleDropOnNode = (e, targetNode) => {
+    if (!canEdit || !dragNodeId) return;
+    e.preventDefault();
+    handleDragEnd();
+    if (!isValidDropTarget(targetNode)) return;
+    const dragNode = nodesById[dragNodeId];
+    if (dragNode.parent_id === targetNode.id) return; // unchanged
+    persistParentChange(dragNode.id, targetNode.id);
+  };
+
+  const handleDragOverRoot = (e) => {
+    if (!canEdit || !dragNodeId) return;
+    const dragNode = nodesById[dragNodeId];
+    if (!dragNode) return;
+    if (dragNode.parent_id === null) return; // already root
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverRoot(true);
+  };
+
+  const handleDropOnRoot = (e) => {
+    if (!canEdit || !dragNodeId) return;
+    e.preventDefault();
+    const id = dragNodeId;
+    handleDragEnd();
+    const dragNode = nodesById[id];
+    if (!dragNode || dragNode.parent_id === null) return;
+    persistParentChange(id, "");
+  };
+
+  // ===== Export PNG =====
+  const handleExportPng = async () => {
+    if (!chartRef.current) return;
+    setExporting(true);
+    try {
+      const dataUrl = await toPng(chartRef.current, {
+        cacheBust: true,
+        backgroundColor: "#020617",
+        pixelRatio: 2,
+        style: { padding: "32px" },
+      });
+      const link = document.createElement("a");
+      link.download = `organogram-${new Date().toISOString().slice(0, 10)}.png`;
+      link.href = dataUrl;
+      link.click();
+      toast.success("Organogram exported");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to export image");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (!currentUser) return null;
 
   return (
@@ -272,12 +407,36 @@ export default function Organogram() {
             </h1>
           </div>
           {canEdit && (
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleExportPng}
+                disabled={exporting || nodes.length === 0}
+                variant="outline"
+                className="border-slate-600 text-slate-300 hover:bg-slate-800 rounded-sm"
+                data-testid="organogram-export-btn"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                {exporting ? "Exporting…" : "Export PNG"}
+              </Button>
+              <Button
+                onClick={openCreateDialog}
+                className="bg-amber-500 hover:bg-amber-600 text-white rounded-sm btn-glow"
+                data-testid="organogram-add-node-btn"
+              >
+                <Plus className="h-4 w-4 mr-2" /> Add Member
+              </Button>
+            </div>
+          )}
+          {!canEdit && nodes.length > 0 && (
             <Button
-              onClick={openCreateDialog}
-              className="bg-amber-500 hover:bg-amber-600 text-white rounded-sm btn-glow"
-              data-testid="organogram-add-node-btn"
+              onClick={handleExportPng}
+              disabled={exporting}
+              variant="outline"
+              className="border-slate-600 text-slate-300 hover:bg-slate-800 rounded-sm"
+              data-testid="organogram-export-btn-readonly"
             >
-              <Plus className="h-4 w-4 mr-2" /> Add Member
+              <Download className="h-4 w-4 mr-2" />
+              {exporting ? "Exporting…" : "Export PNG"}
             </Button>
           )}
         </div>
@@ -292,7 +451,9 @@ export default function Organogram() {
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-slate-500">
-            {canEdit ? "You can add, edit, and remove organogram members." : "View-only mode. Only Admins or organogram CMods can edit."}
+            {canEdit
+              ? "You can add, edit, and remove organogram members. Drag a card onto a higher-rank card to re-parent it."
+              : "View-only mode. Only Admins or organogram CMods can edit."}
           </CardContent>
         </Card>
 
@@ -310,6 +471,24 @@ export default function Organogram() {
           </div>
         ) : (
           <div ref={containerRef} className="relative" data-testid="organogram-chart">
+            <div ref={chartRef} className="relative bg-slate-950 rounded-md p-2">
+            {canEdit && (
+              <div
+                onDragOver={handleDragOverRoot}
+                onDragLeave={() => setDragOverRoot(false)}
+                onDrop={handleDropOnRoot}
+                className={`mb-4 mx-auto max-w-md text-center text-xs uppercase tracking-widest border-2 border-dashed rounded-sm py-3 transition-colors ${
+                  dragNodeId
+                    ? dragOverRoot
+                      ? "border-amber-400 bg-amber-500/10 text-amber-300"
+                      : "border-slate-600 text-slate-400"
+                    : "border-transparent text-transparent select-none pointer-events-none"
+                }`}
+                data-testid="organogram-root-drop-zone"
+              >
+                Drop here to remove parent (make root)
+              </div>
+            )}
             <svg
               className="absolute inset-0 w-full h-full pointer-events-none"
               style={{ overflow: "visible" }}
@@ -348,7 +527,19 @@ export default function Organogram() {
                           <div
                             key={node.id}
                             ref={(el) => (nodeRefs.current[node.id] = el)}
-                            className={`group relative w-48 sm:w-56 bg-slate-900/80 backdrop-blur border border-slate-700 rounded-md p-4 hover:border-amber-500/50 transition-all shadow-lg ${styles.glow}`}
+                            draggable={canEdit}
+                            onDragStart={(e) => handleDragStart(e, node)}
+                            onDragEnd={handleDragEnd}
+                            onDragOver={(e) => handleDragOverNode(e, node)}
+                            onDragLeave={() => handleDragLeaveNode(node)}
+                            onDrop={(e) => handleDropOnNode(e, node)}
+                            className={`group relative w-48 sm:w-56 bg-slate-900/80 backdrop-blur border rounded-md p-4 transition-all shadow-lg ${styles.glow} ${
+                              dragNodeId === node.id
+                                ? "opacity-50 border-amber-500"
+                                : dragOverNodeId === node.id
+                                ? "border-amber-400 ring-2 ring-amber-400/60"
+                                : "border-slate-700 hover:border-amber-500/50"
+                            } ${canEdit ? "cursor-move" : ""}`}
                             data-testid={`organogram-node-${node.username}`}
                           >
                             <div className={`mx-auto mb-3 w-20 h-20 rounded-full overflow-hidden ring-2 ${styles.ring} bg-slate-800 flex items-center justify-center`}>
@@ -421,6 +612,7 @@ export default function Organogram() {
                   </div>
                 );
               })}
+            </div>
             </div>
           </div>
         )}
