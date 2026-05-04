@@ -756,7 +756,7 @@ export default function Organogram() {
 
       {/* Webhook Config Dialog */}
       <Dialog open={showWebhookDialog} onOpenChange={setShowWebhookDialog}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 sm:max-w-lg" data-testid="organogram-webhook-dialog">
+        <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 sm:max-w-lg max-h-[90vh] overflow-y-auto" data-testid="organogram-webhook-dialog">
           <DialogHeader>
             <DialogTitle className="text-amber-400">Discord Webhook</DialogTitle>
             <DialogDescription className="text-slate-400">
@@ -826,7 +826,7 @@ export default function Organogram() {
 
       {/* Share to Discord Dialog */}
       <Dialog open={shareDialog} onOpenChange={setShareDialog}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 sm:max-w-lg" data-testid="organogram-share-dialog">
+        <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 sm:max-w-lg max-h-[90vh] overflow-y-auto" data-testid="organogram-share-dialog">
           <DialogHeader>
             <DialogTitle className="text-indigo-300 flex items-center gap-2">
               <Send className="h-5 w-5" /> Share to Discord
@@ -873,7 +873,7 @@ export default function Organogram() {
 
 
       {/* Add/Edit Dialog */}
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>        <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 sm:max-w-lg" data-testid="organogram-dialog">
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>        <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 sm:max-w-lg max-h-[90vh] overflow-y-auto" data-testid="organogram-dialog">
           <DialogHeader>
             <DialogTitle className="text-amber-400">
               {editingNode ? "Edit Member" : "Add Member to Organogram"}
