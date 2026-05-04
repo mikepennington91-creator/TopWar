@@ -68,6 +68,7 @@ export default function Organogram() {
   const [dragOverNodeId, setDragOverNodeId] = useState(null);
   const [dragOverRoot, setDragOverRoot] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [teamFilter, setTeamFilter] = useState("all"); // 'all' | 'in_game' | 'discord' | 'training'
 
   // Discord webhook
   const [webhookConfigured, setWebhookConfigured] = useState(false);
@@ -129,10 +130,15 @@ export default function Organogram() {
   }, [currentUser, fetchAll]);
 
   // Group nodes by rank
+  const visibleNodes = useMemo(() => {
+    if (teamFilter === "all") return nodes;
+    return nodes.filter((n) => Array.isArray(n.teams) && n.teams.includes(teamFilter));
+  }, [nodes, teamFilter]);
+
   const tiered = useMemo(() => {
     const grouped = {};
     RANKS.forEach((r) => (grouped[r] = []));
-    nodes.forEach((n) => {
+    visibleNodes.forEach((n) => {
       if (grouped[n.rank]) grouped[n.rank].push(n);
     });
     // sort each tier by parent_id then username for stable layout
@@ -145,7 +151,7 @@ export default function Organogram() {
       });
     });
     return grouped;
-  }, [nodes]);
+  }, [visibleNodes]);
 
   // Compute SVG connector lines after layout
   const computeLines = useCallback(() => {
@@ -154,9 +160,10 @@ export default function Organogram() {
     const baseRect = baseEl.getBoundingClientRect();
     const scrollLeft = chartRef.current ? chartRef.current.scrollLeft : 0;
     const scrollTop = chartRef.current ? chartRef.current.scrollTop : 0;
+    const visibleIds = new Set(visibleNodes.map((n) => n.id));
     const newLines = [];
-    nodes.forEach((node) => {
-      if (!node.parent_id) return;
+    visibleNodes.forEach((node) => {
+      if (!node.parent_id || !visibleIds.has(node.parent_id)) return;
       const childEl = nodeRefs.current[node.id];
       const parentEl = nodeRefs.current[node.parent_id];
       if (!childEl || !parentEl) return;
@@ -169,7 +176,7 @@ export default function Organogram() {
       newLines.push({ id: `${node.parent_id}-${node.id}`, x1, y1, x2, y2 });
     });
     setLines(newLines);
-  }, [nodes]);
+  }, [visibleNodes]);
 
   useEffect(() => {
     // After nodes render, compute lines (next frame)
@@ -603,10 +610,39 @@ export default function Organogram() {
               Hierarchy: CMod → MMod → SMod → LMod → Mod
             </CardTitle>
           </CardHeader>
-          <CardContent className="text-xs text-slate-500">
-            {canEdit
-              ? "You can add, edit, and remove organogram members. Drag a card onto a higher-rank card to re-parent it. Swipe left/right on mobile to see more cards in the same tier."
-              : "View-only mode. Only Admins or organogram CMods can edit. Swipe left/right on mobile to see more cards in the same tier."}
+          <CardContent className="text-xs text-slate-500 space-y-3">
+            <p>
+              {canEdit
+                ? "You can add, edit, and remove organogram members. Drag a card onto a higher-rank card to re-parent it. Swipe left/right on mobile to see more cards in the same tier."
+                : "View-only mode. Only Admins or organogram CMods can edit. Swipe left/right on mobile to see more cards in the same tier."}
+            </p>
+            <div className="flex flex-wrap gap-2" data-testid="organogram-team-filter">
+              {[
+                { key: "all", label: "Whole Team", className: "bg-slate-700 text-slate-100 border-slate-600" },
+                { key: "in_game", label: "In-Game", className: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" },
+                { key: "discord", label: "Discord", className: "bg-indigo-500/20 text-indigo-300 border-indigo-500/40" },
+                { key: "training", label: "Training", className: "bg-orange-500/20 text-orange-300 border-orange-500/40" },
+              ].map((opt) => {
+                const active = teamFilter === opt.key;
+                const count =
+                  opt.key === "all"
+                    ? nodes.length
+                    : nodes.filter((n) => Array.isArray(n.teams) && n.teams.includes(opt.key)).length;
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => setTeamFilter(opt.key)}
+                    className={`px-3 py-1.5 rounded-sm border text-xs uppercase tracking-wider transition-all ${
+                      active ? `${opt.className} ring-2 ring-offset-2 ring-offset-slate-900 ring-current` : "bg-slate-900/50 text-slate-400 border-slate-700 hover:border-slate-500"
+                    }`}
+                    data-testid={`organogram-filter-${opt.key}`}
+                  >
+                    {opt.label} <span className="opacity-70 ml-1">({count})</span>
+                  </button>
+                );
+              })}
+            </div>
           </CardContent>
         </Card>
 
@@ -621,6 +657,18 @@ export default function Organogram() {
                 <Plus className="h-4 w-4 mr-2" /> Add First Member
               </Button>
             )}
+          </div>
+        ) : visibleNodes.length === 0 ? (
+          <div className="text-center py-16 glass-card rounded-md border border-slate-700" data-testid="organogram-filter-empty-state">
+            <UserPlus className="h-12 w-12 text-slate-600 mx-auto mb-3" />
+            <p className="text-slate-400">No moderators match this filter.</p>
+            <Button
+              onClick={() => setTeamFilter("all")}
+              variant="outline"
+              className="mt-4 border-slate-600 text-slate-300 hover:bg-slate-800 rounded-sm"
+            >
+              Show whole team
+            </Button>
           </div>
         ) : (
           <div ref={containerRef} className="relative -mx-3 sm:mx-0" data-testid="organogram-chart">
