@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import ImageCropDialog from "@/components/ImageCropDialog";
 import { toast } from "sonner";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -77,6 +78,7 @@ export default function Organogram() {
   const [shareDialog, setShareDialog] = useState(false);
   const [shareMessage, setShareMessage] = useState("");
   const [sharing, setSharing] = useState(false);
+  const [cropSource, setCropSource] = useState(null);
   const isAdmin = currentUser?.role === "admin" || localStorage.getItem("moderator_is_admin") === "true";
 
   // Auth & initial load
@@ -202,13 +204,20 @@ export default function Organogram() {
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 1.5 * 1024 * 1024) {
-      toast.error("Image must be smaller than 1.5 MB");
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error("Image must be smaller than 8 MB");
       return;
     }
     const reader = new FileReader();
-    reader.onloadend = () => setForm((prev) => ({ ...prev, profile_picture: reader.result }));
+    reader.onloadend = () => setCropSource(reader.result);
     reader.readAsDataURL(file);
+    // Reset the input so re-selecting the same file still triggers onChange
+    e.target.value = "";
+  };
+
+  const handleCropConfirm = (croppedDataUrl) => {
+    setForm((prev) => ({ ...prev, profile_picture: croppedDataUrl }));
+    setCropSource(null);
   };
 
   const handleSubmit = async (e) => {
@@ -683,7 +692,7 @@ export default function Organogram() {
                                 <img
                                   src={node.profile_picture}
                                   alt={node.username}
-                                  className="w-full h-full object-cover object-top"
+                                  className="w-full h-full object-cover"
                                 />
                               ) : (
                                 <span className="text-2xl font-bold text-slate-400" style={{ fontFamily: "Rajdhani, sans-serif" }}>
@@ -753,6 +762,14 @@ export default function Organogram() {
           </div>
         )}
       </div>
+
+      {/* Image Crop Dialog */}
+      <ImageCropDialog
+        open={!!cropSource}
+        imageSrc={cropSource}
+        onCancel={() => setCropSource(null)}
+        onConfirm={handleCropConfirm}
+      />
 
       {/* Webhook Config Dialog */}
       <Dialog open={showWebhookDialog} onOpenChange={setShowWebhookDialog}>
@@ -992,7 +1009,7 @@ export default function Organogram() {
               <div className="flex items-center gap-3">
                 <div className="w-16 h-16 rounded-full overflow-hidden bg-slate-800 ring-2 ring-slate-700 flex items-center justify-center shrink-0">
                   {form.profile_picture ? (
-                    <img src={form.profile_picture} alt="preview" className="w-full h-full object-cover object-top" />
+                    <img src={form.profile_picture} alt="preview" className="w-full h-full object-cover" />
                   ) : (
                     <UserPlus className="h-6 w-6 text-slate-500" />
                   )}
@@ -1022,7 +1039,7 @@ export default function Organogram() {
                   )}
                 </div>
               </div>
-              <p className="text-xs text-slate-500 mt-1">Max 1.5 MB. Stored as base64.</p>
+              <p className="text-xs text-slate-500 mt-1">Max 8 MB. You'll position and crop the photo before saving.</p>
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
