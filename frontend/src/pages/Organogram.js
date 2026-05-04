@@ -29,7 +29,6 @@ const RANK_STYLES = {
 const TEAM_OPTIONS = [
   { value: "in_game", label: "In-Game", icon: Gamepad2, badge: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" },
   { value: "discord", label: "Discord", icon: MessageCircle, badge: "bg-indigo-500/20 text-indigo-300 border-indigo-500/40" },
-  { value: "both", label: "In-Game + Discord", icon: Shield, badge: "bg-amber-500/20 text-amber-300 border-amber-500/40" },
   { value: "training", label: "Training", icon: GraduationCap, badge: "bg-orange-500/20 text-orange-300 border-orange-500/40" },
 ];
 
@@ -44,7 +43,7 @@ const emptyForm = {
   parent_id: "",
   display_name: "",
   profile_picture: "",
-  team: "",
+  teams: [],
   bio: "",
 };
 
@@ -238,7 +237,7 @@ export default function Organogram() {
             parent_id: form.parent_id || "",
             display_name: form.display_name || "",
             profile_picture: form.profile_picture || "",
-            team: form.team || "",
+            teams: form.teams,
             bio: form.bio || "",
           },
           { headers: { Authorization: `Bearer ${token}` } }
@@ -253,7 +252,7 @@ export default function Organogram() {
             parent_id: form.parent_id || null,
             display_name: form.display_name || null,
             profile_picture: form.profile_picture || null,
-            team: form.team || null,
+            teams: form.teams,
             bio: form.bio || null,
           },
           { headers: { Authorization: `Bearer ${token}` } }
@@ -667,8 +666,7 @@ export default function Organogram() {
                     <div className="flex flex-wrap justify-center gap-4">
                       {tierNodes.map((node) => {
                         const styles = RANK_STYLES[rank];
-                        const teamCfg = node.team ? TEAM_MAP[node.team] : null;
-                        const TeamIcon = teamCfg?.icon;
+                        const nodeTeams = Array.isArray(node.teams) ? node.teams : [];
                         return (
                           <div
                             key={node.id}
@@ -710,12 +708,21 @@ export default function Organogram() {
                               )}
                               <div className="flex items-center justify-center gap-1 mt-2 flex-wrap">
                                 <Badge className={`${styles.badge} text-[10px] uppercase`}>{node.rank}</Badge>
-                                {teamCfg && (
-                                  <Badge className={`${teamCfg.badge} text-[10px] uppercase flex items-center gap-1`} data-testid={`organogram-team-${node.username}`}>
-                                    {TeamIcon ? <TeamIcon className="h-2.5 w-2.5" /> : null}
-                                    {teamCfg.label}
-                                  </Badge>
-                                )}
+                                {nodeTeams.map((teamKey) => {
+                                  const teamCfg = TEAM_MAP[teamKey];
+                                  if (!teamCfg) return null;
+                                  const TeamIcon = teamCfg.icon;
+                                  return (
+                                    <Badge
+                                      key={teamKey}
+                                      className={`${teamCfg.badge} text-[10px] uppercase flex items-center gap-1`}
+                                      data-testid={`organogram-team-${node.username}-${teamKey}`}
+                                    >
+                                      {TeamIcon ? <TeamIcon className="h-2.5 w-2.5" /> : null}
+                                      {teamCfg.label}
+                                    </Badge>
+                                  );
+                                })}
                               </div>
                               {node.bio && (
                                 <p
@@ -973,21 +980,44 @@ export default function Organogram() {
             </div>
 
             <div>
-              <Label className="text-slate-300">Team (Optional)</Label>
-              <Select
-                value={form.team || "none"}
-                onValueChange={(v) => setForm((prev) => ({ ...prev, team: v === "none" ? "" : v }))}
-              >
-                <SelectTrigger className="bg-slate-950/60 border-slate-700 text-slate-200 rounded-sm" data-testid="organogram-team-select">
-                  <SelectValue placeholder="Select team…" />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700 text-slate-200">
-                  <SelectItem value="none">— Unassigned —</SelectItem>
-                  {TEAM_OPTIONS.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label className="text-slate-300">Departments</Label>
+              <div className="grid grid-cols-1 gap-2 mt-2" data-testid="organogram-teams-checkboxes">
+                {TEAM_OPTIONS.map((opt) => {
+                  const Icon = opt.icon;
+                  const checked = (form.teams || []).includes(opt.value);
+                  return (
+                    <label
+                      key={opt.value}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-sm border cursor-pointer transition-colors ${
+                        checked
+                          ? `${opt.badge} border-current`
+                          : "bg-slate-950/60 border-slate-700 hover:border-slate-500 text-slate-300"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => {
+                          setForm((prev) => {
+                            const cur = prev.teams || [];
+                            return {
+                              ...prev,
+                              teams: e.target.checked
+                                ? [...cur, opt.value]
+                                : cur.filter((t) => t !== opt.value),
+                            };
+                          });
+                        }}
+                        className="accent-amber-500 h-4 w-4"
+                        data-testid={`organogram-team-checkbox-${opt.value}`}
+                      />
+                      <Icon className="h-4 w-4" />
+                      <span className="text-sm">{opt.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-slate-500 mt-1">Select all that apply. Each shows as a separate badge on the card.</p>
             </div>
 
             <div>

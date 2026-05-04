@@ -19,7 +19,31 @@ router = APIRouter(prefix="/organogram", tags=["Organogram"])
 
 # ============ Models ============
 ORG_RANKS = ["CMod", "MMod", "SMod", "LMod", "Mod"]
-ORG_TEAMS = ["in_game", "discord", "both", "training"]
+ORG_TEAMS = ["in_game", "discord", "training"]
+
+
+def normalize_teams(value) -> List[str]:
+    """Accept legacy single-string team or list; return clean list of valid teams."""
+    if value is None:
+        return []
+    if isinstance(value, str):
+        # Legacy: 'both' meant in_game + discord
+        if value == "both":
+            return ["in_game", "discord"]
+        if value in ORG_TEAMS:
+            return [value]
+        return []
+    if isinstance(value, list):
+        out = []
+        for v in value:
+            if v == "both":
+                for t in ("in_game", "discord"):
+                    if t not in out:
+                        out.append(t)
+            elif v in ORG_TEAMS and v not in out:
+                out.append(v)
+        return out
+    return []
 
 
 class OrgNode(BaseModel):
@@ -29,7 +53,7 @@ class OrgNode(BaseModel):
     username: str
     display_name: Optional[str] = None
     rank: str  # One of ORG_RANKS
-    team: Optional[str] = None  # One of ORG_TEAMS
+    teams: List[str] = Field(default_factory=list)  # subset of ORG_TEAMS
     bio: Optional[str] = None
     parent_id: Optional[str] = None
     profile_picture: Optional[str] = None  # base64 data URL
@@ -44,7 +68,7 @@ class OrgNodeCreate(BaseModel):
     parent_id: Optional[str] = None
     display_name: Optional[str] = None
     profile_picture: Optional[str] = None
-    team: Optional[str] = None
+    teams: Optional[List[str]] = None
     bio: Optional[str] = None
 
 
@@ -53,7 +77,7 @@ class OrgNodeUpdate(BaseModel):
     parent_id: Optional[str] = None
     display_name: Optional[str] = None
     profile_picture: Optional[str] = None
-    team: Optional[str] = None
+    teams: Optional[List[str]] = None
     bio: Optional[str] = None
 
 
@@ -81,7 +105,7 @@ async def require_org_editor(current_user: dict = Depends(get_current_moderator)
 
 
 def serialize_node(node: dict) -> dict:
-    """Convert datetimes for response."""
+    """Convert datetimes + migrate legacy team -> teams for response."""
     if isinstance(node.get("created_at"), str):
         try:
             node["created_at"] = datetime.fromisoformat(node["created_at"])
@@ -92,6 +116,12 @@ def serialize_node(node: dict) -> dict:
             node["updated_at"] = datetime.fromisoformat(node["updated_at"])
         except ValueError:
             pass
+    # Migrate legacy single-team field on the fly for the response
+    if "teams" not in node or not node.get("teams"):
+        legacy = node.get("team")
+        node["teams"] = normalize_teams(legacy) if legacy else []
+    else:
+        node["teams"] = normalize_teams(node["teams"])
     return node
 
 
@@ -135,8 +165,10 @@ async def create_node(payload: OrgNodeCreate, current_user: dict = Depends(requi
     if payload.rank not in ORG_RANKS:
         raise HTTPException(status_code=400, detail=f"Rank must be one of {ORG_RANKS}")
 
-    if payload.team is not None and payload.team not in ORG_TEAMS:
-        raise HTTPException(status_code=400, detail=f"Team must be one of {ORG_TEAMS}")
+    if payload.teams is not None:
+        invalid = [t for t in payload.teams if t not in ORG_TEAMS]
+        if invalid:
+            raise HTTPException(status_code=400, detail=f"Invalid team(s): {invalid}. Allowed: {ORG_TEAMS}")
 
     # Verify portal user exists
     mod = await db.moderators.find_one({"username": payload.username}, {"_id": 0, "username": 1})
@@ -165,7 +197,7 @@ async def create_node(payload: OrgNodeCreate, current_user: dict = Depends(requi
         parent_id=payload.parent_id,
         display_name=payload.display_name,
         profile_picture=payload.profile_picture,
-        team=payload.team,
+        teams=normalize_teams(payload.teams),
         bio=payload.bio,
         updated_by=current_user["username"],
     )
@@ -222,10 +254,13 @@ async def update_node(node_id: str, payload: OrgNodeUpdate, current_user: dict =
     if payload.profile_picture is not None:
         updates["profile_picture"] = payload.profile_picture or None
 
-    if payload.team is not None:
-        if payload.team and payload.team not in ORG_TEAMS:
-            raise HTTPException(status_code=400, detail=f"Team must be one of {ORG_TEAMS}")
-        updates["team"] = payload.team or None
+    if payload.teams is not None:
+        invalid = [t for t in payload.teams if t not in ORG_TEAMS]
+        if invalid:
+            raise HTTPException(status_code=400, detail=f"Invalid team(s): {invalid}. Allowed: {ORG_TEAMS}")
+        updates["teams"] = normalize_teams(payload.teams)
+        # Clear legacy single-team field so it doesn't override on read
+        updates["team"] = None
 
     if payload.bio is not None:
         updates["bio"] = payload.bio or None
