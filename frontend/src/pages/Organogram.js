@@ -683,7 +683,7 @@ export default function Organogram() {
                                 <img
                                   src={node.profile_picture}
                                   alt={node.username}
-                                  className="w-full h-full object-cover"
+                                  className="w-full h-full object-cover object-top"
                                 />
                               ) : (
                                 <span className="text-2xl font-bold text-slate-400" style={{ fontFamily: "Rajdhani, sans-serif" }}>
@@ -992,7 +992,7 @@ export default function Organogram() {
               <div className="flex items-center gap-3">
                 <div className="w-16 h-16 rounded-full overflow-hidden bg-slate-800 ring-2 ring-slate-700 flex items-center justify-center shrink-0">
                   {form.profile_picture ? (
-                    <img src={form.profile_picture} alt="preview" className="w-full h-full object-cover" />
+                    <img src={form.profile_picture} alt="preview" className="w-full h-full object-cover object-top" />
                   ) : (
                     <UserPlus className="h-6 w-6 text-slate-500" />
                   )}
