@@ -1,37 +1,52 @@
-# PRD — Kyrios Appreciation Page (TW Applications)
+# PRD — Top War Moderator Portal
 
-## Problem Statement
-Create a team appreciation page for Kyrios, a Discord moderator on the Twapplications.com mod portal. Page must match the existing site's design patterns and be an addition to the existing codebase pulled from GitHub.
+## Latest Feature: Moderator Organogram (Jan 2026)
 
-## Architecture
-- **Frontend**: React + Tailwind CSS (existing Twapplications.com codebase)
-- **Backend**: FastAPI with MongoDB (unchanged — static page, no API needed)
-- **Routing**: react-router-dom, page at `/kyrios-appreciation`
-- **Meta Tags**: react-helmet-async for per-page OG/Twitter tags
-- **Favicon**: Custom katana-themed SVG at `/favicons/kyrios.svg`
+### Problem Statement
+Pull latest code from https://github.com/mikepennington91-creator/TopWar and add an Admin-managed Organogram (org chart) section. Hierarchical mod ranks (CMod → MMod → SMod → LMod → Mod), assignable to portal users with profile picture upload, parent→child reporting structure, multiple mods of the same rank share a row.
 
-## What's Been Implemented (Jan 2026)
-- Pulled latest code from GitHub (`mikepennington91-creator/TopWar`, main branch)
-- Created `/app/frontend/src/pages/KyriosPage.js` matching existing page patterns (GarudaPage, SethPage, SianPage)
-- Hero section with samurai avatar, shimmer name, Discord Moderator badge
-- Main team quote card + 2 additional quote cards
-- Rotating fun facts (6 facts, auto-rotating every 4s)
-- 6 achievement badge cards with colored gradients
-- 4 Intel Report cards with left/right reveal animations
-- Thank You section with emojis
-- Scroll-triggered entrance animations via IntersectionObserver (reveal, reveal-scale, reveal-left, reveal-right)
-- OG meta tags via react-helmet-async for Discord/social embeds
-- Custom katana-themed favicon SVG
-- useFavicon.js mapping for title and favicon
-- Route added to App.js, import added
-- Back to Login button navigating to /moderator/login
-- 26 data-testid attributes, all tests passed (100%)
+### User Choices
+- Hierarchy: CMod (top) → MMod → SMod → LMod → Mod (bottom)
+- Permissions: Admin + CMod (organogram-rank) can edit
+- Portal user assignment: dropdown of existing portal users
+- Profile pictures: base64 stored in MongoDB
+- Layout: tiered with parent→child connecting lines
 
-## Files Changed
-- `frontend/src/pages/KyriosPage.js` (NEW)
-- `frontend/src/App.js` (added import + route)
-- `frontend/src/hooks/useFavicon.js` (added favicon + title mapping)
-- `frontend/public/favicons/kyrios.svg` (NEW)
+### Architecture
+- Backend: FastAPI + MongoDB collection `organogram_nodes`
+- Routes module: `/app/backend/routes/organogram.py` (mounted at `/api/organogram`)
+- Frontend page: `/app/frontend/src/pages/Organogram.js` at `/moderator/organogram`
+- SVG connectors computed via refs + `getBoundingClientRect`
+- Permission rule: `is_admin == true` OR user has organogram node with `rank == "CMod"`
 
-## Backlog
-- P3: Add a "Share on Discord" button that copies a formatted link
+### Endpoints
+- `GET /api/organogram/nodes` (any auth)
+- `GET /api/organogram/portal-users` (any auth) — list assignable users with `is_assigned`
+- `GET /api/organogram/can-edit` (any auth) — boolean
+- `POST /api/organogram/nodes` (admin / CMod) — create node
+- `PATCH /api/organogram/nodes/{id}` (admin / CMod) — update rank/parent/display_name/profile_picture
+- `DELETE /api/organogram/nodes/{id}` (admin / CMod) — delete; children reparent to deleted node's parent
+
+### What's Been Implemented
+- Pulled latest TopWar repo into `/app`, configured backend/frontend `.env`, restored services
+- Seeded test users: Admin, CModUser, SampleSMod, SampleLMod, SampleMod1, SampleMod2
+- New `organogram_nodes` collection with cycle prevention, rank-vs-parent validation, duplicate user guard
+- Frontend Organogram page: tiered layout (5 rank rows), SVG connectors, profile picture preview, base64 upload, admin/CMod edit/delete with hover controls, view-only for everyone else
+- Added `Org Chart` to navigation menu and Moderator Portal quick actions
+- Permission gate `can-edit` exposed via API and used in UI to toggle admin controls
+- 23/23 backend pytest pass; all frontend flows verified by testing agent
+
+### Files Changed/Added
+- NEW `/app/backend/routes/organogram.py`
+- MOD `/app/backend/server.py` (router include)
+- NEW `/app/frontend/src/pages/Organogram.js`
+- MOD `/app/frontend/src/App.js` (route + import)
+- MOD `/app/frontend/src/components/Navigation.js` (Network nav item)
+- MOD `/app/frontend/src/pages/ModeratorPortal.js` (quick action button)
+- NEW `/app/backend/tests/test_organogram.py` (regression suite)
+
+### Backlog
+- P2: Server-side cap on profile_picture size to prevent abuse via direct API
+- P2: Drag-and-drop to re-parent nodes within the chart
+- P2: Export org chart as image (PNG via html-to-image)
+- P3: Show department/team labels alongside rank
