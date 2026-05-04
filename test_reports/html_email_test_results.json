@@ -1,0 +1,212 @@
+{
+  "timestamp": "2026-04-12T21:54:19.821468",
+  "total_tests": 34,
+  "passed_tests": 34,
+  "success_rate": "100.0%",
+  "results": [
+    {
+      "test": "Moderator Login",
+      "success": true,
+      "details": "Logged in as Sian",
+      "timestamp": "2026-04-12T21:54:19.815795"
+    },
+    {
+      "test": "send_application_rejected_email Signature",
+      "success": true,
+      "details": "Correct parameters: ['to_email', 'name', 'manager_comment']",
+      "timestamp": "2026-04-12T21:54:19.820417"
+    },
+    {
+      "test": "send_application_approved_email Signature",
+      "success": true,
+      "details": "Correct parameters: ['to_email', 'name', 'manager_comment']",
+      "timestamp": "2026-04-12T21:54:19.820441"
+    },
+    {
+      "test": "send_application_confirmation_email Signature",
+      "success": true,
+      "details": "Correct parameters: ['to_email', 'name']",
+      "timestamp": "2026-04-12T21:54:19.820456"
+    },
+    {
+      "test": "send_email Signature",
+      "success": true,
+      "details": "Correct parameters: ['to_email', 'subject', 'body_html']",
+      "timestamp": "2026-04-12T21:54:19.820470"
+    },
+    {
+      "test": "TOP_WAR_LOGO Constant",
+      "success": true,
+      "details": "Logo URL: https://www.rivergame.net/en/res/img/comm/home/topcover/title.png",
+      "timestamp": "2026-04-12T21:54:19.820478"
+    },
+    {
+      "test": "APPLY_URL Construction",
+      "success": true,
+      "details": "Apply URL: http://localhost:3000/apply",
+      "timestamp": "2026-04-12T21:54:19.820481"
+    },
+    {
+      "test": "HTML Template - DOCTYPE html",
+      "success": true,
+      "details": "Found in template",
+      "timestamp": "2026-04-12T21:54:19.820489"
+    },
+    {
+      "test": "HTML Template - Logo image",
+      "success": true,
+      "details": "Found in template",
+      "timestamp": "2026-04-12T21:54:19.820493"
+    },
+    {
+      "test": "HTML Template - Body content",
+      "success": true,
+      "details": "Found in template",
+      "timestamp": "2026-04-12T21:54:19.820496"
+    },
+    {
+      "test": "HTML Template - RiverGames branding",
+      "success": true,
+      "details": "Found in template",
+      "timestamp": "2026-04-12T21:54:19.820499"
+    },
+    {
+      "test": "HTML Template - HTML structure",
+      "success": true,
+      "details": "Found in template",
+      "timestamp": "2026-04-12T21:54:19.820501"
+    },
+    {
+      "test": "Rejection Email - Logo image",
+      "success": true,
+      "details": "Found in email",
+      "timestamp": "2026-04-12T21:54:19.820964"
+    },
+    {
+      "test": "Rejection Email - Rejection comment box",
+      "success": true,
+      "details": "Found in email",
+      "timestamp": "2026-04-12T21:54:19.820968"
+    },
+    {
+      "test": "Rejection Email - Re-Apply button",
+      "success": true,
+      "details": "Found in email",
+      "timestamp": "2026-04-12T21:54:19.820972"
+    },
+    {
+      "test": "Rejection Email - Apply URL in button",
+      "success": true,
+      "details": "Found in email",
+      "timestamp": "2026-04-12T21:54:19.820974"
+    },
+    {
+      "test": "Rejection Email - HTML structure",
+      "success": true,
+      "details": "Found in email",
+      "timestamp": "2026-04-12T21:54:19.820977"
+    },
+    {
+      "test": "Rejection Email - Greeting",
+      "success": true,
+      "details": "Found in email",
+      "timestamp": "2026-04-12T21:54:19.820979"
+    },
+    {
+      "test": "Rejection Email - RiverGames branding",
+      "success": true,
+      "details": "Found in email",
+      "timestamp": "2026-04-12T21:54:19.820983"
+    },
+    {
+      "test": "Approval Email - Logo image",
+      "success": true,
+      "details": "Found in email",
+      "timestamp": "2026-04-12T21:54:19.821141"
+    },
+    {
+      "test": "Approval Email - Approval comment box",
+      "success": true,
+      "details": "Found in email",
+      "timestamp": "2026-04-12T21:54:19.821145"
+    },
+    {
+      "test": "Approval Email - HTML structure",
+      "success": true,
+      "details": "Found in email",
+      "timestamp": "2026-04-12T21:54:19.821157"
+    },
+    {
+      "test": "Approval Email - Greeting",
+      "success": true,
+      "details": "Found in email",
+      "timestamp": "2026-04-12T21:54:19.821160"
+    },
+    {
+      "test": "Approval Email - Congratulations",
+      "success": true,
+      "details": "Found in email",
+      "timestamp": "2026-04-12T21:54:19.821163"
+    },
+    {
+      "test": "Approval Email - RiverGames branding",
+      "success": true,
+      "details": "Found in email",
+      "timestamp": "2026-04-12T21:54:19.821165"
+    },
+    {
+      "test": "Confirmation Email - Logo image",
+      "success": true,
+      "details": "Found in email",
+      "timestamp": "2026-04-12T21:54:19.821299"
+    },
+    {
+      "test": "Confirmation Email - HTML structure",
+      "success": true,
+      "details": "Found in email",
+      "timestamp": "2026-04-12T21:54:19.821303"
+    },
+    {
+      "test": "Confirmation Email - Greeting",
+      "success": true,
+      "details": "Found in email",
+      "timestamp": "2026-04-12T21:54:19.821306"
+    },
+    {
+      "test": "Confirmation Email - Application received",
+      "success": true,
+      "details": "Found in email",
+      "timestamp": "2026-04-12T21:54:19.821309"
+    },
+    {
+      "test": "Confirmation Email - RiverGames branding",
+      "success": true,
+      "details": "Found in email",
+      "timestamp": "2026-04-12T21:54:19.821311"
+    },
+    {
+      "test": "Send Email HTML - MIMEText with html",
+      "success": true,
+      "details": "Found in code",
+      "timestamp": "2026-04-12T21:54:19.821389"
+    },
+    {
+      "test": "Send Email HTML - HTML parameter name",
+      "success": true,
+      "details": "Found in code",
+      "timestamp": "2026-04-12T21:54:19.821393"
+    },
+    {
+      "test": "Send Email HTML - SMTP functionality",
+      "success": true,
+      "details": "Found in code",
+      "timestamp": "2026-04-12T21:54:19.821396"
+    },
+    {
+      "test": "Send Email HTML - Email attachment",
+      "success": true,
+      "details": "Found in code",
+      "timestamp": "2026-04-12T21:54:19.821400"
+    }
+  ]
+}
