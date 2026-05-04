@@ -149,8 +149,11 @@ export default function Organogram() {
 
   // Compute SVG connector lines after layout
   const computeLines = useCallback(() => {
-    if (!containerRef.current) return;
-    const containerRect = containerRef.current.getBoundingClientRect();
+    const baseEl = chartRef.current || containerRef.current;
+    if (!baseEl) return;
+    const baseRect = baseEl.getBoundingClientRect();
+    const scrollLeft = chartRef.current ? chartRef.current.scrollLeft : 0;
+    const scrollTop = chartRef.current ? chartRef.current.scrollTop : 0;
     const newLines = [];
     nodes.forEach((node) => {
       if (!node.parent_id) return;
@@ -159,10 +162,10 @@ export default function Organogram() {
       if (!childEl || !parentEl) return;
       const c = childEl.getBoundingClientRect();
       const p = parentEl.getBoundingClientRect();
-      const x1 = p.left - containerRect.left + p.width / 2;
-      const y1 = p.bottom - containerRect.top;
-      const x2 = c.left - containerRect.left + c.width / 2;
-      const y2 = c.top - containerRect.top;
+      const x1 = p.left - baseRect.left + scrollLeft + p.width / 2;
+      const y1 = p.bottom - baseRect.top + scrollTop;
+      const x2 = c.left - baseRect.left + scrollLeft + c.width / 2;
+      const y2 = c.top - baseRect.top + scrollTop;
       newLines.push({ id: `${node.parent_id}-${node.id}`, x1, y1, x2, y2 });
     });
     setLines(newLines);
@@ -177,7 +180,12 @@ export default function Organogram() {
   useEffect(() => {
     const handler = () => computeLines();
     window.addEventListener("resize", handler);
-    return () => window.removeEventListener("resize", handler);
+    const scrollEl = chartRef.current;
+    if (scrollEl) scrollEl.addEventListener("scroll", handler, { passive: true });
+    return () => {
+      window.removeEventListener("resize", handler);
+      if (scrollEl) scrollEl.removeEventListener("scroll", handler);
+    };
   }, [computeLines]);
 
   // Form handlers
@@ -597,8 +605,8 @@ export default function Organogram() {
           </CardHeader>
           <CardContent className="text-xs text-slate-500">
             {canEdit
-              ? "You can add, edit, and remove organogram members. Drag a card onto a higher-rank card to re-parent it."
-              : "View-only mode. Only Admins or organogram CMods can edit."}
+              ? "You can add, edit, and remove organogram members. Drag a card onto a higher-rank card to re-parent it. Swipe left/right on mobile to see more cards in the same tier."
+              : "View-only mode. Only Admins or organogram CMods can edit. Swipe left/right on mobile to see more cards in the same tier."}
           </CardContent>
         </Card>
 
@@ -615,8 +623,8 @@ export default function Organogram() {
             )}
           </div>
         ) : (
-          <div ref={containerRef} className="relative" data-testid="organogram-chart">
-            <div ref={chartRef} className="relative bg-slate-950 rounded-md p-2">
+          <div ref={containerRef} className="relative -mx-3 sm:mx-0" data-testid="organogram-chart">
+            <div ref={chartRef} className="relative bg-slate-950 rounded-md p-2 overflow-x-auto px-3 sm:px-2">
             {canEdit && (
               <div
                 onDragOver={handleDragOverRoot}
@@ -663,7 +671,7 @@ export default function Organogram() {
                       </Badge>
                       <div className="h-px flex-1 bg-gradient-to-l from-transparent to-slate-700" />
                     </div>
-                    <div className="flex flex-wrap justify-center gap-4">
+                    <div className="flex flex-nowrap sm:flex-wrap justify-start sm:justify-center gap-3 sm:gap-4 min-w-min">
                       {tierNodes.map((node) => {
                         const styles = RANK_STYLES[rank];
                         const nodeTeams = Array.isArray(node.teams) ? node.teams : [];
@@ -677,7 +685,7 @@ export default function Organogram() {
                             onDragOver={(e) => handleDragOverNode(e, node)}
                             onDragLeave={() => handleDragLeaveNode(node)}
                             onDrop={(e) => handleDropOnNode(e, node)}
-                            className={`group relative w-48 sm:w-56 bg-slate-900/80 backdrop-blur border rounded-md p-4 transition-all shadow-lg ${styles.glow} ${
+                            className={`group relative shrink-0 w-36 sm:w-56 bg-slate-900/80 backdrop-blur border rounded-md p-3 sm:p-4 transition-all shadow-lg ${styles.glow} ${
                               dragNodeId === node.id
                                 ? "opacity-50 border-amber-500"
                                 : dragOverNodeId === node.id
@@ -686,7 +694,7 @@ export default function Organogram() {
                             } ${canEdit ? "cursor-move" : ""}`}
                             data-testid={`organogram-node-${node.username}`}
                           >
-                            <div className={`mx-auto mb-3 w-20 h-20 rounded-full overflow-hidden ring-2 ${styles.ring} bg-slate-800 flex items-center justify-center`}>
+                            <div className={`mx-auto mb-3 w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden ring-2 ${styles.ring} bg-slate-800 flex items-center justify-center`}>
                               {node.profile_picture ? (
                                 <img
                                   src={node.profile_picture}
