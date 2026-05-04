@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Network, Plus, Trash2, Pencil, Upload, Shield, X, UserPlus } from "lucide-react";
+import { Network, Plus, Trash2, Pencil, Upload, Shield, X, UserPlus, Gamepad2, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -23,12 +24,25 @@ const RANK_STYLES = {
   Mod: { ring: "ring-cyan-500/60", badge: "bg-cyan-500/20 text-cyan-300 border-cyan-500/40", glow: "shadow-cyan-500/20" },
 };
 
+const TEAM_OPTIONS = [
+  { value: "in_game", label: "In-Game", icon: Gamepad2, badge: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" },
+  { value: "discord", label: "Discord", icon: MessageCircle, badge: "bg-indigo-500/20 text-indigo-300 border-indigo-500/40" },
+  { value: "both", label: "In-Game + Discord", icon: Shield, badge: "bg-amber-500/20 text-amber-300 border-amber-500/40" },
+];
+
+const TEAM_MAP = TEAM_OPTIONS.reduce((acc, t) => {
+  acc[t.value] = t;
+  return acc;
+}, {});
+
 const emptyForm = {
   username: "",
   rank: "Mod",
   parent_id: "",
   display_name: "",
   profile_picture: "",
+  team: "",
+  bio: "",
 };
 
 export default function Organogram() {
@@ -151,6 +165,8 @@ export default function Organogram() {
       parent_id: node.parent_id || "",
       display_name: node.display_name || "",
       profile_picture: node.profile_picture || "",
+      team: node.team || "",
+      bio: node.bio || "",
     });
     setShowDialog(true);
   };
@@ -184,6 +200,8 @@ export default function Organogram() {
             parent_id: form.parent_id || "",
             display_name: form.display_name || "",
             profile_picture: form.profile_picture || "",
+            team: form.team || "",
+            bio: form.bio || "",
           },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -197,6 +215,8 @@ export default function Organogram() {
             parent_id: form.parent_id || null,
             display_name: form.display_name || null,
             profile_picture: form.profile_picture || null,
+            team: form.team || null,
+            bio: form.bio || null,
           },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -322,11 +342,13 @@ export default function Organogram() {
                     <div className="flex flex-wrap justify-center gap-4">
                       {tierNodes.map((node) => {
                         const styles = RANK_STYLES[rank];
+                        const teamCfg = node.team ? TEAM_MAP[node.team] : null;
+                        const TeamIcon = teamCfg?.icon;
                         return (
                           <div
                             key={node.id}
                             ref={(el) => (nodeRefs.current[node.id] = el)}
-                            className={`group relative w-44 sm:w-52 bg-slate-900/80 backdrop-blur border border-slate-700 rounded-md p-4 hover:border-amber-500/50 transition-all shadow-lg ${styles.glow}`}
+                            className={`group relative w-48 sm:w-56 bg-slate-900/80 backdrop-blur border border-slate-700 rounded-md p-4 hover:border-amber-500/50 transition-all shadow-lg ${styles.glow}`}
                             data-testid={`organogram-node-${node.username}`}
                           >
                             <div className={`mx-auto mb-3 w-20 h-20 rounded-full overflow-hidden ring-2 ${styles.ring} bg-slate-800 flex items-center justify-center`}>
@@ -349,27 +371,46 @@ export default function Organogram() {
                               {node.display_name && (
                                 <p className="text-xs text-slate-500 truncate">@{node.username}</p>
                               )}
-                              <Badge className={`${styles.badge} mt-2 text-[10px] uppercase`}>{node.rank}</Badge>
+                              <div className="flex items-center justify-center gap-1 mt-2 flex-wrap">
+                                <Badge className={`${styles.badge} text-[10px] uppercase`}>{node.rank}</Badge>
+                                {teamCfg && (
+                                  <Badge className={`${teamCfg.badge} text-[10px] uppercase flex items-center gap-1`} data-testid={`organogram-team-${node.username}`}>
+                                    {TeamIcon ? <TeamIcon className="h-2.5 w-2.5" /> : null}
+                                    {teamCfg.label}
+                                  </Badge>
+                                )}
+                              </div>
+                              {node.bio && (
+                                <p
+                                  className="mt-3 text-[11px] leading-relaxed text-slate-400 whitespace-pre-wrap text-left line-clamp-5"
+                                  data-testid={`organogram-bio-${node.username}`}
+                                  title={node.bio}
+                                >
+                                  {node.bio}
+                                </p>
+                              )}
                             </div>
                             {canEdit && (
-                              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="absolute top-2 right-2 flex gap-1">
                                 <Button
                                   size="sm"
                                   variant="ghost"
                                   onClick={() => openEditDialog(node)}
-                                  className="h-6 w-6 p-0 text-slate-400 hover:text-amber-400"
+                                  className="h-7 w-7 p-0 text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 bg-slate-800/80 border border-slate-700 rounded-sm"
+                                  title="Edit"
                                   data-testid={`organogram-edit-${node.username}`}
                                 >
-                                  <Pencil className="h-3 w-3" />
+                                  <Pencil className="h-3.5 w-3.5" />
                                 </Button>
                                 <Button
                                   size="sm"
                                   variant="ghost"
                                   onClick={() => handleDelete(node)}
-                                  className="h-6 w-6 p-0 text-slate-400 hover:text-red-400"
+                                  className="h-7 w-7 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/10 bg-slate-800/80 border border-slate-700 rounded-sm"
+                                  title="Delete"
                                   data-testid={`organogram-delete-${node.username}`}
                                 >
-                                  <Trash2 className="h-3 w-3" />
+                                  <Trash2 className="h-3.5 w-3.5" />
                                 </Button>
                               </div>
                             )}
@@ -466,6 +507,39 @@ export default function Organogram() {
                 className="bg-slate-950/60 border-slate-700 text-slate-200 rounded-sm"
                 data-testid="organogram-display-name-input"
               />
+            </div>
+
+            <div>
+              <Label className="text-slate-300">Team (Optional)</Label>
+              <Select
+                value={form.team || "none"}
+                onValueChange={(v) => setForm((prev) => ({ ...prev, team: v === "none" ? "" : v }))}
+              >
+                <SelectTrigger className="bg-slate-950/60 border-slate-700 text-slate-200 rounded-sm" data-testid="organogram-team-select">
+                  <SelectValue placeholder="Select team…" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-700 text-slate-200">
+                  <SelectItem value="none">— Unassigned —</SelectItem>
+                  {TEAM_OPTIONS.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-slate-300">Bio / Notes (Optional)</Label>
+              <Textarea
+                value={form.bio}
+                onChange={(e) => setForm((prev) => ({ ...prev, bio: e.target.value }))}
+                placeholder="A few lines about this person — role focus, region, languages, fun facts…"
+                className="bg-slate-950/60 border-slate-700 text-slate-200 rounded-sm min-h-[90px]"
+                maxLength={400}
+                data-testid="organogram-bio-input"
+              />
+              <p className="text-xs text-slate-500 mt-1">
+                {form.bio.length}/400 — appears below the name on the org chart card.
+              </p>
             </div>
 
             <div>

@@ -13,6 +13,7 @@ router = APIRouter(prefix="/organogram", tags=["Organogram"])
 
 # ============ Models ============
 ORG_RANKS = ["CMod", "MMod", "SMod", "LMod", "Mod"]
+ORG_TEAMS = ["in_game", "discord", "both"]
 
 
 class OrgNode(BaseModel):
@@ -22,6 +23,8 @@ class OrgNode(BaseModel):
     username: str
     display_name: Optional[str] = None
     rank: str  # One of ORG_RANKS
+    team: Optional[str] = None  # One of ORG_TEAMS
+    bio: Optional[str] = None
     parent_id: Optional[str] = None
     profile_picture: Optional[str] = None  # base64 data URL
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -35,6 +38,8 @@ class OrgNodeCreate(BaseModel):
     parent_id: Optional[str] = None
     display_name: Optional[str] = None
     profile_picture: Optional[str] = None
+    team: Optional[str] = None
+    bio: Optional[str] = None
 
 
 class OrgNodeUpdate(BaseModel):
@@ -42,6 +47,8 @@ class OrgNodeUpdate(BaseModel):
     parent_id: Optional[str] = None
     display_name: Optional[str] = None
     profile_picture: Optional[str] = None
+    team: Optional[str] = None
+    bio: Optional[str] = None
 
 
 # ============ Helpers ============
@@ -122,6 +129,9 @@ async def create_node(payload: OrgNodeCreate, current_user: dict = Depends(requi
     if payload.rank not in ORG_RANKS:
         raise HTTPException(status_code=400, detail=f"Rank must be one of {ORG_RANKS}")
 
+    if payload.team is not None and payload.team not in ORG_TEAMS:
+        raise HTTPException(status_code=400, detail=f"Team must be one of {ORG_TEAMS}")
+
     # Verify portal user exists
     mod = await db.moderators.find_one({"username": payload.username}, {"_id": 0, "username": 1})
     if not mod:
@@ -149,6 +159,8 @@ async def create_node(payload: OrgNodeCreate, current_user: dict = Depends(requi
         parent_id=payload.parent_id,
         display_name=payload.display_name,
         profile_picture=payload.profile_picture,
+        team=payload.team,
+        bio=payload.bio,
         updated_by=current_user["username"],
     )
     doc = node.model_dump()
@@ -203,6 +215,14 @@ async def update_node(node_id: str, payload: OrgNodeUpdate, current_user: dict =
 
     if payload.profile_picture is not None:
         updates["profile_picture"] = payload.profile_picture or None
+
+    if payload.team is not None:
+        if payload.team and payload.team not in ORG_TEAMS:
+            raise HTTPException(status_code=400, detail=f"Team must be one of {ORG_TEAMS}")
+        updates["team"] = payload.team or None
+
+    if payload.bio is not None:
+        updates["bio"] = payload.bio or None
 
     if not updates:
         return serialize_node(node)
