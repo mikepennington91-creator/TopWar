@@ -1004,7 +1004,7 @@ export default function Organogram() {
             </div>
 
             <div>
-              <Label className="text-slate-300">Parent (Reports To)</Label>
+              <Label className="text-slate-300">Parent (Reports To) <span className="text-slate-500 text-xs">(Optional)</span></Label>
               <Select
                 value={form.parent_id || "none"}
                 onValueChange={(v) => setForm((prev) => ({ ...prev, parent_id: v === "none" ? "" : v }))}
@@ -1036,7 +1036,7 @@ export default function Organogram() {
             </div>
 
             <div>
-              <Label className="text-slate-300">Departments</Label>
+              <Label className="text-slate-300">Departments <span className="text-slate-500 text-xs">(Optional)</span></Label>
               <div className="grid grid-cols-1 gap-2 mt-2" data-testid="organogram-teams-checkboxes">
                 {TEAM_OPTIONS.map((opt) => {
                   const Icon = opt.icon;
