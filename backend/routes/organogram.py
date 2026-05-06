@@ -55,7 +55,7 @@ class OrgNode(BaseModel):
     rank: str  # One of ORG_RANKS
     teams: List[str] = Field(default_factory=list)  # subset of ORG_TEAMS
     bio: Optional[str] = None
-    parent_id: Optional[str] = None
+    parent_ids: List[str] = Field(default_factory=list)  # supports multiple parents
     profile_picture: Optional[str] = None  # base64 data URL
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -65,7 +65,8 @@ class OrgNode(BaseModel):
 class OrgNodeCreate(BaseModel):
     username: str
     rank: str
-    parent_id: Optional[str] = None
+    parent_ids: Optional[List[str]] = None  # multi-parent
+    parent_id: Optional[str] = None  # legacy single-parent (still accepted)
     display_name: Optional[str] = None
     profile_picture: Optional[str] = None
     teams: Optional[List[str]] = None
@@ -74,7 +75,8 @@ class OrgNodeCreate(BaseModel):
 
 class OrgNodeUpdate(BaseModel):
     rank: Optional[str] = None
-    parent_id: Optional[str] = None
+    parent_ids: Optional[List[str]] = None
+    parent_id: Optional[str] = None  # legacy
     display_name: Optional[str] = None
     profile_picture: Optional[str] = None
     teams: Optional[List[str]] = None
@@ -104,8 +106,66 @@ async def require_org_editor(current_user: dict = Depends(get_current_moderator)
     return current_user
 
 
+def resolve_parent_ids(payload_parent_ids, payload_parent_id) -> Optional[List[str]]:
+    """Pick the multi-parent value if provided, otherwise fall back to legacy single-parent.
+
+    Returns None if neither was provided (no change). Returns a (possibly empty) list otherwise.
+    """
+    if payload_parent_ids is not None:
+        # de-duplicate while preserving order, drop empties
+        out = []
+        for pid in payload_parent_ids:
+            if pid and pid not in out:
+                out.append(pid)
+        return out
+    if payload_parent_id is not None:
+        # empty string explicitly clears parent
+        if payload_parent_id == "" or payload_parent_id is False:
+            return []
+        return [payload_parent_id]
+    return None
+
+
+async def validate_parents(parent_ids: List[str], child_id: Optional[str], child_rank: str):
+    """Ensure each parent exists, has a higher rank, and would not create a cycle."""
+    for pid in parent_ids:
+        if child_id and pid == child_id:
+            raise HTTPException(status_code=400, detail="A node cannot be its own parent")
+        parent = await db.organogram_nodes.find_one({"id": pid}, {"_id": 0})
+        if not parent:
+            raise HTTPException(status_code=400, detail=f"Parent node {pid} not found")
+        if ORG_RANKS.index(parent["rank"]) >= ORG_RANKS.index(child_rank):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Parent rank ({parent['rank']}) must be higher than child rank ({child_rank})"
+            )
+    if not child_id:
+        return
+    # Walk up from each parent to make sure none reaches child_id
+    visited = set()
+    stack = list(parent_ids)
+    while stack:
+        nid = stack.pop()
+        if nid in visited:
+            continue
+        visited.add(nid)
+        if nid == child_id:
+            raise HTTPException(status_code=400, detail="Cycle detected in parent chain")
+        n = await db.organogram_nodes.find_one({"id": nid}, {"_id": 0})
+        if not n:
+            continue
+        # collect this node's parents (multi or legacy single)
+        ps = n.get("parent_ids")
+        if not ps:
+            single = n.get("parent_id")
+            ps = [single] if single else []
+        for p in ps:
+            if p and p not in visited:
+                stack.append(p)
+
+
 def serialize_node(node: dict) -> dict:
-    """Convert datetimes + migrate legacy team -> teams for response."""
+    """Convert datetimes + migrate legacy single-team/single-parent fields for response."""
     if isinstance(node.get("created_at"), str):
         try:
             node["created_at"] = datetime.fromisoformat(node["created_at"])
@@ -122,6 +182,12 @@ def serialize_node(node: dict) -> dict:
         node["teams"] = normalize_teams(legacy) if legacy else []
     else:
         node["teams"] = normalize_teams(node["teams"])
+    # Migrate legacy single-parent field on the fly
+    if "parent_ids" not in node or node.get("parent_ids") is None:
+        legacy_parent = node.get("parent_id")
+        node["parent_ids"] = [legacy_parent] if legacy_parent else []
+    elif not isinstance(node["parent_ids"], list):
+        node["parent_ids"] = []
     return node
 
 
@@ -180,21 +246,15 @@ async def create_node(payload: OrgNodeCreate, current_user: dict = Depends(requi
     if existing:
         raise HTTPException(status_code=400, detail=f"{payload.username} is already in the organogram")
 
-    # Verify parent rank is higher (lower index)
-    if payload.parent_id:
-        parent = await db.organogram_nodes.find_one({"id": payload.parent_id}, {"_id": 0})
-        if not parent:
-            raise HTTPException(status_code=400, detail="Parent node not found")
-        if ORG_RANKS.index(parent["rank"]) >= ORG_RANKS.index(payload.rank):
-            raise HTTPException(
-                status_code=400,
-                detail=f"Parent rank ({parent['rank']}) must be higher than child rank ({payload.rank})"
-            )
+    # Resolve parent_ids (supports multi or legacy single)
+    parent_ids = resolve_parent_ids(payload.parent_ids, payload.parent_id) or []
+    if parent_ids:
+        await validate_parents(parent_ids, None, payload.rank)
 
     node = OrgNode(
         username=payload.username,
         rank=payload.rank,
-        parent_id=payload.parent_id,
+        parent_ids=parent_ids,
         display_name=payload.display_name,
         profile_picture=payload.profile_picture,
         teams=normalize_teams(payload.teams),
@@ -204,6 +264,8 @@ async def create_node(payload: OrgNodeCreate, current_user: dict = Depends(requi
     doc = node.model_dump()
     doc["created_at"] = doc["created_at"].isoformat()
     doc["updated_at"] = doc["updated_at"].isoformat()
+    # Clear legacy single-parent field on insert
+    doc["parent_id"] = None
     await db.organogram_nodes.insert_one(doc)
     return node
 
@@ -223,30 +285,13 @@ async def update_node(node_id: str, payload: OrgNodeUpdate, current_user: dict =
             raise HTTPException(status_code=400, detail=f"Rank must be one of {ORG_RANKS}")
         updates["rank"] = payload.rank
 
-    if payload.parent_id is not None:
-        # Empty string means remove parent
-        new_parent_id = payload.parent_id or None
-        if new_parent_id:
-            if new_parent_id == node_id:
-                raise HTTPException(status_code=400, detail="A node cannot be its own parent")
-            parent = await db.organogram_nodes.find_one({"id": new_parent_id}, {"_id": 0})
-            if not parent:
-                raise HTTPException(status_code=400, detail="Parent node not found")
-            if ORG_RANKS.index(parent["rank"]) >= ORG_RANKS.index(new_rank):
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Parent rank ({parent['rank']}) must be higher than child rank ({new_rank})"
-                )
-            # Prevent cycles: walk up parent chain
-            current = parent
-            while current:
-                if current["id"] == node_id:
-                    raise HTTPException(status_code=400, detail="Cycle detected in parent chain")
-                pid = current.get("parent_id")
-                if not pid:
-                    break
-                current = await db.organogram_nodes.find_one({"id": pid}, {"_id": 0})
-        updates["parent_id"] = new_parent_id
+    if payload.parent_ids is not None or payload.parent_id is not None:
+        new_parent_ids = resolve_parent_ids(payload.parent_ids, payload.parent_id) or []
+        if new_parent_ids:
+            await validate_parents(new_parent_ids, node_id, new_rank)
+        updates["parent_ids"] = new_parent_ids
+        # Clear legacy field so it doesn't shadow on read
+        updates["parent_id"] = None
 
     if payload.display_name is not None:
         updates["display_name"] = payload.display_name or None
@@ -273,7 +318,10 @@ async def update_node(node_id: str, payload: OrgNodeUpdate, current_user: dict =
 
     # If rank was changed, ensure children of this node still have lower rank
     if "rank" in updates:
-        children = await db.organogram_nodes.find({"parent_id": node_id}, {"_id": 0}).to_list(1000)
+        children = await db.organogram_nodes.find(
+            {"$or": [{"parent_ids": node_id}, {"parent_id": node_id}]},
+            {"_id": 0}
+        ).to_list(1000)
         new_rank_idx = ORG_RANKS.index(updates["rank"])
         for child in children:
             if ORG_RANKS.index(child["rank"]) <= new_rank_idx:
@@ -294,11 +342,35 @@ async def delete_node(node_id: str, current_user: dict = Depends(require_org_edi
     if not node:
         raise HTTPException(status_code=404, detail="Node not found")
 
-    # Reparent children to this node's parent (preserving structure) or null
-    new_parent = node.get("parent_id")
+    # Remove this node's id from any children's parent lists; also clear legacy parent_id pointers.
+    surviving_parents = [p for p in (node.get("parent_ids") or []) if p and p != node_id]
+    legacy_parent = node.get("parent_id")
+    if not surviving_parents and legacy_parent and legacy_parent != node_id:
+        surviving_parents = [legacy_parent]
+    now = datetime.now(timezone.utc).isoformat()
+
+    # Children referencing via parent_ids array
+    children_multi = await db.organogram_nodes.find(
+        {"parent_ids": node_id}, {"_id": 0}
+    ).to_list(1000)
+    for child in children_multi:
+        new_parents = [p for p in (child.get("parent_ids") or []) if p != node_id]
+        # Inherit deleted node's parents so the chain isn't broken
+        for sp in surviving_parents:
+            if sp not in new_parents and sp != child["id"]:
+                new_parents.append(sp)
+        await db.organogram_nodes.update_one(
+            {"id": child["id"]},
+            {"$set": {"parent_ids": new_parents, "updated_at": now}}
+        )
+
+    # Children referencing via legacy parent_id
     await db.organogram_nodes.update_many(
         {"parent_id": node_id},
-        {"$set": {"parent_id": new_parent, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {
+            "parent_id": surviving_parents[0] if surviving_parents else None,
+            "updated_at": now,
+        }}
     )
     await db.organogram_nodes.delete_one({"id": node_id})
     return {"message": f"Node {node['username']} removed from organogram"}

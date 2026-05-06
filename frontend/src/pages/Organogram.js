@@ -40,7 +40,7 @@ const TEAM_MAP = TEAM_OPTIONS.reduce((acc, t) => {
 const emptyForm = {
   username: "",
   rank: "Mod",
-  parent_id: "",
+  parent_ids: [],
   display_name: "",
   profile_picture: "",
   teams: [],
@@ -163,17 +163,20 @@ export default function Organogram() {
     const visibleIds = new Set(visibleNodes.map((n) => n.id));
     const newLines = [];
     visibleNodes.forEach((node) => {
-      if (!node.parent_id || !visibleIds.has(node.parent_id)) return;
-      const childEl = nodeRefs.current[node.id];
-      const parentEl = nodeRefs.current[node.parent_id];
-      if (!childEl || !parentEl) return;
-      const c = childEl.getBoundingClientRect();
-      const p = parentEl.getBoundingClientRect();
-      const x1 = p.left - baseRect.left + scrollLeft + p.width / 2;
-      const y1 = p.bottom - baseRect.top + scrollTop;
-      const x2 = c.left - baseRect.left + scrollLeft + c.width / 2;
-      const y2 = c.top - baseRect.top + scrollTop;
-      newLines.push({ id: `${node.parent_id}-${node.id}`, x1, y1, x2, y2 });
+      const parentIds = Array.isArray(node.parent_ids) ? node.parent_ids : [];
+      parentIds.forEach((parentId) => {
+        if (!visibleIds.has(parentId)) return;
+        const childEl = nodeRefs.current[node.id];
+        const parentEl = nodeRefs.current[parentId];
+        if (!childEl || !parentEl) return;
+        const c = childEl.getBoundingClientRect();
+        const p = parentEl.getBoundingClientRect();
+        const x1 = p.left - baseRect.left + scrollLeft + p.width / 2;
+        const y1 = p.bottom - baseRect.top + scrollTop;
+        const x2 = c.left - baseRect.left + scrollLeft + c.width / 2;
+        const y2 = c.top - baseRect.top + scrollTop;
+        newLines.push({ id: `${parentId}-${node.id}`, x1, y1, x2, y2 });
+      });
     });
     setLines(newLines);
   }, [visibleNodes]);
@@ -204,13 +207,16 @@ export default function Organogram() {
 
   const openEditDialog = (node) => {
     setEditingNode(node);
+    const parents = Array.isArray(node.parent_ids)
+      ? node.parent_ids
+      : (node.parent_id ? [node.parent_id] : []);
     setForm({
       username: node.username,
       rank: node.rank,
-      parent_id: node.parent_id || "",
+      parent_ids: parents,
       display_name: node.display_name || "",
       profile_picture: node.profile_picture || "",
-      team: node.team || "",
+      teams: Array.isArray(node.teams) ? node.teams : [],
       bio: node.bio || "",
     });
     setShowDialog(true);
@@ -249,7 +255,7 @@ export default function Organogram() {
           `${API}/organogram/nodes/${editingNode.id}`,
           {
             rank: form.rank,
-            parent_id: form.parent_id || "",
+            parent_ids: form.parent_ids,
             display_name: form.display_name || "",
             profile_picture: form.profile_picture || "",
             teams: form.teams,
@@ -264,7 +270,7 @@ export default function Organogram() {
           {
             username: form.username,
             rank: form.rank,
-            parent_id: form.parent_id || null,
+            parent_ids: form.parent_ids,
             display_name: form.display_name || null,
             profile_picture: form.profile_picture || null,
             teams: form.teams,
@@ -318,12 +324,24 @@ export default function Organogram() {
     return map;
   }, [nodes]);
 
+  const getParentIds = (n) =>
+    Array.isArray(n?.parent_ids) ? n.parent_ids : (n?.parent_id ? [n.parent_id] : []);
+
   const isDescendant = useCallback(
     (ancestorId, candidateId) => {
-      let current = nodesById[candidateId];
-      while (current && current.parent_id) {
-        if (current.parent_id === ancestorId) return true;
-        current = nodesById[current.parent_id];
+      const visited = new Set();
+      const stack = [candidateId];
+      while (stack.length) {
+        const cur = stack.pop();
+        if (!cur || visited.has(cur)) continue;
+        visited.add(cur);
+        const node = nodesById[cur];
+        if (!node) continue;
+        const parents = getParentIds(node);
+        for (const p of parents) {
+          if (p === ancestorId) return true;
+          if (!visited.has(p)) stack.push(p);
+        }
       }
       return false;
     },
@@ -371,12 +389,12 @@ export default function Organogram() {
     if (dragOverNodeId === targetNode.id) setDragOverNodeId(null);
   };
 
-  const persistParentChange = async (nodeId, newParentId) => {
+  const persistParents = async (nodeId, newParentIds) => {
     const token = localStorage.getItem("moderator_token");
     try {
       await axios.patch(
         `${API}/organogram/nodes/${nodeId}`,
-        { parent_id: newParentId || "" },
+        { parent_ids: newParentIds },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success("Reporting line updated");
@@ -389,18 +407,29 @@ export default function Organogram() {
   const handleDropOnNode = (e, targetNode) => {
     if (!canEdit || !dragNodeId) return;
     e.preventDefault();
+    const draggedId = dragNodeId;
     handleDragEnd();
     if (!isValidDropTarget(targetNode)) return;
-    const dragNode = nodesById[dragNodeId];
-    if (dragNode.parent_id === targetNode.id) return; // unchanged
-    persistParentChange(dragNode.id, targetNode.id);
+    const dragNode = nodesById[draggedId];
+    const currentParents = getParentIds(dragNode);
+    // Hold Ctrl/Cmd to ADD a parent; otherwise REPLACE with single parent.
+    const additive = e.ctrlKey || e.metaKey || e.shiftKey;
+    let newParents;
+    if (additive) {
+      if (currentParents.includes(targetNode.id)) return; // already a parent
+      newParents = [...currentParents, targetNode.id];
+    } else {
+      if (currentParents.length === 1 && currentParents[0] === targetNode.id) return; // unchanged
+      newParents = [targetNode.id];
+    }
+    persistParents(dragNode.id, newParents);
   };
 
   const handleDragOverRoot = (e) => {
     if (!canEdit || !dragNodeId) return;
     const dragNode = nodesById[dragNodeId];
     if (!dragNode) return;
-    if (dragNode.parent_id === null) return; // already root
+    if (getParentIds(dragNode).length === 0) return; // already root
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
     setDragOverRoot(true);
@@ -412,8 +441,8 @@ export default function Organogram() {
     const id = dragNodeId;
     handleDragEnd();
     const dragNode = nodesById[id];
-    if (!dragNode || dragNode.parent_id === null) return;
-    persistParentChange(id, "");
+    if (!dragNode || getParentIds(dragNode).length === 0) return;
+    persistParents(id, []);
   };
 
   // ===== Export PNG =====
@@ -991,7 +1020,12 @@ export default function Organogram() {
 
             <div>
               <Label className="text-slate-300">Rank</Label>
-              <Select value={form.rank} onValueChange={(v) => setForm((prev) => ({ ...prev, rank: v, parent_id: "" }))}>
+              <Select value={form.rank} onValueChange={(v) => setForm((prev) => {
+                // When rank changes, drop any parents that are no longer higher rank than the new rank
+                const childIdx = RANKS.indexOf(v);
+                const validIds = new Set(nodes.filter((n) => RANKS.indexOf(n.rank) < childIdx).map((n) => n.id));
+                return { ...prev, rank: v, parent_ids: prev.parent_ids.filter((pid) => validIds.has(pid)) };
+              })}>
                 <SelectTrigger className="bg-slate-950/60 border-slate-700 text-slate-200 rounded-sm" data-testid="organogram-rank-select">
                   <SelectValue />
                 </SelectTrigger>
@@ -1004,24 +1038,58 @@ export default function Organogram() {
             </div>
 
             <div>
-              <Label className="text-slate-300">Parent (Reports To) <span className="text-slate-500 text-xs">(Optional)</span></Label>
-              <Select
-                value={form.parent_id || "none"}
-                onValueChange={(v) => setForm((prev) => ({ ...prev, parent_id: v === "none" ? "" : v }))}
-                disabled={form.rank === "CMod"}
-              >
-                <SelectTrigger className="bg-slate-950/60 border-slate-700 text-slate-200 rounded-sm" data-testid="organogram-parent-select">
-                  <SelectValue placeholder={form.rank === "CMod" ? "CMod has no parent" : "No parent"} />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700 text-slate-200">
-                  <SelectItem value="none">— No parent —</SelectItem>
-                  {validParents.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {(p.display_name || p.username)} <span className="text-slate-500 text-xs ml-2">({p.rank})</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label className="text-slate-300">Reports To <span className="text-slate-500 text-xs">(Optional, multiple allowed)</span></Label>
+              {form.rank === "CMod" ? (
+                <div className="bg-slate-950/60 border border-slate-700 text-slate-500 rounded-sm px-3 py-2 text-sm" data-testid="organogram-parents-cmod-note">
+                  CMod sits at the top — no parents.
+                </div>
+              ) : validParents.length === 0 ? (
+                <div className="bg-slate-950/60 border border-slate-700 text-slate-500 rounded-sm px-3 py-2 text-sm">
+                  No higher-rank members available yet.
+                </div>
+              ) : (
+                <div className="space-y-2 mt-2 max-h-56 overflow-y-auto pr-1" data-testid="organogram-parents-checkboxes">
+                  {validParents.map((p) => {
+                    const checked = form.parent_ids.includes(p.id);
+                    const rankColor = RANK_STYLES[p.rank]?.badge || "bg-slate-700/30 text-slate-300";
+                    return (
+                      <label
+                        key={p.id}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-sm border cursor-pointer transition-colors ${
+                          checked
+                            ? "bg-amber-500/10 border-amber-500/60 text-amber-200"
+                            : "bg-slate-950/60 border-slate-700 hover:border-slate-500 text-slate-300"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={(e) => {
+                            setForm((prev) => {
+                              const cur = prev.parent_ids || [];
+                              return {
+                                ...prev,
+                                parent_ids: e.target.checked
+                                  ? [...cur, p.id]
+                                  : cur.filter((id) => id !== p.id),
+                              };
+                            });
+                          }}
+                          className="accent-amber-500 h-4 w-4"
+                          data-testid={`organogram-parent-checkbox-${p.username}`}
+                        />
+                        <span className="flex-1 text-sm truncate">{p.display_name || p.username}</span>
+                        <span className={`${rankColor} text-[10px] uppercase px-1.5 py-0.5 rounded-sm border`}>{p.rank}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+              {form.parent_ids.length > 1 && (
+                <p className="text-xs text-amber-300/80 mt-1">
+                  Reports to {form.parent_ids.length} parents — a line will be drawn from each on the chart.
+                </p>
+              )}
             </div>
 
             <div>
