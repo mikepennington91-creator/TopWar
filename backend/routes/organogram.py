@@ -19,6 +19,7 @@ router = APIRouter(prefix="/organogram", tags=["Organogram"])
 
 # ============ Models ============
 ORG_RANKS = ["CMod", "MMod", "SMod", "LMod", "Mod"]
+ORG_CHARTS = ["in_game", "discord", "training"]
 ORG_TEAMS = ["in_game", "discord", "training"]
 
 
@@ -51,9 +52,10 @@ class OrgNode(BaseModel):
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     username: str
+    chart: str = "in_game"  # one of ORG_CHARTS - which organogram this node belongs to
     display_name: Optional[str] = None
     rank: str  # One of ORG_RANKS
-    teams: List[str] = Field(default_factory=list)  # subset of ORG_TEAMS
+    teams: List[str] = Field(default_factory=list)  # legacy, kept for back-compat
     bio: Optional[str] = None
     parent_ids: List[str] = Field(default_factory=list)  # supports multiple parents
     profile_picture: Optional[str] = None  # base64 data URL
@@ -65,21 +67,23 @@ class OrgNode(BaseModel):
 class OrgNodeCreate(BaseModel):
     username: str
     rank: str
-    parent_ids: Optional[List[str]] = None  # multi-parent
-    parent_id: Optional[str] = None  # legacy single-parent (still accepted)
+    chart: str  # required: which organogram to add to
+    parent_ids: Optional[List[str]] = None
+    parent_id: Optional[str] = None  # legacy
     display_name: Optional[str] = None
     profile_picture: Optional[str] = None
-    teams: Optional[List[str]] = None
+    teams: Optional[List[str]] = None  # legacy, ignored on create
     bio: Optional[str] = None
 
 
 class OrgNodeUpdate(BaseModel):
     rank: Optional[str] = None
+    chart: Optional[str] = None
     parent_ids: Optional[List[str]] = None
     parent_id: Optional[str] = None  # legacy
     display_name: Optional[str] = None
     profile_picture: Optional[str] = None
-    teams: Optional[List[str]] = None
+    teams: Optional[List[str]] = None  # legacy, ignored
     bio: Optional[str] = None
 
 
@@ -126,14 +130,20 @@ def resolve_parent_ids(payload_parent_ids, payload_parent_id) -> Optional[List[s
     return None
 
 
-async def validate_parents(parent_ids: List[str], child_id: Optional[str], child_rank: str):
-    """Ensure each parent exists, has a higher rank, and would not create a cycle."""
+async def validate_parents(parent_ids: List[str], child_id: Optional[str], child_rank: str, child_chart: str):
+    """Ensure each parent exists, has a higher rank, is in the same chart, and would not create a cycle."""
     for pid in parent_ids:
         if child_id and pid == child_id:
             raise HTTPException(status_code=400, detail="A node cannot be its own parent")
         parent = await db.organogram_nodes.find_one({"id": pid}, {"_id": 0})
         if not parent:
             raise HTTPException(status_code=400, detail=f"Parent node {pid} not found")
+        parent = serialize_node(parent)
+        if parent.get("chart") != child_chart:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Parent must be in the same organogram ({child_chart})"
+            )
         if ORG_RANKS.index(parent["rank"]) >= ORG_RANKS.index(child_rank):
             raise HTTPException(
                 status_code=400,
@@ -141,7 +151,6 @@ async def validate_parents(parent_ids: List[str], child_id: Optional[str], child
             )
     if not child_id:
         return
-    # Walk up from each parent to make sure none reaches child_id
     visited = set()
     stack = list(parent_ids)
     while stack:
@@ -154,7 +163,6 @@ async def validate_parents(parent_ids: List[str], child_id: Optional[str], child
         n = await db.organogram_nodes.find_one({"id": nid}, {"_id": 0})
         if not n:
             continue
-        # collect this node's parents (multi or legacy single)
         ps = n.get("parent_ids")
         if not ps:
             single = n.get("parent_id")
@@ -188,6 +196,10 @@ def serialize_node(node: dict) -> dict:
         node["parent_ids"] = [legacy_parent] if legacy_parent else []
     elif not isinstance(node["parent_ids"], list):
         node["parent_ids"] = []
+    # Migrate legacy nodes without a chart: pick first team or default to in_game
+    if "chart" not in node or not node.get("chart") or node["chart"] not in ORG_CHARTS:
+        teams_list = node.get("teams") or []
+        node["chart"] = teams_list[0] if teams_list and teams_list[0] in ORG_CHARTS else "in_game"
     return node
 
 
@@ -199,21 +211,48 @@ async def get_can_edit(current_user: dict = Depends(get_current_moderator)):
 
 
 @router.get("/nodes", response_model=List[OrgNode])
-async def list_nodes(current_user: dict = Depends(get_current_moderator)):
-    """List all organogram nodes."""
-    nodes = await db.organogram_nodes.find({}, {"_id": 0}).to_list(1000)
+async def list_nodes(chart: Optional[str] = None, current_user: dict = Depends(get_current_moderator)):
+    """List organogram nodes. Optionally filter by chart (in_game | discord | training)."""
+    if chart is not None and chart not in ORG_CHARTS:
+        raise HTTPException(status_code=400, detail=f"chart must be one of {ORG_CHARTS}")
+
+    # One-time migration: backfill `chart` on any doc missing it
+    missing = await db.organogram_nodes.find(
+        {"$or": [{"chart": {"$exists": False}}, {"chart": None}, {"chart": ""}]},
+        {"_id": 0, "id": 1, "teams": 1}
+    ).to_list(2000)
+    for doc in missing:
+        teams_list = doc.get("teams") or []
+        new_chart = teams_list[0] if teams_list and teams_list[0] in ORG_CHARTS else "in_game"
+        await db.organogram_nodes.update_one({"id": doc["id"]}, {"$set": {"chart": new_chart}})
+
+    query = {"chart": chart} if chart else {}
+    nodes = await db.organogram_nodes.find(query, {"_id": 0}).to_list(2000)
     return [serialize_node(n) for n in nodes]
 
 
 @router.get("/portal-users")
-async def list_portal_users(current_user: dict = Depends(get_current_moderator)):
-    """List portal users (moderators) available for assignment."""
+async def list_portal_users(chart: Optional[str] = None, current_user: dict = Depends(get_current_moderator)):
+    """List portal users (moderators) available for assignment.
+    If chart is provided, is_assigned reflects whether the user is already in THAT chart.
+    """
+    if chart is not None and chart not in ORG_CHARTS:
+        raise HTTPException(status_code=400, detail=f"chart must be one of {ORG_CHARTS}")
     mods = await db.moderators.find(
         {"status": {"$ne": "disabled"}},
         {"_id": 0, "username": 1, "role": 1, "roles": 1}
     ).to_list(1000)
-    # Find which usernames are already in the organogram
-    existing = await db.organogram_nodes.find({}, {"_id": 0, "username": 1}).to_list(1000)
+    # Find which usernames are already in this chart (or any, if chart not specified)
+    if chart:
+        existing = await db.organogram_nodes.find(
+            {"$or": [
+                {"chart": chart},
+                {"chart": {"$exists": False}, "teams.0": chart},
+            ]},
+            {"_id": 0, "username": 1}
+        ).to_list(2000)
+    else:
+        existing = await db.organogram_nodes.find({}, {"_id": 0, "username": 1}).to_list(2000)
     assigned_usernames = {e["username"] for e in existing}
     result = []
     for m in mods:
@@ -230,41 +269,41 @@ async def create_node(payload: OrgNodeCreate, current_user: dict = Depends(requi
     """Create a new organogram node."""
     if payload.rank not in ORG_RANKS:
         raise HTTPException(status_code=400, detail=f"Rank must be one of {ORG_RANKS}")
-
-    if payload.teams is not None:
-        invalid = [t for t in payload.teams if t not in ORG_TEAMS]
-        if invalid:
-            raise HTTPException(status_code=400, detail=f"Invalid team(s): {invalid}. Allowed: {ORG_TEAMS}")
+    if payload.chart not in ORG_CHARTS:
+        raise HTTPException(status_code=400, detail=f"chart must be one of {ORG_CHARTS}")
 
     # Verify portal user exists
     mod = await db.moderators.find_one({"username": payload.username}, {"_id": 0, "username": 1})
     if not mod:
         raise HTTPException(status_code=400, detail="Portal user not found")
 
-    # Verify username not already assigned
-    existing = await db.organogram_nodes.find_one({"username": payload.username}, {"_id": 0})
+    # Verify username not already assigned in THIS chart
+    existing = await db.organogram_nodes.find_one(
+        {"username": payload.username, "$or": [{"chart": payload.chart}, {"chart": {"$exists": False}, "teams.0": payload.chart}]},
+        {"_id": 0}
+    )
     if existing:
-        raise HTTPException(status_code=400, detail=f"{payload.username} is already in the organogram")
+        raise HTTPException(status_code=400, detail=f"{payload.username} is already in the {payload.chart.replace('_', '-')} organogram")
 
     # Resolve parent_ids (supports multi or legacy single)
     parent_ids = resolve_parent_ids(payload.parent_ids, payload.parent_id) or []
     if parent_ids:
-        await validate_parents(parent_ids, None, payload.rank)
+        await validate_parents(parent_ids, None, payload.rank, payload.chart)
 
     node = OrgNode(
         username=payload.username,
+        chart=payload.chart,
         rank=payload.rank,
         parent_ids=parent_ids,
         display_name=payload.display_name,
         profile_picture=payload.profile_picture,
-        teams=normalize_teams(payload.teams),
+        teams=[],
         bio=payload.bio,
         updated_by=current_user["username"],
     )
     doc = node.model_dump()
     doc["created_at"] = doc["created_at"].isoformat()
     doc["updated_at"] = doc["updated_at"].isoformat()
-    # Clear legacy single-parent field on insert
     doc["parent_id"] = None
     await db.organogram_nodes.insert_one(doc)
     return node
@@ -278,7 +317,27 @@ async def update_node(node_id: str, payload: OrgNodeUpdate, current_user: dict =
         raise HTTPException(status_code=404, detail="Node not found")
 
     updates = {}
-    new_rank = payload.rank if payload.rank is not None else node["rank"]
+    current = serialize_node(dict(node))
+    new_rank = payload.rank if payload.rank is not None else current["rank"]
+    new_chart = current["chart"]
+
+    if payload.chart is not None:
+        if payload.chart not in ORG_CHARTS:
+            raise HTTPException(status_code=400, detail=f"chart must be one of {ORG_CHARTS}")
+        if payload.chart != current["chart"]:
+            # ensure no duplicate in destination chart
+            dup = await db.organogram_nodes.find_one(
+                {"username": current["username"], "chart": payload.chart, "id": {"$ne": node_id}},
+                {"_id": 0}
+            )
+            if dup:
+                raise HTTPException(status_code=400, detail=f"{current['username']} is already in the {payload.chart.replace('_', '-')} organogram")
+            updates["chart"] = payload.chart
+            new_chart = payload.chart
+            # When moving charts, parents from old chart no longer apply
+            if payload.parent_ids is None and payload.parent_id is None:
+                updates["parent_ids"] = []
+                updates["parent_id"] = None
 
     if payload.rank is not None:
         if payload.rank not in ORG_RANKS:
@@ -288,7 +347,7 @@ async def update_node(node_id: str, payload: OrgNodeUpdate, current_user: dict =
     if payload.parent_ids is not None or payload.parent_id is not None:
         new_parent_ids = resolve_parent_ids(payload.parent_ids, payload.parent_id) or []
         if new_parent_ids:
-            await validate_parents(new_parent_ids, node_id, new_rank)
+            await validate_parents(new_parent_ids, node_id, new_rank, new_chart)
         updates["parent_ids"] = new_parent_ids
         # Clear legacy field so it doesn't shadow on read
         updates["parent_id"] = None

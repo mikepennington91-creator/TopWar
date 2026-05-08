@@ -26,24 +26,21 @@ const RANK_STYLES = {
   Mod: { ring: "ring-blue-500/60", badge: "bg-blue-500/20 text-blue-300 border-blue-500/40", glow: "shadow-blue-500/20" },
 };
 
-const TEAM_OPTIONS = [
-  { value: "in_game", label: "In-Game", icon: Gamepad2, badge: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" },
-  { value: "discord", label: "Discord", icon: MessageCircle, badge: "bg-indigo-500/20 text-indigo-300 border-indigo-500/40" },
-  { value: "training", label: "Training", icon: GraduationCap, badge: "bg-orange-500/20 text-orange-300 border-orange-500/40" },
+const CHART_OPTIONS = [
+  { value: "in_game", label: "In-Game", icon: Gamepad2, badge: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40", color: "emerald" },
+  { value: "discord", label: "Discord", icon: MessageCircle, badge: "bg-indigo-500/20 text-indigo-300 border-indigo-500/40", color: "indigo" },
+  { value: "training", label: "Training", icon: GraduationCap, badge: "bg-orange-500/20 text-orange-300 border-orange-500/40", color: "orange" },
 ];
 
-const TEAM_MAP = TEAM_OPTIONS.reduce((acc, t) => {
-  acc[t.value] = t;
-  return acc;
-}, {});
+const CHART_MAP = CHART_OPTIONS.reduce((acc, c) => { acc[c.value] = c; return acc; }, {});
 
 const emptyForm = {
   username: "",
+  chart: "in_game",
   rank: "Mod",
   parent_ids: [],
   display_name: "",
   profile_picture: "",
-  teams: [],
   bio: "",
 };
 
@@ -68,7 +65,7 @@ export default function Organogram() {
   const [dragOverNodeId, setDragOverNodeId] = useState(null);
   const [dragOverRoot, setDragOverRoot] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [teamFilter, setTeamFilter] = useState("all"); // 'all' | 'in_game' | 'discord' | 'training'
+  const [activeChart, setActiveChart] = useState("in_game"); // 'in_game' | 'discord' | 'training' | 'all'
 
   // Discord webhook
   const [webhookConfigured, setWebhookConfigured] = useState(false);
@@ -129,29 +126,40 @@ export default function Organogram() {
     if (currentUser) fetchAll();
   }, [currentUser, fetchAll]);
 
-  // Group nodes by rank
+  // Filter by active chart (or show all if 'all')
   const visibleNodes = useMemo(() => {
-    if (teamFilter === "all") return nodes;
-    return nodes.filter((n) => Array.isArray(n.teams) && n.teams.includes(teamFilter));
-  }, [nodes, teamFilter]);
+    if (activeChart === "all") return nodes;
+    return nodes.filter((n) => n.chart === activeChart);
+  }, [nodes, activeChart]);
 
-  const tiered = useMemo(() => {
+  const tieredFor = useCallback((nodeList) => {
     const grouped = {};
     RANKS.forEach((r) => (grouped[r] = []));
-    visibleNodes.forEach((n) => {
+    nodeList.forEach((n) => {
       if (grouped[n.rank]) grouped[n.rank].push(n);
     });
-    // sort each tier by parent_id then username for stable layout
     RANKS.forEach((r) => {
       grouped[r].sort((a, b) => {
-        const pa = a.parent_id || "";
-        const pb = b.parent_id || "";
+        const pa = (a.parent_ids && a.parent_ids[0]) || "";
+        const pb = (b.parent_ids && b.parent_ids[0]) || "";
         if (pa !== pb) return pa.localeCompare(pb);
         return a.username.localeCompare(b.username);
       });
     });
     return grouped;
-  }, [visibleNodes]);
+  }, []);
+
+  const tiered = useMemo(() => tieredFor(visibleNodes), [visibleNodes, tieredFor]);
+
+  const chartSections = useMemo(() => {
+    if (activeChart === "all") {
+      return CHART_OPTIONS
+        .map((c) => ({ chart: c.value, label: c.label, nodes: nodes.filter((n) => n.chart === c.value) }))
+        .filter((s) => s.nodes.length > 0)
+        .map((s) => ({ ...s, tiered: tieredFor(s.nodes) }));
+    }
+    return [{ chart: activeChart, label: CHART_MAP[activeChart]?.label, nodes: visibleNodes, tiered }];
+  }, [activeChart, nodes, visibleNodes, tiered, tieredFor]);
 
   // Compute SVG connector lines after layout
   const computeLines = useCallback(() => {
@@ -201,7 +209,8 @@ export default function Organogram() {
   // Form handlers
   const openCreateDialog = () => {
     setEditingNode(null);
-    setForm(emptyForm);
+    // Default new entries to the chart currently being viewed
+    setForm({ ...emptyForm, chart: activeChart === "all" ? "in_game" : activeChart });
     setShowDialog(true);
   };
 
@@ -212,11 +221,11 @@ export default function Organogram() {
       : (node.parent_id ? [node.parent_id] : []);
     setForm({
       username: node.username,
+      chart: node.chart || "in_game",
       rank: node.rank,
       parent_ids: parents,
       display_name: node.display_name || "",
       profile_picture: node.profile_picture || "",
-      teams: Array.isArray(node.teams) ? node.teams : [],
       bio: node.bio || "",
     });
     setShowDialog(true);
@@ -254,11 +263,11 @@ export default function Organogram() {
         await axios.patch(
           `${API}/organogram/nodes/${editingNode.id}`,
           {
+            chart: form.chart,
             rank: form.rank,
             parent_ids: form.parent_ids,
             display_name: form.display_name || "",
             profile_picture: form.profile_picture || "",
-            teams: form.teams,
             bio: form.bio || "",
           },
           { headers: { Authorization: `Bearer ${token}` } }
@@ -269,11 +278,11 @@ export default function Organogram() {
           `${API}/organogram/nodes`,
           {
             username: form.username,
+            chart: form.chart,
             rank: form.rank,
             parent_ids: form.parent_ids,
             display_name: form.display_name || null,
             profile_picture: form.profile_picture || null,
-            teams: form.teams,
             bio: form.bio || null,
           },
           { headers: { Authorization: `Bearer ${token}` } }
@@ -308,14 +317,17 @@ export default function Organogram() {
     const childIdx = RANKS.indexOf(form.rank);
     return nodes.filter((n) => {
       if (editingNode && n.id === editingNode.id) return false;
+      if (n.chart !== form.chart) return false;
       return RANKS.indexOf(n.rank) < childIdx;
     });
-  }, [nodes, form.rank, editingNode]);
+  }, [nodes, form.rank, form.chart, editingNode]);
 
   const availablePortalUsers = useMemo(() => {
     if (editingNode) return portalUsers; // username locked when editing
-    return portalUsers.filter((u) => !u.is_assigned);
-  }, [portalUsers, editingNode]);
+    // Hide users already in THIS chart only
+    const inChart = new Set(nodes.filter((n) => n.chart === form.chart).map((n) => n.username));
+    return portalUsers.filter((u) => !inChart.has(u.username));
+  }, [portalUsers, editingNode, nodes, form.chart]);
 
   // ===== Drag & Drop =====
   const nodesById = useMemo(() => {
@@ -645,27 +657,25 @@ export default function Organogram() {
                 ? "You can add, edit, and remove organogram members. Drag a card onto a higher-rank card to re-parent it. Swipe left/right on mobile to see more cards in the same tier."
                 : "View-only mode. Only Admins or organogram CMods can edit. Swipe left/right on mobile to see more cards in the same tier."}
             </p>
-            <div className="flex flex-wrap gap-2" data-testid="organogram-team-filter">
+            <div className="flex flex-wrap gap-2" data-testid="organogram-chart-selector">
               {[
                 { key: "all", label: "Whole Team", className: "bg-slate-700 text-slate-100 border-slate-600" },
-                { key: "in_game", label: "In-Game", className: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" },
-                { key: "discord", label: "Discord", className: "bg-indigo-500/20 text-indigo-300 border-indigo-500/40" },
-                { key: "training", label: "Training", className: "bg-orange-500/20 text-orange-300 border-orange-500/40" },
+                ...CHART_OPTIONS.map((c) => ({ key: c.value, label: c.label, className: c.badge })),
               ].map((opt) => {
-                const active = teamFilter === opt.key;
+                const active = activeChart === opt.key;
                 const count =
                   opt.key === "all"
                     ? nodes.length
-                    : nodes.filter((n) => Array.isArray(n.teams) && n.teams.includes(opt.key)).length;
+                    : nodes.filter((n) => n.chart === opt.key).length;
                 return (
                   <button
                     key={opt.key}
                     type="button"
-                    onClick={() => setTeamFilter(opt.key)}
+                    onClick={() => setActiveChart(opt.key)}
                     className={`px-3 py-1.5 rounded-sm border text-xs uppercase tracking-wider transition-all ${
                       active ? `${opt.className} ring-2 ring-offset-2 ring-offset-slate-900 ring-current` : "bg-slate-900/50 text-slate-400 border-slate-700 hover:border-slate-500"
                     }`}
-                    data-testid={`organogram-filter-${opt.key}`}
+                    data-testid={`organogram-chart-${opt.key}`}
                   >
                     {opt.label} <span className="opacity-70 ml-1">({count})</span>
                   </button>
@@ -690,14 +700,16 @@ export default function Organogram() {
         ) : visibleNodes.length === 0 ? (
           <div className="text-center py-16 glass-card rounded-md border border-slate-700" data-testid="organogram-filter-empty-state">
             <UserPlus className="h-12 w-12 text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-400">No moderators match this filter.</p>
-            <Button
-              onClick={() => setTeamFilter("all")}
-              variant="outline"
-              className="mt-4 border-slate-600 text-slate-300 hover:bg-slate-800 rounded-sm"
-            >
-              Show whole team
-            </Button>
+            <p className="text-slate-400">
+              {activeChart === "all"
+                ? "No moderators yet."
+                : `No moderators in the ${CHART_MAP[activeChart]?.label} organogram yet.`}
+            </p>
+            {canEdit && (
+              <Button onClick={openCreateDialog} className="mt-4 bg-amber-500 hover:bg-amber-600 text-white rounded-sm">
+                <Plus className="h-4 w-4 mr-2" /> Add Member
+              </Button>
+            )}
           </div>
         ) : (
           <div ref={containerRef} className="relative -mx-3 sm:mx-0" data-testid="organogram-chart">
@@ -736,22 +748,36 @@ export default function Organogram() {
             </svg>
 
             <div className="relative space-y-12">
-              {RANKS.map((rank) => {
-                const tierNodes = tiered[rank];
-                if (tierNodes.length === 0) return null;
+              {chartSections.map((section) => {
+                const sectionCfg = CHART_MAP[section.chart];
+                const SectionIcon = sectionCfg?.icon;
                 return (
-                  <div key={rank} className="relative" data-testid={`organogram-tier-${rank}`}>
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="h-px flex-1 bg-gradient-to-r from-transparent to-slate-700" />
-                      <Badge className={`${RANK_STYLES[rank].badge} uppercase tracking-widest text-xs px-3 py-1`}>
-                        {rank}
-                      </Badge>
-                      <div className="h-px flex-1 bg-gradient-to-l from-transparent to-slate-700" />
-                    </div>
-                    <div className="flex flex-nowrap sm:flex-wrap justify-start sm:justify-center gap-3 sm:gap-4 min-w-min">
-                      {tierNodes.map((node) => {
-                        const styles = RANK_STYLES[rank];
-                        const nodeTeams = Array.isArray(node.teams) ? node.teams : [];
+                  <div key={section.chart} className="space-y-12" data-testid={`organogram-section-${section.chart}`}>
+                    {activeChart === "all" && (
+                      <div className="flex items-center gap-3 sticky top-0 z-10 bg-slate-950/85 backdrop-blur py-2 -mx-2 px-2 border-b border-slate-800">
+                        {SectionIcon && <SectionIcon className={`h-5 w-5 ${sectionCfg.badge.split(' ').find(c => c.startsWith('text-')) || ''}`} />}
+                        <h2 className="text-lg uppercase tracking-widest font-bold" style={{ fontFamily: "Rajdhani, sans-serif" }}>
+                          {section.label} Organogram
+                        </h2>
+                        <span className="text-xs text-slate-500">({section.nodes.length})</span>
+                      </div>
+                    )}
+                    {RANKS.map((rank) => {
+                      const tierNodes = section.tiered[rank];
+                      if (tierNodes.length === 0) return null;
+                      return (
+                        <div key={`${section.chart}-${rank}`} className="relative" data-testid={`organogram-tier-${section.chart}-${rank}`}>
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-slate-700" />
+                            <Badge className={`${RANK_STYLES[rank].badge} uppercase tracking-widest text-xs px-3 py-1`}>
+                              {rank}
+                            </Badge>
+                            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-slate-700" />
+                          </div>
+                          <div className="flex flex-nowrap sm:flex-wrap justify-start sm:justify-center gap-3 sm:gap-4 min-w-min">
+                            {tierNodes.map((node) => {
+                              const styles = RANK_STYLES[rank];
+                              const chartCfg = CHART_MAP[node.chart];
                         return (
                           <div
                             key={node.id}
@@ -793,21 +819,19 @@ export default function Organogram() {
                               )}
                               <div className="flex items-center justify-center gap-1 mt-2 flex-wrap">
                                 <Badge className={`${styles.badge} text-[10px] uppercase`}>{node.rank}</Badge>
-                                {nodeTeams.map((teamKey) => {
-                                  const teamCfg = TEAM_MAP[teamKey];
-                                  if (!teamCfg) return null;
-                                  const TeamIcon = teamCfg.icon;
+                                {/* Show chart badge only when viewing 'Whole Team' (otherwise it's redundant) */}
+                                {activeChart === "all" && chartCfg && (() => {
+                                  const ChartIcon = chartCfg.icon;
                                   return (
                                     <Badge
-                                      key={teamKey}
-                                      className={`${teamCfg.badge} text-[10px] uppercase flex items-center gap-1`}
-                                      data-testid={`organogram-team-${node.username}-${teamKey}`}
+                                      className={`${chartCfg.badge} text-[10px] uppercase flex items-center gap-1`}
+                                      data-testid={`organogram-chart-badge-${node.username}`}
                                     >
-                                      {TeamIcon ? <TeamIcon className="h-2.5 w-2.5" /> : null}
-                                      {teamCfg.label}
+                                      <ChartIcon className="h-2.5 w-2.5" />
+                                      {chartCfg.label}
                                     </Badge>
                                   );
-                                })}
+                                })()}
                               </div>
                               {node.bio && (
                                 <p
@@ -846,7 +870,10 @@ export default function Organogram() {
                           </div>
                         );
                       })}
-                    </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 );
               })}
@@ -1021,9 +1048,8 @@ export default function Organogram() {
             <div>
               <Label className="text-slate-300">Rank</Label>
               <Select value={form.rank} onValueChange={(v) => setForm((prev) => {
-                // When rank changes, drop any parents that are no longer higher rank than the new rank
                 const childIdx = RANKS.indexOf(v);
-                const validIds = new Set(nodes.filter((n) => RANKS.indexOf(n.rank) < childIdx).map((n) => n.id));
+                const validIds = new Set(nodes.filter((n) => n.chart === prev.chart && RANKS.indexOf(n.rank) < childIdx).map((n) => n.id));
                 return { ...prev, rank: v, parent_ids: prev.parent_ids.filter((pid) => validIds.has(pid)) };
               })}>
                 <SelectTrigger className="bg-slate-950/60 border-slate-700 text-slate-200 rounded-sm" data-testid="organogram-rank-select">
@@ -1104,11 +1130,11 @@ export default function Organogram() {
             </div>
 
             <div>
-              <Label className="text-slate-300">Departments <span className="text-slate-500 text-xs">(Optional)</span></Label>
-              <div className="grid grid-cols-1 gap-2 mt-2" data-testid="organogram-teams-checkboxes">
-                {TEAM_OPTIONS.map((opt) => {
+              <Label className="text-slate-300">Organogram</Label>
+              <div className="grid grid-cols-1 gap-2 mt-2" data-testid="organogram-chart-picker">
+                {CHART_OPTIONS.map((opt) => {
                   const Icon = opt.icon;
-                  const checked = (form.teams || []).includes(opt.value);
+                  const checked = form.chart === opt.value;
                   return (
                     <label
                       key={opt.value}
@@ -1119,21 +1145,15 @@ export default function Organogram() {
                       }`}
                     >
                       <input
-                        type="checkbox"
+                        type="radio"
+                        name="organogram-chart"
                         checked={checked}
-                        onChange={(e) => {
-                          setForm((prev) => {
-                            const cur = prev.teams || [];
-                            return {
-                              ...prev,
-                              teams: e.target.checked
-                                ? [...cur, opt.value]
-                                : cur.filter((t) => t !== opt.value),
-                            };
-                          });
+                        onChange={() => {
+                          // Switching chart wipes parents (they belong to the old chart)
+                          setForm((prev) => ({ ...prev, chart: opt.value, parent_ids: [] }));
                         }}
                         className="accent-amber-500 h-4 w-4"
-                        data-testid={`organogram-team-checkbox-${opt.value}`}
+                        data-testid={`organogram-chart-radio-${opt.value}`}
                       />
                       <Icon className="h-4 w-4" />
                       <span className="text-sm">{opt.label}</span>
@@ -1141,7 +1161,11 @@ export default function Organogram() {
                   );
                 })}
               </div>
-              <p className="text-xs text-slate-500 mt-1">Select all that apply. Each shows as a separate badge on the card.</p>
+              <p className="text-xs text-slate-500 mt-1">
+                {editingNode
+                  ? "Switch this person to a different organogram. Parents will be cleared."
+                  : "Choose which of the three trees this person belongs to."}
+              </p>
             </div>
 
             <div>
