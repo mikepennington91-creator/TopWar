@@ -226,6 +226,46 @@ async def list_nodes(chart: Optional[str] = None, current_user: dict = Depends(g
         new_chart = teams_list[0] if teams_list and teams_list[0] in ORG_CHARTS else "in_game"
         await db.organogram_nodes.update_one({"id": doc["id"]}, {"$set": {"chart": new_chart}})
 
+    # One-time migration: split multi-team nodes across charts
+    flag = await db.app_settings.find_one({"id": "organogram_chart_split_done"}, {"_id": 0})
+    if not flag:
+        all_docs = await db.organogram_nodes.find(
+            {"teams": {"$exists": True, "$ne": []}},
+            {"_id": 0}
+        ).to_list(5000)
+        now = datetime.now(timezone.utc).isoformat()
+        for doc in all_docs:
+            existing_chart = doc.get("chart") or "in_game"
+            extra_charts = [t for t in (doc.get("teams") or []) if t in ORG_CHARTS and t != existing_chart]
+            for extra in extra_charts:
+                # Skip if already has a node in that chart for this username
+                dup = await db.organogram_nodes.find_one(
+                    {"username": doc["username"], "chart": extra},
+                    {"_id": 0, "id": 1}
+                )
+                if dup:
+                    continue
+                await db.organogram_nodes.insert_one({
+                    "id": str(uuid.uuid4()),
+                    "username": doc["username"],
+                    "chart": extra,
+                    "display_name": doc.get("display_name"),
+                    "rank": doc.get("rank", "Mod"),
+                    "teams": [],
+                    "bio": doc.get("bio"),
+                    "parent_ids": [],  # parents are chart-scoped; admin can set in the new chart
+                    "parent_id": None,
+                    "profile_picture": doc.get("profile_picture"),
+                    "created_at": now,
+                    "updated_at": now,
+                    "updated_by": "auto-migration",
+                })
+        await db.app_settings.update_one(
+            {"id": "organogram_chart_split_done"},
+            {"$set": {"id": "organogram_chart_split_done", "completed_at": now}},
+            upsert=True,
+        )
+
     query = {"chart": chart} if chart else {}
     nodes = await db.organogram_nodes.find(query, {"_id": 0}).to_list(2000)
     return [serialize_node(n) for n in nodes]
