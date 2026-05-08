@@ -65,7 +65,7 @@ export default function Organogram() {
   const [dragOverNodeId, setDragOverNodeId] = useState(null);
   const [dragOverRoot, setDragOverRoot] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [activeChart, setActiveChart] = useState("in_game"); // 'in_game' | 'discord' | 'training' | 'all'
+  const [activeChart, setActiveChart] = useState("in_game"); // 'in_game' | 'discord' | 'training'
 
   // Discord webhook
   const [webhookConfigured, setWebhookConfigured] = useState(false);
@@ -126,9 +126,8 @@ export default function Organogram() {
     if (currentUser) fetchAll();
   }, [currentUser, fetchAll]);
 
-  // Filter by active chart (or show all if 'all')
+  // Filter by active chart
   const visibleNodes = useMemo(() => {
-    if (activeChart === "all") return nodes;
     return nodes.filter((n) => n.chart === activeChart);
   }, [nodes, activeChart]);
 
@@ -152,14 +151,8 @@ export default function Organogram() {
   const tiered = useMemo(() => tieredFor(visibleNodes), [visibleNodes, tieredFor]);
 
   const chartSections = useMemo(() => {
-    if (activeChart === "all") {
-      return CHART_OPTIONS
-        .map((c) => ({ chart: c.value, label: c.label, nodes: nodes.filter((n) => n.chart === c.value) }))
-        .filter((s) => s.nodes.length > 0)
-        .map((s) => ({ ...s, tiered: tieredFor(s.nodes) }));
-    }
     return [{ chart: activeChart, label: CHART_MAP[activeChart]?.label, nodes: visibleNodes, tiered }];
-  }, [activeChart, nodes, visibleNodes, tiered, tieredFor]);
+  }, [activeChart, visibleNodes, tiered]);
 
   // Compute SVG connector lines after layout
   const computeLines = useCallback(() => {
@@ -209,8 +202,7 @@ export default function Organogram() {
   // Form handlers
   const openCreateDialog = () => {
     setEditingNode(null);
-    // Default new entries to the chart currently being viewed
-    setForm({ ...emptyForm, chart: activeChart === "all" ? "in_game" : activeChart });
+    setForm({ ...emptyForm, chart: activeChart });
     setShowDialog(true);
   };
 
@@ -382,6 +374,8 @@ export default function Organogram() {
     const dragNode = nodesById[dragNodeId];
     if (!dragNode) return false;
     if (targetNode.id === dragNode.id) return false;
+    // target must be in the same chart (organogram)
+    if (targetNode.chart !== dragNode.chart) return false;
     // target rank must be strictly higher (lower index) than drag rank
     if (RANKS.indexOf(targetNode.rank) >= RANKS.indexOf(dragNode.rank)) return false;
     // target cannot be a descendant of drag node (cycle)
@@ -658,15 +652,9 @@ export default function Organogram() {
                 : "View-only mode. Only Admins or organogram CMods can edit. Swipe left/right on mobile to see more cards in the same tier."}
             </p>
             <div className="flex flex-wrap gap-2" data-testid="organogram-chart-selector">
-              {[
-                { key: "all", label: "Whole Team", className: "bg-slate-700 text-slate-100 border-slate-600" },
-                ...CHART_OPTIONS.map((c) => ({ key: c.value, label: c.label, className: c.badge })),
-              ].map((opt) => {
+              {CHART_OPTIONS.map((c) => ({ key: c.value, label: c.label, className: c.badge })).map((opt) => {
                 const active = activeChart === opt.key;
-                const count =
-                  opt.key === "all"
-                    ? nodes.length
-                    : nodes.filter((n) => n.chart === opt.key).length;
+                const count = nodes.filter((n) => n.chart === opt.key).length;
                 return (
                   <button
                     key={opt.key}
@@ -701,9 +689,7 @@ export default function Organogram() {
           <div className="text-center py-16 glass-card rounded-md border border-slate-700" data-testid="organogram-filter-empty-state">
             <UserPlus className="h-12 w-12 text-slate-600 mx-auto mb-3" />
             <p className="text-slate-400">
-              {activeChart === "all"
-                ? "No moderators yet."
-                : `No moderators in the ${CHART_MAP[activeChart]?.label} organogram yet.`}
+              No moderators in the {CHART_MAP[activeChart]?.label} organogram yet.
             </p>
             {canEdit && (
               <Button onClick={openCreateDialog} className="mt-4 bg-amber-500 hover:bg-amber-600 text-white rounded-sm">
@@ -749,19 +735,8 @@ export default function Organogram() {
 
             <div className="relative space-y-12">
               {chartSections.map((section) => {
-                const sectionCfg = CHART_MAP[section.chart];
-                const SectionIcon = sectionCfg?.icon;
                 return (
                   <div key={section.chart} className="space-y-12" data-testid={`organogram-section-${section.chart}`}>
-                    {activeChart === "all" && (
-                      <div className="flex items-center gap-3 sticky top-0 z-10 bg-slate-950/85 backdrop-blur py-2 -mx-2 px-2 border-b border-slate-800">
-                        {SectionIcon && <SectionIcon className={`h-5 w-5 ${sectionCfg.badge.split(' ').find(c => c.startsWith('text-')) || ''}`} />}
-                        <h2 className="text-lg uppercase tracking-widest font-bold" style={{ fontFamily: "Rajdhani, sans-serif" }}>
-                          {section.label} Organogram
-                        </h2>
-                        <span className="text-xs text-slate-500">({section.nodes.length})</span>
-                      </div>
-                    )}
                     {RANKS.map((rank) => {
                       const tierNodes = section.tiered[rank];
                       if (tierNodes.length === 0) return null;
@@ -777,7 +752,6 @@ export default function Organogram() {
                           <div className="flex flex-nowrap sm:flex-wrap justify-start sm:justify-center gap-3 sm:gap-4 min-w-min">
                             {tierNodes.map((node) => {
                               const styles = RANK_STYLES[rank];
-                              const chartCfg = CHART_MAP[node.chart];
                         return (
                           <div
                             key={node.id}
@@ -819,19 +793,6 @@ export default function Organogram() {
                               )}
                               <div className="flex items-center justify-center gap-1 mt-2 flex-wrap">
                                 <Badge className={`${styles.badge} text-[10px] uppercase`}>{node.rank}</Badge>
-                                {/* Show chart badge only when viewing 'Whole Team' (otherwise it's redundant) */}
-                                {activeChart === "all" && chartCfg && (() => {
-                                  const ChartIcon = chartCfg.icon;
-                                  return (
-                                    <Badge
-                                      className={`${chartCfg.badge} text-[10px] uppercase flex items-center gap-1`}
-                                      data-testid={`organogram-chart-badge-${node.username}`}
-                                    >
-                                      <ChartIcon className="h-2.5 w-2.5" />
-                                      {chartCfg.label}
-                                    </Badge>
-                                  );
-                                })()}
                               </div>
                               {node.bio && (
                                 <p
