@@ -42,6 +42,7 @@ const TIER_HEIGHT = 232;      // approximate card height
 const TIER_GAP = 88;          // vertical space for connectors between tiers
 const TIER_HEADER_H = 36;     // space at the top of each tier for the rank badge
 const CHART_PADDING = 24;     // inner padding around the canvas
+const RAIL_PADDING = 32;      // distance from the leftmost card to the side-rail line
 
 // Distinct line colors so 15 reporting lines are easy to follow.
 const PARENT_LINE_COLORS = [
@@ -318,7 +319,9 @@ export default function Organogram() {
   // Connector paths — one path per parent→child edge. Lines are coloured by
   // the child's *parent set* (so siblings with identical reporting share a
   // colour). For wrapped multi-row groups we route the line via a side rail
-  // so it never crosses through a row 0 card.
+  // so it never crosses through a row 0 card. When a line *skips* an
+  // intermediate tier, the horizontal busbar is placed in the gap immediately
+  // below the parent tier so it visually passes ABOVE the skipped tier.
   const computeLines = useCallback(() => {
     const newLines = [];
     visibleNodes.forEach((node) => {
@@ -332,6 +335,8 @@ export default function Organogram() {
       parents.forEach((parentId) => {
         const parentGeom = nodeGeom(parentId);
         if (!parentGeom) return;
+        const parentNode = visibleNodes.find((n) => n.id === parentId);
+        if (!parentNode) return;
         const childPos = layout.positions[node.id];
         const childRow = childPos?.row || 0;
         const x1 = parentGeom.centerX;
@@ -339,18 +344,27 @@ export default function Organogram() {
         const x2 = childGeom.centerX;
         const y2 = childGeom.top;
 
-        // manifoldY[0]: in the gap between parent tier and row 0 of child tier
-        // (always safe — no cards there).
+        // Detect tier-skip (e.g. MMod → Mod, bypassing SMod/LMod).
+        const parentTierIdx = layout.tierIndex[parentNode.rank];
+        const childTierIdx = layout.tierIndex[node.rank];
+        const isSkip = childTierIdx - parentTierIdx > 1;
+
+        // For non-skip: route in the gap right above row 0 of the child tier.
+        // For skip: route in the gap right BELOW the parent tier (above all
+        // skipped tiers) so the bus bar never sits next to a skipped card.
         const childRow0Top = y2 - childRow * (TIER_HEIGHT + SUBROW_GAP);
-        const manifoldY0 = y1 + (childRow0Top - y1) / 2;
+        const manifoldY0 = isSkip
+          ? y1 + TIER_GAP / 2
+          : y1 + (childRow0Top - y1) / 2;
 
         let d;
         if (childRow === 0) {
           d = `M ${x1} ${y1} V ${manifoldY0} H ${x2} V ${y2}`;
         } else {
-          // Route via a side rail to the LEFT of the wrapped block.
+          // Wrapped row >0: route via a side rail to the LEFT of the block.
           const groupStartCol = childPos.groupStartCol ?? childPos.col;
-          const railX = CHART_PADDING + groupStartCol * SLOT_W - SUBROW_GAP / 2;
+          const railX =
+            CHART_PADDING + groupStartCol * SLOT_W + H_GAP / 2 - RAIL_PADDING;
           // manifoldY for THIS row: in the gap between row-1 bottom and row top.
           const prevRowBottom = y2 - SUBROW_GAP;
           const manifoldY = prevRowBottom + SUBROW_GAP / 2;
