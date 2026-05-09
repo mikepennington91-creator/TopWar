@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toPng } from "html-to-image";
-import { Network, Plus, Trash2, Pencil, Upload, Shield, X, UserPlus, Gamepad2, MessageCircle, Download, Send, Settings as SettingsIcon, GraduationCap } from "lucide-react";
+import { Network, Plus, Trash2, Pencil, Upload, Shield, X, UserPlus, Gamepad2, MessageCircle, Download, Send, Settings as SettingsIcon, GraduationCap, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,32 @@ const CHART_OPTIONS = [
 
 const CHART_MAP = CHART_OPTIONS.reduce((acc, c) => { acc[c.value] = c; return acc; }, {});
 
+// Layout constants for the tree-style chart
+const NODE_W_MOBILE = 144;
+const NODE_W_DESKTOP = 224;
+const H_GAP = 28;             // horizontal slot padding
+const TIER_HEIGHT = 232;      // approximate card height
+const TIER_GAP = 88;          // vertical space for connectors between tiers
+const TIER_HEADER_H = 36;     // space at the top of each tier for the rank badge
+const CHART_PADDING = 24;     // inner padding around the canvas
+
+// Distinct line colors so 15 reporting lines are easy to follow.
+const PARENT_LINE_COLORS = [
+  "#f59e0b", "#10b981", "#3b82f6", "#ec4899",
+  "#8b5cf6", "#ef4444", "#14b8a6", "#f97316",
+  "#84cc16", "#06b6d4", "#a855f7", "#d946ef",
+  "#22d3ee", "#fb7185", "#facc15", "#4ade80",
+];
+
+function colorForId(id) {
+  if (!id) return "#94a3b8";
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = ((hash << 5) - hash + id.charCodeAt(i)) | 0;
+  }
+  return PARENT_LINE_COLORS[Math.abs(hash) % PARENT_LINE_COLORS.length];
+}
+
 const emptyForm = {
   username: "",
   chart: "in_game",
@@ -59,6 +85,7 @@ export default function Organogram() {
 
   const containerRef = useRef(null);
   const chartRef = useRef(null);
+  const scrollRef = useRef(null);
   const nodeRefs = useRef({});
   const [lines, setLines] = useState([]);
   const [dragNodeId, setDragNodeId] = useState(null);
@@ -66,6 +93,27 @@ export default function Organogram() {
   const [dragOverRoot, setDragOverRoot] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [activeChart, setActiveChart] = useState("in_game"); // 'in_game' | 'discord' | 'training'
+
+  // Mobile detection drives card sizing.
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth < 640 : false
+  );
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  const NODE_W = isMobile ? NODE_W_MOBILE : NODE_W_DESKTOP;
+  const SLOT_W = NODE_W + H_GAP;
+  const TIER_FULL = TIER_HEIGHT + TIER_GAP;
+
+  // Zoom & pinch
+  const [zoom, setZoom] = useState(1);
+  const pinchRef = useRef({ initialDist: 0, initialZoom: 1, pinching: false });
+  const autoFitDoneRef = useRef(false);
+  const zoomIn = () => setZoom((z) => Math.min(2, +(z + 0.1).toFixed(2)));
+  const zoomOut = () => setZoom((z) => Math.max(0.4, +(z - 0.1).toFixed(2)));
+  const zoomReset = () => setZoom(1);
 
   // Discord webhook
   const [webhookConfigured, setWebhookConfigured] = useState(false);
@@ -131,72 +179,116 @@ export default function Organogram() {
     return nodes.filter((n) => n.chart === activeChart);
   }, [nodes, activeChart]);
 
-  const tieredFor = useCallback((nodeList) => {
-    const grouped = {};
-    RANKS.forEach((r) => (grouped[r] = []));
-    nodeList.forEach((n) => {
-      if (grouped[n.rank]) grouped[n.rank].push(n);
+  // Tree layout: children sit directly under their (primary) parent.
+  // Uses a Reingold-Tilford-ish post-order pass — leaves take the next slot,
+  // internal nodes are centered above the average of their children's slots.
+  const layout = useMemo(() => {
+    const idSet = new Set(visibleNodes.map((n) => n.id));
+    const childrenByParent = {};
+    const roots = [];
+    visibleNodes.forEach((n) => {
+      const parents = (Array.isArray(n.parent_ids) ? n.parent_ids : []).filter((p) => idSet.has(p));
+      const primary = parents[0];
+      if (primary) {
+        (childrenByParent[primary] = childrenByParent[primary] || []).push(n);
+      } else {
+        roots.push(n);
+      }
     });
+    Object.values(childrenByParent).forEach((arr) =>
+      arr.sort((a, b) => (a.display_name || a.username).localeCompare(b.display_name || b.username))
+    );
+    roots.sort((a, b) =>
+      (RANKS.indexOf(a.rank) - RANKS.indexOf(b.rank)) ||
+      (a.display_name || a.username).localeCompare(b.display_name || b.username)
+    );
+
+    const positions = {};
+    let cursor = 0;
+    const visit = (node) => {
+      const kids = childrenByParent[node.id] || [];
+      if (kids.length === 0) {
+        const slot = cursor;
+        cursor += 1;
+        positions[node.id] = slot;
+        return slot;
+      }
+      const childSlots = kids.map(visit);
+      const slot = (Math.min(...childSlots) + Math.max(...childSlots)) / 2;
+      positions[node.id] = slot;
+      return slot;
+    };
+    roots.forEach((r, i) => {
+      visit(r);
+      if (i < roots.length - 1) cursor += 0.6; // gap between disconnected subtrees
+    });
+
+    const tierIndex = {};
+    let ti = 0;
     RANKS.forEach((r) => {
-      grouped[r].sort((a, b) => {
-        const pa = (a.parent_ids && a.parent_ids[0]) || "";
-        const pb = (b.parent_ids && b.parent_ids[0]) || "";
-        if (pa !== pb) return pa.localeCompare(pb);
-        return a.username.localeCompare(b.username);
-      });
+      if (visibleNodes.some((n) => n.rank === r)) {
+        tierIndex[r] = ti;
+        ti += 1;
+      }
     });
-    return grouped;
-  }, []);
 
-  const tiered = useMemo(() => tieredFor(visibleNodes), [visibleNodes, tieredFor]);
+    return {
+      positions,
+      tierIndex,
+      totalSlots: Math.max(cursor, 1),
+      tiersUsed: ti,
+    };
+  }, [visibleNodes]);
 
-  const chartSections = useMemo(() => {
-    return [{ chart: activeChart, label: CHART_MAP[activeChart]?.label, nodes: visibleNodes, tiered }];
-  }, [activeChart, visibleNodes, tiered]);
+  const canvasW = Math.max(layout.totalSlots * SLOT_W + CHART_PADDING * 2, 320);
+  const canvasH = layout.tiersUsed * TIER_FULL + CHART_PADDING * 2;
 
-  // Compute SVG connector lines after layout
+  // Auto-fit on mobile once when chart becomes visible.
+  useEffect(() => {
+    if (autoFitDoneRef.current) return;
+    if (!isMobile || !scrollRef.current || layout.totalSlots <= 1) return;
+    const viewportW = scrollRef.current.clientWidth;
+    if (viewportW > 0 && canvasW > viewportW) {
+      const fit = Math.max(0.5, +(viewportW / canvasW).toFixed(2));
+      setZoom(fit);
+      autoFitDoneRef.current = true;
+    }
+  }, [isMobile, canvasW, layout.totalSlots]);
+
+  // Connector lines: each parent_id draws its own colored elbow line.
   const computeLines = useCallback(() => {
-    const baseEl = chartRef.current || containerRef.current;
-    if (!baseEl) return;
-    const baseRect = baseEl.getBoundingClientRect();
-    const scrollLeft = chartRef.current ? chartRef.current.scrollLeft : 0;
-    const scrollTop = chartRef.current ? chartRef.current.scrollTop : 0;
-    const visibleIds = new Set(visibleNodes.map((n) => n.id));
     const newLines = [];
+    const nodeMap = {};
+    visibleNodes.forEach((n) => (nodeMap[n.id] = n));
     visibleNodes.forEach((node) => {
-      const parentIds = Array.isArray(node.parent_ids) ? node.parent_ids : [];
-      parentIds.forEach((parentId) => {
-        if (!visibleIds.has(parentId)) return;
-        const childEl = nodeRefs.current[node.id];
-        const parentEl = nodeRefs.current[parentId];
-        if (!childEl || !parentEl) return;
-        const c = childEl.getBoundingClientRect();
-        const p = parentEl.getBoundingClientRect();
-        const x1 = p.left - baseRect.left + scrollLeft + p.width / 2;
-        const y1 = p.bottom - baseRect.top + scrollTop;
-        const x2 = c.left - baseRect.left + scrollLeft + c.width / 2;
-        const y2 = c.top - baseRect.top + scrollTop;
-        newLines.push({ id: `${parentId}-${node.id}`, x1, y1, x2, y2 });
+      const parents = (Array.isArray(node.parent_ids) ? node.parent_ids : []).filter(
+        (p) => layout.positions[p] !== undefined
+      );
+      const cSlot = layout.positions[node.id];
+      const cTier = layout.tierIndex[node.rank];
+      if (cSlot === undefined || cTier === undefined) return;
+      parents.forEach((parentId) => {
+        const parent = nodeMap[parentId];
+        if (!parent) return;
+        const pSlot = layout.positions[parentId];
+        const pTier = layout.tierIndex[parent.rank];
+        if (pSlot === undefined || pTier === undefined) return;
+        const x1 = CHART_PADDING + pSlot * SLOT_W + NODE_W / 2 + H_GAP / 2;
+        const y1 = CHART_PADDING + pTier * TIER_FULL + TIER_HEADER_H + TIER_HEIGHT;
+        const x2 = CHART_PADDING + cSlot * SLOT_W + NODE_W / 2 + H_GAP / 2;
+        const y2 = CHART_PADDING + cTier * TIER_FULL + TIER_HEADER_H;
+        newLines.push({
+          id: `${parentId}-${node.id}`,
+          x1, y1, x2, y2,
+          color: colorForId(parentId),
+        });
       });
     });
     setLines(newLines);
-  }, [visibleNodes]);
+  }, [visibleNodes, layout, NODE_W, SLOT_W, TIER_FULL]);
 
   useEffect(() => {
-    // After nodes render, compute lines (next frame)
-    const t = setTimeout(computeLines, 50);
-    return () => clearTimeout(t);
-  }, [tiered, computeLines]);
-
-  useEffect(() => {
-    const handler = () => computeLines();
-    window.addEventListener("resize", handler);
-    const scrollEl = chartRef.current;
-    if (scrollEl) scrollEl.addEventListener("scroll", handler, { passive: true });
-    return () => {
-      window.removeEventListener("resize", handler);
-      if (scrollEl) scrollEl.removeEventListener("scroll", handler);
-    };
+    computeLines();
   }, [computeLines]);
 
   // Form handlers
@@ -458,15 +550,34 @@ export default function Organogram() {
       cacheBust: true,
       backgroundColor: "#020617",
       pixelRatio: 2,
-      style: { padding: "32px" },
+      width: canvasW,
+      height: canvasH,
+      style: {
+        transform: "none",
+        transformOrigin: "top left",
+        width: `${canvasW}px`,
+        height: `${canvasH}px`,
+      },
     });
+  };
+
+  const captureWithoutZoom = async (fn) => {
+    const prev = zoom;
+    setZoom(1);
+    // Wait two frames for layout to settle
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    try {
+      return await fn();
+    } finally {
+      setZoom(prev);
+    }
   };
 
   const handleExportPng = async () => {
     if (!chartRef.current) return;
     setExporting(true);
     try {
-      const dataUrl = await buildChartPng();
+      const dataUrl = await captureWithoutZoom(() => buildChartPng());
       const link = document.createElement("a");
       link.download = `organogram-${new Date().toISOString().slice(0, 10)}.png`;
       link.href = dataUrl;
@@ -549,7 +660,7 @@ export default function Organogram() {
     setSharing(true);
     const token = localStorage.getItem("moderator_token");
     try {
-      const dataUrl = await buildChartPng();
+      const dataUrl = await captureWithoutZoom(() => buildChartPng());
       if (!dataUrl) throw new Error("Could not capture chart");
       await axios.post(
         `${API}/organogram/share`,
@@ -648,8 +759,8 @@ export default function Organogram() {
           <CardContent className="text-xs text-slate-500 space-y-3">
             <p>
               {canEdit
-                ? "You can add, edit, and remove organogram members. Drag a card onto a higher-rank card to re-parent it. Swipe left/right on mobile to see more cards in the same tier."
-                : "View-only mode. Only Admins or organogram CMods can edit. Swipe left/right on mobile to see more cards in the same tier."}
+                ? "You can add, edit, and remove organogram members. Drag a card onto a higher-rank card to re-parent it. Pinch to zoom on mobile, or use the zoom controls below."
+                : "View-only mode. Only Admins or organogram CMods can edit. Pinch to zoom on mobile, or use the zoom controls below."}
             </p>
             <div className="flex flex-wrap gap-2" data-testid="organogram-chart-selector">
               {CHART_OPTIONS.map((c) => ({ key: c.value, label: c.label, className: c.badge })).map((opt) => {
@@ -699,147 +810,265 @@ export default function Organogram() {
           </div>
         ) : (
           <div ref={containerRef} className="relative -mx-3 sm:mx-0" data-testid="organogram-chart">
-            <div ref={chartRef} className="relative bg-slate-950 rounded-md p-2 overflow-x-auto px-3 sm:px-2">
-            {canEdit && (
-              <div
-                onDragOver={handleDragOverRoot}
-                onDragLeave={() => setDragOverRoot(false)}
-                onDrop={handleDropOnRoot}
-                className={`mb-4 mx-auto max-w-md text-center text-xs uppercase tracking-widest border-2 border-dashed rounded-sm py-3 transition-colors ${
-                  dragNodeId
-                    ? dragOverRoot
-                      ? "border-amber-400 bg-amber-500/10 text-amber-300"
-                      : "border-slate-600 text-slate-400"
-                    : "border-transparent text-transparent select-none pointer-events-none"
-                }`}
-                data-testid="organogram-root-drop-zone"
-              >
-                Drop here to remove parent (make root)
+            {/* Zoom toolbar */}
+            <div className="flex items-center justify-between gap-2 px-3 sm:px-2 mb-2">
+              {canEdit && (
+                <div
+                  onDragOver={handleDragOverRoot}
+                  onDragLeave={() => setDragOverRoot(false)}
+                  onDrop={handleDropOnRoot}
+                  className={`flex-1 max-w-md text-center text-[11px] sm:text-xs uppercase tracking-widest border-2 border-dashed rounded-sm py-2 transition-colors ${
+                    dragNodeId
+                      ? dragOverRoot
+                        ? "border-amber-400 bg-amber-500/10 text-amber-300"
+                        : "border-slate-600 text-slate-400"
+                      : "border-transparent text-transparent select-none pointer-events-none"
+                  }`}
+                  data-testid="organogram-root-drop-zone"
+                >
+                  Drop here to remove parent (make root)
+                </div>
+              )}
+              <div className="ml-auto flex items-center gap-1 bg-slate-900/80 border border-slate-700 rounded-sm p-1" data-testid="organogram-zoom-toolbar">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={zoomOut}
+                  disabled={zoom <= 0.4}
+                  className="h-7 w-7 p-0 text-slate-300 hover:text-amber-300 hover:bg-amber-500/10"
+                  title="Zoom out"
+                  data-testid="organogram-zoom-out"
+                >
+                  <ZoomOut className="h-4 w-4" />
+                </Button>
+                <button
+                  type="button"
+                  onClick={zoomReset}
+                  className="text-[10px] font-mono text-slate-400 hover:text-amber-300 px-1 min-w-[42px] tabular-nums"
+                  title="Reset zoom"
+                  data-testid="organogram-zoom-reset"
+                >
+                  {Math.round(zoom * 100)}%
+                </button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={zoomIn}
+                  disabled={zoom >= 2}
+                  className="h-7 w-7 p-0 text-slate-300 hover:text-amber-300 hover:bg-amber-500/10"
+                  title="Zoom in"
+                  data-testid="organogram-zoom-in"
+                >
+                  <ZoomIn className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={zoomReset}
+                  className="h-7 w-7 p-0 text-slate-400 hover:text-slate-100"
+                  title="Reset zoom (100%)"
+                  data-testid="organogram-zoom-fit"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                </Button>
               </div>
-            )}
-            <svg
-              className="absolute inset-0 w-full h-full pointer-events-none"
-              style={{ overflow: "visible" }}
-              data-testid="organogram-connectors"
-            >
-              {lines.map((line) => (
-                <path
-                  key={line.id}
-                  d={`M ${line.x1} ${line.y1} C ${line.x1} ${(line.y1 + line.y2) / 2}, ${line.x2} ${(line.y1 + line.y2) / 2}, ${line.x2} ${line.y2}`}
-                  stroke="rgba(245, 158, 11, 0.4)"
-                  strokeWidth="2"
-                  fill="none"
-                />
-              ))}
-            </svg>
+            </div>
 
-            <div className="relative space-y-12">
-              {chartSections.map((section) => {
-                return (
-                  <div key={section.chart} className="space-y-12" data-testid={`organogram-section-${section.chart}`}>
-                    {RANKS.map((rank) => {
-                      const tierNodes = section.tiered[rank];
-                      if (tierNodes.length === 0) return null;
+            <div
+              ref={scrollRef}
+              className="relative bg-slate-950 rounded-md overflow-auto touch-pan-x touch-pan-y"
+              style={{ maxHeight: "75vh" }}
+              onTouchStart={(e) => {
+                if (e.touches.length === 2) {
+                  const [a, b] = e.touches;
+                  pinchRef.current = {
+                    initialDist: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY),
+                    initialZoom: zoom,
+                    pinching: true,
+                  };
+                }
+              }}
+              onTouchMove={(e) => {
+                if (e.touches.length === 2 && pinchRef.current.pinching) {
+                  e.preventDefault();
+                  const [a, b] = e.touches;
+                  const d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+                  const ratio = d / (pinchRef.current.initialDist || d);
+                  const next = Math.min(2, Math.max(0.4, +(pinchRef.current.initialZoom * ratio).toFixed(2)));
+                  setZoom(next);
+                }
+              }}
+              onTouchEnd={() => {
+                pinchRef.current.pinching = false;
+              }}
+            >
+              {/* Sized wrapper so the scrollable area knows the zoomed bounds */}
+              <div
+                style={{
+                  width: canvasW * zoom,
+                  height: canvasH * zoom,
+                  position: "relative",
+                }}
+              >
+                <div
+                  ref={chartRef}
+                  className="relative"
+                  style={{
+                    width: canvasW,
+                    height: canvasH,
+                    transform: `scale(${zoom})`,
+                    transformOrigin: "top left",
+                    backgroundColor: "#020617",
+                  }}
+                >
+                  {/* Tier dividers */}
+                  {RANKS.filter((r) => layout.tierIndex[r] !== undefined).map((rank) => {
+                    const idx = layout.tierIndex[rank];
+                    const top = CHART_PADDING + idx * TIER_FULL;
+                    return (
+                      <div
+                        key={`tier-${rank}`}
+                        className="absolute left-0 right-0 flex items-center gap-3 px-6 pointer-events-none"
+                        style={{ top, height: TIER_HEADER_H }}
+                        data-testid={`organogram-tier-${activeChart}-${rank}`}
+                      >
+                        <div className="h-px flex-1 bg-gradient-to-r from-transparent to-slate-700" />
+                        <Badge className={`${RANK_STYLES[rank].badge} uppercase tracking-widest text-xs px-3 py-1`}>
+                          {rank}
+                        </Badge>
+                        <div className="h-px flex-1 bg-gradient-to-l from-transparent to-slate-700" />
+                      </div>
+                    );
+                  })}
+
+                  {/* Connectors — straight right-angle lines, color per parent */}
+                  <svg
+                    width={canvasW}
+                    height={canvasH}
+                    className="absolute inset-0 pointer-events-none"
+                    data-testid="organogram-connectors"
+                  >
+                    {lines.map((line) => {
+                      const midY = line.y1 + (line.y2 - line.y1) / 2;
                       return (
-                        <div key={`${section.chart}-${rank}`} className="relative" data-testid={`organogram-tier-${section.chart}-${rank}`}>
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-slate-700" />
-                            <Badge className={`${RANK_STYLES[rank].badge} uppercase tracking-widest text-xs px-3 py-1`}>
-                              {rank}
-                            </Badge>
-                            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-slate-700" />
-                          </div>
-                          <div className="flex flex-nowrap sm:flex-wrap justify-start sm:justify-center gap-3 sm:gap-4 min-w-min">
-                            {tierNodes.map((node) => {
-                              const styles = RANK_STYLES[rank];
-                        return (
-                          <div
-                            key={node.id}
-                            ref={(el) => (nodeRefs.current[node.id] = el)}
-                            draggable={canEdit}
-                            onDragStart={(e) => handleDragStart(e, node)}
-                            onDragEnd={handleDragEnd}
-                            onDragOver={(e) => handleDragOverNode(e, node)}
-                            onDragLeave={() => handleDragLeaveNode(node)}
-                            onDrop={(e) => handleDropOnNode(e, node)}
-                            className={`group relative shrink-0 w-36 sm:w-56 bg-slate-900/80 backdrop-blur border rounded-md p-3 sm:p-4 transition-all shadow-lg ${styles.glow} ${
-                              dragNodeId === node.id
-                                ? "opacity-50 border-amber-500"
-                                : dragOverNodeId === node.id
-                                ? "border-amber-400 ring-2 ring-amber-400/60"
-                                : "border-slate-700 hover:border-amber-500/50"
-                            } ${canEdit ? "cursor-move" : ""}`}
-                            data-testid={`organogram-node-${node.username}`}
-                          >
-                            <div className={`mx-auto mb-3 w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden ring-2 ${styles.ring} bg-slate-800 flex items-center justify-center`}>
-                              {node.profile_picture ? (
-                                <img
-                                  src={node.profile_picture}
-                                  alt={node.username}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <span className="text-2xl font-bold text-slate-400" style={{ fontFamily: "Rajdhani, sans-serif" }}>
-                                  {(node.display_name || node.username).slice(0, 2).toUpperCase()}
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-center">
-                              <p className="text-sm font-bold text-slate-100 truncate" title={node.display_name || node.username}>
-                                {node.display_name || node.username}
-                              </p>
-                              {node.display_name && (
-                                <p className="text-xs text-slate-500 truncate">@{node.username}</p>
-                              )}
-                              <div className="flex items-center justify-center gap-1 mt-2 flex-wrap">
-                                <Badge className={`${styles.badge} text-[10px] uppercase`}>{node.rank}</Badge>
-                              </div>
-                              {node.bio && (
-                                <p
-                                  className="mt-3 text-[11px] leading-relaxed text-slate-400 whitespace-pre-wrap text-left line-clamp-5"
-                                  data-testid={`organogram-bio-${node.username}`}
-                                  title={node.bio}
-                                >
-                                  {node.bio}
-                                </p>
-                              )}
-                            </div>
-                            {canEdit && (
-                              <div className="absolute top-2 right-2 flex gap-1">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => openEditDialog(node)}
-                                  className="h-7 w-7 p-0 text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 bg-slate-800/80 border border-slate-700 rounded-sm"
-                                  title="Edit"
-                                  data-testid={`organogram-edit-${node.username}`}
-                                >
-                                  <Pencil className="h-3.5 w-3.5" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => handleDelete(node)}
-                                  className="h-7 w-7 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/10 bg-slate-800/80 border border-slate-700 rounded-sm"
-                                  title="Delete"
-                                  data-testid={`organogram-delete-${node.username}`}
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                          </div>
-                        </div>
+                        <g key={line.id}>
+                          <path
+                            d={`M ${line.x1} ${line.y1} V ${midY} H ${line.x2} V ${line.y2}`}
+                            stroke={line.color}
+                            strokeWidth="2"
+                            strokeOpacity="0.85"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            fill="none"
+                          />
+                          <circle cx={line.x1} cy={line.y1} r={3} fill={line.color} opacity={0.9} />
+                          <circle cx={line.x2} cy={line.y2} r={3} fill={line.color} opacity={0.9} />
+                        </g>
                       );
                     })}
-                  </div>
-                );
-              })}
+                  </svg>
+
+                  {/* Nodes */}
+                  {visibleNodes.map((node) => {
+                    const slot = layout.positions[node.id];
+                    const tier = layout.tierIndex[node.rank];
+                    if (slot === undefined || tier === undefined) return null;
+                    const left = CHART_PADDING + slot * SLOT_W + H_GAP / 2;
+                    const top = CHART_PADDING + tier * TIER_FULL + TIER_HEADER_H;
+                    const styles = RANK_STYLES[node.rank];
+                    return (
+                      <div
+                        key={node.id}
+                        ref={(el) => (nodeRefs.current[node.id] = el)}
+                        draggable={canEdit}
+                        onDragStart={(e) => handleDragStart(e, node)}
+                        onDragEnd={handleDragEnd}
+                        onDragOver={(e) => handleDragOverNode(e, node)}
+                        onDragLeave={() => handleDragLeaveNode(node)}
+                        onDrop={(e) => handleDropOnNode(e, node)}
+                        style={{
+                          position: "absolute",
+                          left,
+                          top,
+                          width: NODE_W,
+                          height: TIER_HEIGHT,
+                        }}
+                        className={`group bg-slate-900/80 backdrop-blur border rounded-md p-3 sm:p-4 transition-all shadow-lg ${styles.glow} ${
+                          dragNodeId === node.id
+                            ? "opacity-50 border-amber-500"
+                            : dragOverNodeId === node.id
+                            ? "border-amber-400 ring-2 ring-amber-400/60"
+                            : "border-slate-700 hover:border-amber-500/50"
+                        } ${canEdit ? "cursor-move" : ""}`}
+                        data-testid={`organogram-node-${node.username}`}
+                      >
+                        <div className={`mx-auto mb-2 w-14 h-14 sm:w-20 sm:h-20 rounded-full overflow-hidden ring-2 ${styles.ring} bg-slate-800 flex items-center justify-center`}>
+                          {node.profile_picture ? (
+                            <img
+                              src={node.profile_picture}
+                              alt={node.username}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-2xl font-bold text-slate-400" style={{ fontFamily: "Rajdhani, sans-serif" }}>
+                              {(node.display_name || node.username).slice(0, 2).toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm font-bold text-slate-100 truncate" title={node.display_name || node.username}>
+                            {node.display_name || node.username}
+                          </p>
+                          {node.display_name && (
+                            <p className="text-xs text-slate-500 truncate">@{node.username}</p>
+                          )}
+                          <div className="flex items-center justify-center gap-1 mt-1.5 flex-wrap">
+                            <Badge className={`${styles.badge} text-[10px] uppercase`}>{node.rank}</Badge>
+                          </div>
+                          {node.bio && (
+                            <p
+                              className="mt-2 text-[11px] leading-snug text-slate-400 whitespace-pre-wrap text-left line-clamp-3"
+                              data-testid={`organogram-bio-${node.username}`}
+                              title={node.bio}
+                            >
+                              {node.bio}
+                            </p>
+                          )}
+                        </div>
+                        {canEdit && (
+                          <div className="absolute top-2 right-2 flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => openEditDialog(node)}
+                              className="h-7 w-7 p-0 text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 bg-slate-800/80 border border-slate-700 rounded-sm"
+                              title="Edit"
+                              data-testid={`organogram-edit-${node.username}`}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDelete(node)}
+                              className="h-7 w-7 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/10 bg-slate-800/80 border border-slate-700 rounded-sm"
+                              title="Delete"
+                              data-testid={`organogram-delete-${node.username}`}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
-            </div>
+
+            <p className="text-[10px] text-slate-500 mt-2 px-3 sm:px-2 sm:hidden">
+              Tip: pinch to zoom · drag to pan
+            </p>
           </div>
         )}
       </div>
@@ -854,7 +1083,7 @@ export default function Organogram() {
 
       {/* Webhook Config Dialog */}
       <Dialog open={showWebhookDialog} onOpenChange={setShowWebhookDialog}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 sm:max-w-lg max-h-[90vh] overflow-y-auto" data-testid="organogram-webhook-dialog">
+        <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] sm:max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6 rounded-md" data-testid="organogram-webhook-dialog">
           <DialogHeader>
             <DialogTitle className="text-amber-400">Discord Webhook</DialogTitle>
             <DialogDescription className="text-slate-400">
@@ -887,31 +1116,31 @@ export default function Organogram() {
                 required
               />
             </div>
-            <div className="flex justify-between items-center pt-2">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-between items-stretch sm:items-center gap-2 pt-2">
               {webhookConfig?.configured ? (
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handleRemoveWebhook}
-                  className="border-red-500/40 text-red-400 hover:bg-red-500/10 rounded-sm"
+                  className="border-red-500/40 text-red-400 hover:bg-red-500/10 rounded-sm w-full sm:w-auto"
                   data-testid="organogram-webhook-remove-btn"
                 >
                   <Trash2 className="h-4 w-4 mr-2" /> Remove
                 </Button>
-              ) : <span />}
-              <div className="flex gap-2">
+              ) : <span className="hidden sm:inline" />}
+              <div className="flex gap-2 w-full sm:w-auto">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setShowWebhookDialog(false)}
-                  className="border-slate-700 text-slate-300 hover:bg-slate-800 rounded-sm"
+                  className="flex-1 sm:flex-none border-slate-700 text-slate-300 hover:bg-slate-800 rounded-sm"
                 >
                   Close
                 </Button>
                 <Button
                   type="submit"
                   disabled={webhookSaving || !webhookInput.trim()}
-                  className="bg-amber-500 hover:bg-amber-600 text-white rounded-sm btn-glow"
+                  className="flex-1 sm:flex-none bg-amber-500 hover:bg-amber-600 text-white rounded-sm btn-glow"
                   data-testid="organogram-webhook-save-btn"
                 >
                   {webhookSaving ? "Saving…" : "Save"}
@@ -924,7 +1153,7 @@ export default function Organogram() {
 
       {/* Share to Discord Dialog */}
       <Dialog open={shareDialog} onOpenChange={setShareDialog}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 sm:max-w-lg max-h-[90vh] overflow-y-auto" data-testid="organogram-share-dialog">
+        <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] sm:max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6 rounded-md" data-testid="organogram-share-dialog">
           <DialogHeader>
             <DialogTitle className="text-indigo-300 flex items-center gap-2">
               <Send className="h-5 w-5" /> Share to Discord
@@ -946,19 +1175,19 @@ export default function Organogram() {
               />
               <p className="text-xs text-slate-500 mt-1">{shareMessage.length}/500</p>
             </div>
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setShareDialog(false)}
-                className="border-slate-700 text-slate-300 hover:bg-slate-800 rounded-sm"
+                className="border-slate-700 text-slate-300 hover:bg-slate-800 rounded-sm w-full sm:w-auto"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleShareToDiscord}
                 disabled={sharing}
-                className="bg-indigo-500 hover:bg-indigo-600 text-white rounded-sm"
+                className="bg-indigo-500 hover:bg-indigo-600 text-white rounded-sm w-full sm:w-auto"
                 data-testid="organogram-share-confirm-btn"
               >
                 <Send className="h-4 w-4 mr-2" />

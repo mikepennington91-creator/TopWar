@@ -12,7 +12,7 @@ from datetime import datetime
 from unittest.mock import patch, MagicMock
 
 class HTMLEmailTester:
-    def __init__(self, base_url="https://reject-reason-share.preview.emergentagent.com"):
+    def __init__(self, base_url="https://chart-builder-29.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.token = None

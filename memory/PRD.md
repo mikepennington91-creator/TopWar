@@ -50,8 +50,22 @@ Pull latest code from https://github.com/mikepennington91-creator/TopWar and add
 - MOD `/app/frontend/package.json` (`html-to-image` dependency)
 - NEW `/app/backend/tests/test_organogram.py` (regression suite)
 
+### Tree Layout & Mobile Polish — Feb 2026
+- Refactored chart to absolute-positioned tree layout (Reingold-Tilford-style):
+  children sit directly under their primary parent; siblings cluster.
+- Connectors now drawn as right-angle (orthogonal) elbow lines instead of curves.
+- Each parent gets a deterministic color from a 16-tone palette so 15+ reporting
+  lines from a single parent are visually distinguishable.
+- Mobile pinch-to-zoom + zoom in/out/reset toolbar (range 40%–200%).
+- Auto-fit on initial mobile load if the chart is wider than the viewport.
+- PNG export & Discord share now capture at zoom=1, producing a tighter, more
+  Discord-mobile-friendly image.
+- Webhook config + Share dialogs reflowed for narrow screens (stacked buttons,
+  dynamic max-width).
+
 ### Backlog
 - P2: Server-side cap on profile_picture size to prevent abuse via direct API
 - P3: Filter org chart by Team (e.g. "Show only Discord team")
 - P3: Click-card to open profile dialog showing full bio + recent activity
 - P3: Send a Discord message when nodes are added/promoted (auto-publish events)
+- P3: Componentize `Organogram.js` (1,400+ lines) — split layout/dialogs/SVG into modules
