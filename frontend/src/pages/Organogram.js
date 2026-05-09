@@ -366,7 +366,7 @@ export default function Organogram() {
       });
     });
     setLines(newLines);
-  }, [visibleNodes, layout, nodeGeom]);
+  }, [visibleNodes, layout, nodeGeom, SLOT_W]);
 
   useEffect(() => {
     computeLines();
