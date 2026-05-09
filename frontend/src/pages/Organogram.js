@@ -60,6 +60,18 @@ function colorForId(id) {
   return PARENT_LINE_COLORS[Math.abs(hash) % PARENT_LINE_COLORS.length];
 }
 
+// Color is determined by the *set* of parents, not individual parent ids.
+// → mods with identical reporting lines share a colour; only a new
+//   reporting combination produces a new colour.
+function colorForParentSet(parentIds) {
+  if (!parentIds || parentIds.length === 0) return "#94a3b8";
+  return colorForId([...parentIds].sort().join("|"));
+}
+
+// Wrap leaf groups (e.g. lots of Mods reporting to one SMod) into a grid.
+const WRAP_THRESHOLD = 4;     // more children than this and we wrap into rows
+const SUBROW_GAP = 36;        // vertical gap between sub-rows inside the same tier
+
 const emptyForm = {
   username: "",
   chart: "in_game",
@@ -179,9 +191,9 @@ export default function Organogram() {
     return nodes.filter((n) => n.chart === activeChart);
   }, [nodes, activeChart]);
 
-  // Tree layout: children sit directly under their (primary) parent.
-  // Uses a Reingold-Tilford-ish post-order pass — leaves take the next slot,
-  // internal nodes are centered above the average of their children's slots.
+  // Tree layout: children sit directly under their (primary) parent. When a
+  // single parent has many leaf children (e.g. 7 Mods under one SMod) we pack
+  // them into a grid so they span multiple sub-rows instead of one long line.
   const layout = useMemo(() => {
     const idSet = new Set(visibleNodes.map((n) => n.id));
     const childrenByParent = {};
@@ -195,53 +207,84 @@ export default function Organogram() {
         roots.push(n);
       }
     });
-    Object.values(childrenByParent).forEach((arr) =>
-      arr.sort((a, b) => (a.display_name || a.username).localeCompare(b.display_name || b.username))
-    );
+    const sortKey = (n) => (n.display_name || n.username).toLowerCase();
+    Object.values(childrenByParent).forEach((arr) => arr.sort((a, b) => sortKey(a).localeCompare(sortKey(b))));
     roots.sort((a, b) =>
-      (RANKS.indexOf(a.rank) - RANKS.indexOf(b.rank)) ||
-      (a.display_name || a.username).localeCompare(b.display_name || b.username)
+      (RANKS.indexOf(a.rank) - RANKS.indexOf(b.rank)) || sortKey(a).localeCompare(sortKey(b))
     );
 
-    const positions = {};
+    const positions = {}; // id -> { col, row, groupCols }
     let cursor = 0;
+
     const visit = (node) => {
       const kids = childrenByParent[node.id] || [];
       if (kids.length === 0) {
-        const slot = cursor;
+        const col = cursor;
         cursor += 1;
-        positions[node.id] = slot;
+        positions[node.id] = { col, row: 0, groupCols: 1 };
+        return col;
+      }
+      const allLeaves = kids.every((k) => !(childrenByParent[k.id] || []).length);
+      if (allLeaves && kids.length > WRAP_THRESHOLD) {
+        // Pack leaves into a grid that's wider than tall.
+        const cols = Math.max(2, Math.ceil(Math.sqrt(kids.length * 1.6)));
+        const startCol = cursor;
+        kids.forEach((k, i) => {
+          const r = Math.floor(i / cols);
+          const c = i % cols;
+          positions[k.id] = { col: startCol + c, row: r, groupCols: cols, groupStartCol: startCol };
+        });
+        cursor += cols;
+        const slot = startCol + (cols - 1) / 2;
+        positions[node.id] = { col: slot, row: 0, groupCols: cols, groupStartCol: startCol };
         return slot;
       }
-      const childSlots = kids.map(visit);
-      const slot = (Math.min(...childSlots) + Math.max(...childSlots)) / 2;
-      positions[node.id] = slot;
+      const childCols = kids.map(visit);
+      const slot = (Math.min(...childCols) + Math.max(...childCols)) / 2;
+      positions[node.id] = { col: slot, row: 0, groupCols: kids.length, groupStartCol: slot };
       return slot;
     };
     roots.forEach((r, i) => {
       visit(r);
-      if (i < roots.length - 1) cursor += 0.6; // gap between disconnected subtrees
+      if (i < roots.length - 1) cursor += 0.6;
+    });
+
+    // Per-rank max sub-row → variable tier height.
+    const tierMaxRow = {};
+    RANKS.forEach((r) => (tierMaxRow[r] = 0));
+    visibleNodes.forEach((n) => {
+      const sub = positions[n.id]?.row || 0;
+      if (sub > tierMaxRow[n.rank]) tierMaxRow[n.rank] = sub;
     });
 
     const tierIndex = {};
+    const tierY = {};
+    let yCursor = CHART_PADDING;
     let ti = 0;
     RANKS.forEach((r) => {
-      if (visibleNodes.some((n) => n.rank === r)) {
-        tierIndex[r] = ti;
-        ti += 1;
-      }
+      if (!visibleNodes.some((n) => n.rank === r)) return;
+      tierIndex[r] = ti;
+      tierY[r] = yCursor;
+      const rowsInTier = (tierMaxRow[r] || 0) + 1;
+      const tierH = TIER_HEADER_H + rowsInTier * TIER_HEIGHT + (rowsInTier - 1) * SUBROW_GAP;
+      yCursor += tierH + TIER_GAP;
+      ti += 1;
     });
 
     return {
       positions,
       tierIndex,
+      tierY,
+      tierMaxRow,
+      childrenByParent,
       totalSlots: Math.max(cursor, 1),
       tiersUsed: ti,
+      canvasH: yCursor + CHART_PADDING - TIER_GAP,
     };
   }, [visibleNodes]);
 
   const canvasW = Math.max(layout.totalSlots * SLOT_W + CHART_PADDING * 2, 320);
-  const canvasH = layout.tiersUsed * TIER_FULL + CHART_PADDING * 2;
+  const canvasH = Math.max(layout.canvasH, 240);
 
   // Auto-fit on mobile once when chart becomes visible.
   useEffect(() => {
@@ -255,37 +298,75 @@ export default function Organogram() {
     }
   }, [isMobile, canvasW, layout.totalSlots]);
 
-  // Connector lines: each parent_id draws its own colored elbow line.
+  // Helper: card geometry (centerX, top, bottom) for a node id.
+  const nodeGeom = useCallback(
+    (nodeId) => {
+      const node = visibleNodes.find((n) => n.id === nodeId);
+      if (!node) return null;
+      const pos = layout.positions[nodeId];
+      const tierTop = layout.tierY[node.rank];
+      if (!pos || tierTop === undefined) return null;
+      const left = CHART_PADDING + pos.col * SLOT_W + H_GAP / 2;
+      const top = tierTop + TIER_HEADER_H + pos.row * (TIER_HEIGHT + SUBROW_GAP);
+      const centerX = left + NODE_W / 2;
+      const bottom = top + TIER_HEIGHT;
+      return { left, top, centerX, bottom, row: pos.row };
+    },
+    [visibleNodes, layout, NODE_W, SLOT_W]
+  );
+
+  // Connector paths — one path per parent→child edge. Lines are coloured by
+  // the child's *parent set* (so siblings with identical reporting share a
+  // colour). For wrapped multi-row groups we route the line via a side rail
+  // so it never crosses through a row 0 card.
   const computeLines = useCallback(() => {
     const newLines = [];
-    const nodeMap = {};
-    visibleNodes.forEach((n) => (nodeMap[n.id] = n));
     visibleNodes.forEach((node) => {
       const parents = (Array.isArray(node.parent_ids) ? node.parent_ids : []).filter(
         (p) => layout.positions[p] !== undefined
       );
-      const cSlot = layout.positions[node.id];
-      const cTier = layout.tierIndex[node.rank];
-      if (cSlot === undefined || cTier === undefined) return;
+      if (parents.length === 0) return;
+      const childGeom = nodeGeom(node.id);
+      if (!childGeom) return;
+      const color = colorForParentSet(parents);
       parents.forEach((parentId) => {
-        const parent = nodeMap[parentId];
-        if (!parent) return;
-        const pSlot = layout.positions[parentId];
-        const pTier = layout.tierIndex[parent.rank];
-        if (pSlot === undefined || pTier === undefined) return;
-        const x1 = CHART_PADDING + pSlot * SLOT_W + NODE_W / 2 + H_GAP / 2;
-        const y1 = CHART_PADDING + pTier * TIER_FULL + TIER_HEADER_H + TIER_HEIGHT;
-        const x2 = CHART_PADDING + cSlot * SLOT_W + NODE_W / 2 + H_GAP / 2;
-        const y2 = CHART_PADDING + cTier * TIER_FULL + TIER_HEADER_H;
+        const parentGeom = nodeGeom(parentId);
+        if (!parentGeom) return;
+        const childPos = layout.positions[node.id];
+        const childRow = childPos?.row || 0;
+        const x1 = parentGeom.centerX;
+        const y1 = parentGeom.bottom;
+        const x2 = childGeom.centerX;
+        const y2 = childGeom.top;
+
+        // manifoldY[0]: in the gap between parent tier and row 0 of child tier
+        // (always safe — no cards there).
+        const childRow0Top = y2 - childRow * (TIER_HEIGHT + SUBROW_GAP);
+        const manifoldY0 = y1 + (childRow0Top - y1) / 2;
+
+        let d;
+        if (childRow === 0) {
+          d = `M ${x1} ${y1} V ${manifoldY0} H ${x2} V ${y2}`;
+        } else {
+          // Route via a side rail to the LEFT of the wrapped block.
+          const groupStartCol = childPos.groupStartCol ?? childPos.col;
+          const railX = CHART_PADDING + groupStartCol * SLOT_W - SUBROW_GAP / 2;
+          // manifoldY for THIS row: in the gap between row-1 bottom and row top.
+          const prevRowBottom = y2 - SUBROW_GAP;
+          const manifoldY = prevRowBottom + SUBROW_GAP / 2;
+          d = `M ${x1} ${y1} V ${manifoldY0} H ${railX} V ${manifoldY} H ${x2} V ${y2}`;
+        }
+
         newLines.push({
           id: `${parentId}-${node.id}`,
+          d,
           x1, y1, x2, y2,
-          color: colorForId(parentId),
+          color,
         });
       });
     });
     setLines(newLines);
-  }, [visibleNodes, layout, NODE_W, SLOT_W, TIER_FULL]);
+  }, [visibleNodes, layout, nodeGeom]);
 
   useEffect(() => {
     computeLines();
@@ -923,8 +1004,7 @@ export default function Organogram() {
                 >
                   {/* Tier dividers */}
                   {RANKS.filter((r) => layout.tierIndex[r] !== undefined).map((rank) => {
-                    const idx = layout.tierIndex[rank];
-                    const top = CHART_PADDING + idx * TIER_FULL;
+                    const top = layout.tierY[rank];
                     return (
                       <div
                         key={`tier-${rank}`}
@@ -941,40 +1021,37 @@ export default function Organogram() {
                     );
                   })}
 
-                  {/* Connectors — straight right-angle lines, color per parent */}
+                  {/* Connectors — colour per parent SET, side-rail routed for wrapped rows */}
                   <svg
                     width={canvasW}
                     height={canvasH}
                     className="absolute inset-0 pointer-events-none"
                     data-testid="organogram-connectors"
                   >
-                    {lines.map((line) => {
-                      const midY = line.y1 + (line.y2 - line.y1) / 2;
-                      return (
-                        <g key={line.id}>
-                          <path
-                            d={`M ${line.x1} ${line.y1} V ${midY} H ${line.x2} V ${line.y2}`}
-                            stroke={line.color}
-                            strokeWidth="2"
-                            strokeOpacity="0.85"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            fill="none"
-                          />
-                          <circle cx={line.x1} cy={line.y1} r={3} fill={line.color} opacity={0.9} />
-                          <circle cx={line.x2} cy={line.y2} r={3} fill={line.color} opacity={0.9} />
-                        </g>
-                      );
-                    })}
+                    {lines.map((line) => (
+                      <g key={line.id}>
+                        <path
+                          d={line.d}
+                          stroke={line.color}
+                          strokeWidth="2"
+                          strokeOpacity="0.85"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          fill="none"
+                        />
+                        <circle cx={line.x1} cy={line.y1} r={3} fill={line.color} opacity={0.9} />
+                        <circle cx={line.x2} cy={line.y2} r={3} fill={line.color} opacity={0.9} />
+                      </g>
+                    ))}
                   </svg>
 
                   {/* Nodes */}
                   {visibleNodes.map((node) => {
-                    const slot = layout.positions[node.id];
-                    const tier = layout.tierIndex[node.rank];
-                    if (slot === undefined || tier === undefined) return null;
-                    const left = CHART_PADDING + slot * SLOT_W + H_GAP / 2;
-                    const top = CHART_PADDING + tier * TIER_FULL + TIER_HEADER_H;
+                    const pos = layout.positions[node.id];
+                    const tierTop = layout.tierY[node.rank];
+                    if (!pos || tierTop === undefined) return null;
+                    const left = CHART_PADDING + pos.col * SLOT_W + H_GAP / 2;
+                    const top = tierTop + TIER_HEADER_H + pos.row * (TIER_HEIGHT + SUBROW_GAP);
                     const styles = RANK_STYLES[node.rank];
                     return (
                       <div
