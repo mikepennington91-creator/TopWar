@@ -41,8 +41,9 @@ const H_GAP = 28;             // horizontal slot padding
 const TIER_HEIGHT = 232;      // approximate card height
 const TIER_GAP = 88;          // vertical space for connectors between tiers
 const TIER_HEADER_H = 36;     // space at the top of each tier for the rank badge
-const CHART_PADDING = 24;     // inner padding around the canvas
-const RAIL_PADDING = 32;      // distance from the leftmost card to the side-rail line
+const CHART_PADDING = 64;     // room for cards plus protected connector lanes
+const RAIL_PADDING = H_GAP / 2; // keep wrapped-row rails centred in card gaps
+const SKIP_RAIL_SPACING = 8;  // separate long reporting lines in the outer gutter
 
 // Distinct line colors so 15 reporting lines are easy to follow.
 const PARENT_LINE_COLORS = [
@@ -124,9 +125,24 @@ export default function Organogram() {
   const [zoom, setZoom] = useState(1);
   const pinchRef = useRef({ initialDist: 0, initialZoom: 1, pinching: false });
   const autoFitDoneRef = useRef(false);
-  const zoomIn = () => setZoom((z) => Math.min(2, +(z + 0.1).toFixed(2)));
-  const zoomOut = () => setZoom((z) => Math.max(0.4, +(z - 0.1).toFixed(2)));
-  const zoomReset = () => setZoom(1);
+  const setZoomFromControl = useCallback((getNextZoom) => {
+    setZoom((currentZoom) => {
+      const nextZoom = Math.min(2, Math.max(0.4, +getNextZoom(currentZoom).toFixed(2)));
+      const viewport = scrollRef.current;
+      if (viewport && nextZoom !== currentZoom) {
+        const centreX = viewport.scrollLeft + viewport.clientWidth / 2;
+        const centreY = viewport.scrollTop + viewport.clientHeight / 2;
+        requestAnimationFrame(() => {
+          viewport.scrollLeft = Math.max(0, centreX * (nextZoom / currentZoom) - viewport.clientWidth / 2);
+          viewport.scrollTop = Math.max(0, centreY * (nextZoom / currentZoom) - viewport.clientHeight / 2);
+        });
+      }
+      return nextZoom;
+    });
+  }, []);
+  const zoomIn = () => setZoomFromControl((z) => z + 0.1);
+  const zoomOut = () => setZoomFromControl((z) => z - 0.1);
+  const zoomReset = () => setZoomFromControl(() => 1);
 
   // Discord webhook
   const [webhookConfigured, setWebhookConfigured] = useState(false);
@@ -312,17 +328,23 @@ export default function Organogram() {
   }, [activeChart]);
 
   useEffect(() => {
-    if (!scrollRef.current || typeof ResizeObserver === "undefined") return undefined;
+    const viewport = scrollRef.current;
+    if (!viewport || typeof ResizeObserver === "undefined") return undefined;
     let frame;
-    const observer = new ResizeObserver(() => {
+    let previousWidth = viewport.clientWidth;
+    let previousHeight = viewport.clientHeight;
+    const observer = new ResizeObserver(([entry]) => {
+      const width = entry.contentRect.width;
+      const height = entry.contentRect.height;
+      if (Math.abs(width - previousWidth) < 1 && Math.abs(height - previousHeight) < 1) return;
+      previousWidth = width;
+      previousHeight = height;
       cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        if (canvasW * zoom < scrollRef.current.clientWidth || isMobile) fitChart();
-      });
+      frame = requestAnimationFrame(fitChart);
     });
-    observer.observe(scrollRef.current);
+    observer.observe(viewport);
     return () => { cancelAnimationFrame(frame); observer.disconnect(); };
-  }, [canvasW, fitChart, isMobile, zoom]);
+  }, [fitChart]);
 
   // Helper: card geometry (centerX, top, bottom) for a node id.
   const nodeGeom = useCallback(
@@ -350,63 +372,57 @@ export default function Organogram() {
   const computeLines = useCallback(() => {
     const newLines = [];
     visibleNodes.forEach((node) => {
-      const parents = (Array.isArray(node.parent_ids) ? node.parent_ids : []).filter(
-        (p) => layout.positions[p] !== undefined
-      );
+      const parents = (Array.isArray(node.parent_ids) ? node.parent_ids : [])
+        .filter((p) => layout.positions[p] !== undefined)
+        .sort();
       if (parents.length === 0) return;
       const childGeom = nodeGeom(node.id);
       if (!childGeom) return;
       const color = colorForParentSet(parents);
-      parents.forEach((parentId) => {
+
+      parents.forEach((parentId, parentIndex) => {
         const parentGeom = nodeGeom(parentId);
-        if (!parentGeom) return;
         const parentNode = visibleNodes.find((n) => n.id === parentId);
-        if (!parentNode) return;
+        if (!parentGeom || !parentNode) return;
+
         const childPos = layout.positions[node.id];
         const childRow = childPos?.row || 0;
+        const entryOffset = (parentIndex - (parents.length - 1) / 2) * 10;
         const x1 = parentGeom.centerX;
         const y1 = parentGeom.bottom;
-        const x2 = childGeom.centerX;
+        const x2 = childGeom.centerX + entryOffset;
         const y2 = childGeom.top;
-
-        // Detect tier-skip (e.g. MMod → Mod, bypassing SMod/LMod).
         const parentTierIdx = layout.tierIndex[parentNode.rank];
         const childTierIdx = layout.tierIndex[node.rank];
         const isSkip = childTierIdx - parentTierIdx > 1;
-
-        // For non-skip: route in the gap right above row 0 of the child tier.
-        // For skip: route in the gap right BELOW the parent tier (above all
-        // skipped tiers) so the bus bar never sits next to a skipped card.
         const childRow0Top = y2 - childRow * (TIER_HEIGHT + SUBROW_GAP);
-        const manifoldY0 = isSkip
-          ? y1 + TIER_GAP / 2
-          : y1 + (childRow0Top - y1) / 2;
+        const firstTurnY = y1 + Math.max(20, Math.min(TIER_GAP / 2, (childRow0Top - y1) / 2));
 
         let d;
-        if (childRow === 0) {
-          d = `M ${x1} ${y1} V ${manifoldY0} H ${x2} V ${y2}`;
+        if (isSkip) {
+          // Long connections stay in the left gutter until they reach the
+          // destination tier, so they cannot run through skipped cards.
+          const laneSeed = Math.abs([...parentId].reduce((hash, ch) => ((hash * 31) + ch.charCodeAt(0)) | 0, 0));
+          const railX = 12 + (laneSeed % 5) * SKIP_RAIL_SPACING;
+          const entryY = Math.max(firstTurnY, y2 - 24);
+          d = `M ${x1} ${y1} V ${firstTurnY} H ${railX} V ${entryY} H ${x2} V ${y2}`;
+        } else if (childRow === 0) {
+          const manifoldY = y1 + (y2 - y1) / 2;
+          d = `M ${x1} ${y1} V ${manifoldY} H ${x2} V ${y2}`;
         } else {
-          // Wrapped row >0: route via a side rail to the LEFT of the block.
+          // Wrapped rows use the empty gap beside their card group.
           const groupStartCol = childPos.groupStartCol ?? childPos.col;
-          const railX =
-            CHART_PADDING + groupStartCol * SLOT_W + H_GAP / 2 - RAIL_PADDING;
-          // manifoldY for THIS row: in the gap between row-1 bottom and row top.
-          const prevRowBottom = y2 - SUBROW_GAP;
-          const manifoldY = prevRowBottom + SUBROW_GAP / 2;
-          d = `M ${x1} ${y1} V ${manifoldY0} H ${railX} V ${manifoldY} H ${x2} V ${y2}`;
+          const groupLeft = CHART_PADDING + groupStartCol * SLOT_W + H_GAP / 2;
+          const railX = Math.max(8, groupLeft - RAIL_PADDING);
+          const manifoldY = y2 - SUBROW_GAP / 2;
+          d = `M ${x1} ${y1} V ${firstTurnY} H ${railX} V ${manifoldY} H ${x2} V ${y2}`;
         }
 
-        newLines.push({
-          id: `${parentId}-${node.id}`,
-          d,
-          x1, y1, x2, y2,
-          color,
-        });
+        newLines.push({ id: `${parentId}-${node.id}`, d, x1, y1, x2, y2, color });
       });
     });
     setLines(newLines);
   }, [visibleNodes, layout, nodeGeom, SLOT_W]);
-
   useEffect(() => {
     computeLines();
   }, [computeLines]);
