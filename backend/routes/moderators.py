@@ -83,6 +83,28 @@ async def update_moderator_status(username: str, status_update: ModeratorStatusU
     return {"message": f"Moderator {username} has been {action}"}
 
 
+@router.patch("/{username}/unlock")
+async def unlock_moderator(username: str, current_user: dict = Depends(require_admin)):
+    """Clear a moderator's failed-login lock (admin only)."""
+    moderator = await db.moderators.find_one({"username": username}, {"_id": 0})
+    if not moderator:
+        raise HTTPException(status_code=404, detail="Moderator not found")
+
+    if current_user["role"] != "admin" and not current_user.get("is_admin", False):
+        current_rank = get_role_rank(current_user["role"])
+        target_roles = normalize_roles(moderator.get("role", "moderator"), moderator.get("roles", []))
+        target_rank = get_role_rank(get_highest_role(target_roles))
+        if current_rank <= target_rank:
+            raise HTTPException(status_code=403, detail="You can only unlock users with lower rank than yours")
+
+    await db.moderators.update_one(
+        {"username": username},
+        {"$set": {"failed_login_attempts": 0, "locked_at": None}}
+    )
+
+    return {"message": f"Moderator {username} has been unlocked"}
+
+
 @router.delete("/{username}")
 async def delete_moderator(username: str, current_user: dict = Depends(require_admin)):
     """Delete a moderator."""

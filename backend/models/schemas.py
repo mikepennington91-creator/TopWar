@@ -233,6 +233,8 @@ class ModeratorInfo(BaseModel):
     can_view_applications: bool
     created_at: datetime
     last_login: Optional[datetime] = None
+    failed_login_attempts: int = 0
+    locked_at: Optional[datetime] = None
     email: Optional[str] = None  # Only populated for admins
 
 

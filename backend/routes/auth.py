@@ -241,7 +241,9 @@ async def reset_password(username: str, password_data: PasswordReset, current_us
         {"$set": {
             "hashed_password": new_hashed,
             "password_history": new_history,
-            "must_change_password": True
+            "must_change_password": True,
+            "failed_login_attempts": 0,
+            "locked_at": None
         }}
     )
     
