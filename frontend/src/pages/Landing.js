@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Shield, Users, CheckCircle, ChevronDown } from "lucide-react";
+import { Shield, Users, CheckCircle, ChevronDown, Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import HolidayOverlay from "@/components/HolidayOverlay";
 import SeasonalOverlay from "@/components/SeasonalOverlay";
@@ -22,7 +22,7 @@ export default function Landing() {
       <SeasonalOverlay />
       
       {/* Hero Section */}
-      <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      <div className="hero-glow relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Background Image with Overlay */}
         <div 
           className="absolute inset-0 z-0"
@@ -30,40 +30,39 @@ export default function Landing() {
             backgroundImage: `url('https://images.unsplash.com/photo-1704229266209-47d8d6ad0c46?crop=entropy&cs=srgb&fm=jpg&q=85')`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            opacity: 0.15,
-            filter: 'grayscale(100%)'
+            opacity: 0.1,
+            filter: 'grayscale(100%) contrast(120%)'
           }}
         />
         
         {/* Content */}
-        <div className="relative z-10 max-w-4xl mx-auto px-8 text-center">
+        <div className="relative z-10 max-w-5xl mx-auto px-6 sm:px-8 text-center">
           <div className="mb-8">
-            <Shield className="w-20 h-20 mx-auto text-amber-500 mb-6" />
-            <h1 className="text-5xl md:text-7xl font-bold uppercase tracking-wider mb-4 text-amber-500" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-              TOP WAR
+            <span className="eyebrow mb-8"><Sparkles className="w-3.5 h-3.5" /> Community operations</span>
+            <div className="brand-mark !w-16 !h-16 !rounded-2xl mx-auto mb-7"><Shield className="w-8 h-8" /></div>
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-5 text-white leading-[0.95]">
+              Lead the community.<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-300 via-cyan-400 to-amber-300">Shape the game.</span>
             </h1>
-            <h2 className="text-3xl md:text-5xl font-semibold uppercase tracking-wider mb-6" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-              Moderator Recruitment
-            </h2>
+            <h2 className="text-sm md:text-base font-bold uppercase tracking-[0.28em] text-slate-400">Top War Moderator Recruitment</h2>
           </div>
 
-          <p className="text-lg md:text-xl text-slate-300 mb-12 leading-relaxed max-w-2xl mx-auto">
-            Join our elite moderation team. Help maintain order, enforce community guidelines, and shape the future of Top War's player experience.
+          <p className="text-lg md:text-xl text-slate-300 mb-10 leading-relaxed max-w-2xl mx-auto">
+            Join the team that keeps Top War welcoming, fair and fun. Support players, solve problems and help build a stronger global community.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center">
             <Button
               data-testid="apply-now-btn"
               onClick={() => navigate('/apply')}
-              className="bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wide px-8 py-6 text-lg rounded-sm btn-glow"
+              className="bg-sky-400 hover:bg-sky-300 text-slate-950 font-bold px-8 py-6 text-base rounded-lg shadow-xl shadow-sky-500/20"
             >
-              Apply Now
+              Apply now <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
             <Button
               data-testid="moderator-login-btn"
               onClick={() => navigate('/moderator/login')}
               variant="outline"
-              className="border-2 border-emerald-500 text-emerald-500 hover:bg-emerald-500/20 font-bold uppercase tracking-wide px-8 py-6 text-lg rounded-sm"
+              className="border border-slate-600 bg-slate-900/40 text-slate-100 hover:bg-slate-800/80 font-bold px-8 py-6 text-base rounded-lg"
             >
               Moderator Login
             </Button>
