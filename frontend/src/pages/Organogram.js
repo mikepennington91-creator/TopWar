@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toPng } from "html-to-image";
-import { Network, Plus, Trash2, Pencil, Upload, Shield, X, UserPlus, Gamepad2, MessageCircle, Download, Send, Settings as SettingsIcon, GraduationCap, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
+import { Network, Plus, Trash2, Pencil, Upload, Shield, X, UserPlus, Gamepad2, MessageCircle, Download, Send, Settings as SettingsIcon, GraduationCap, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -287,17 +287,42 @@ export default function Organogram() {
   const canvasW = Math.max(layout.totalSlots * SLOT_W + CHART_PADDING * 2, 320);
   const canvasH = Math.max(layout.canvasH, 240);
 
-  // Auto-fit on mobile once when chart becomes visible.
+  const fitChart = useCallback(() => {
+    const viewport = scrollRef.current;
+    if (!viewport || !canvasW || !canvasH) return;
+    const horizontal = Math.max(0.4, (viewport.clientWidth - 24) / canvasW);
+    const vertical = Math.max(0.4, (Math.min(window.innerHeight * 0.7, 760) - 24) / canvasH);
+    setZoom(+Math.min(1, horizontal, vertical).toFixed(2));
+    requestAnimationFrame(() => {
+      viewport.scrollLeft = 0;
+      viewport.scrollTop = 0;
+    });
+  }, [canvasW, canvasH]);
+
+  // Auto-fit the first rendered chart, then keep it usable when its viewport changes.
   useEffect(() => {
     if (autoFitDoneRef.current) return;
-    if (!isMobile || !scrollRef.current || layout.totalSlots <= 1) return;
-    const viewportW = scrollRef.current.clientWidth;
-    if (viewportW > 0 && canvasW > viewportW) {
-      const fit = Math.max(0.5, +(viewportW / canvasW).toFixed(2));
-      setZoom(fit);
-      autoFitDoneRef.current = true;
-    }
-  }, [isMobile, canvasW, layout.totalSlots]);
+    if (!scrollRef.current || visibleNodes.length === 0) return;
+    fitChart();
+    autoFitDoneRef.current = true;
+  }, [fitChart, visibleNodes.length]);
+
+  useEffect(() => {
+    autoFitDoneRef.current = false;
+  }, [activeChart]);
+
+  useEffect(() => {
+    if (!scrollRef.current || typeof ResizeObserver === "undefined") return undefined;
+    let frame;
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        if (canvasW * zoom < scrollRef.current.clientWidth || isMobile) fitChart();
+      });
+    });
+    observer.observe(scrollRef.current);
+    return () => { cancelAnimationFrame(frame); observer.disconnect(); };
+  }, [canvasW, fitChart, isMobile, zoom]);
 
   // Helper: card geometry (centerX, top, bottom) for a node id.
   const nodeGeom = useCallback(
@@ -959,19 +984,19 @@ export default function Organogram() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={zoomReset}
+                  onClick={fitChart}
                   className="h-7 w-7 p-0 text-slate-400 hover:text-slate-100"
-                  title="Reset zoom (100%)"
+                  title="Fit chart to view"
                   data-testid="organogram-zoom-fit"
                 >
-                  <RotateCcw className="h-3.5 w-3.5" />
+                  <Maximize2 className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </div>
 
             <div
               ref={scrollRef}
-              className="relative bg-slate-950 rounded-md overflow-auto touch-pan-x touch-pan-y"
+              className="org-scroll relative bg-slate-950 rounded-md overflow-auto touch-pan-x touch-pan-y border border-slate-800/80"
               style={{ maxHeight: "75vh" }}
               onTouchStart={(e) => {
                 if (e.touches.length === 2) {
@@ -1007,7 +1032,7 @@ export default function Organogram() {
               >
                 <div
                   ref={chartRef}
-                  className="relative"
+                  className="org-canvas relative"
                   style={{
                     width: canvasW,
                     height: canvasH,
@@ -1084,7 +1109,7 @@ export default function Organogram() {
                           width: NODE_W,
                           height: TIER_HEIGHT,
                         }}
-                        className={`group bg-slate-900/80 backdrop-blur border rounded-md p-3 sm:p-4 transition-all shadow-lg ${styles.glow} ${
+                        className={`org-node group backdrop-blur border rounded-md p-3 sm:p-4 transition-all ${styles.glow} ${
                           dragNodeId === node.id
                             ? "opacity-50 border-amber-500"
                             : dragOverNodeId === node.id

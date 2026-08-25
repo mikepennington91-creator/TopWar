@@ -98,7 +98,7 @@ export default function Navigation() {
   // For limited nav pages (landing, apply, login)
   if (showLimitedNav) {
     return (
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800">
+      <nav className="portal-navigation fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b">
         <div className="max-w-6xl mx-auto px-3 sm:px-6 py-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -117,7 +117,7 @@ export default function Navigation() {
                 onClick={() => navigate('/')}
                 className="flex items-center gap-2 text-amber-500 hover:text-amber-400 transition-colors"
               >
-                <Shield className="w-6 h-6" />
+                <span className="brand-mark"><Shield className="w-4 h-4" /></span>
                 <span className="font-bold text-sm sm:text-base" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
                   TW APPLICATIONS
                 </span>
@@ -157,14 +157,14 @@ export default function Navigation() {
     return (
       <>
         {/* Desktop Navigation */}
-        <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800 hidden md:block">
+        <nav className="portal-navigation fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b hidden md:block">
           <div className="max-w-6xl mx-auto px-6 py-2">
             <div className="flex items-center justify-between">
               <button 
                 onClick={() => navigate('/moderator/portal')}
                 className="flex items-center gap-2 text-amber-500 hover:text-amber-400 transition-colors"
               >
-                <Shield className="w-6 h-6" />
+                <span className="brand-mark"><Shield className="w-4 h-4" /></span>
                 <span className="font-bold" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
                   TOP WAR PORTAL
                 </span>
@@ -205,7 +205,7 @@ export default function Navigation() {
         </nav>
 
         {/* Mobile Navigation */}
-        <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800 md:hidden">
+        <nav className="portal-navigation fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b md:hidden">
           <div className="px-3 py-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -224,7 +224,7 @@ export default function Navigation() {
                   onClick={() => navigate('/moderator/portal')}
                   className="flex items-center gap-2 text-amber-500"
                 >
-                  <Shield className="w-5 h-5" />
+                  <span className="brand-mark !w-8 !h-8"><Shield className="w-4 h-4" /></span>
                   <span className="font-bold text-sm" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
                     TW PORTAL
                   </span>
