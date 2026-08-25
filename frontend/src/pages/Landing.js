@@ -22,7 +22,7 @@ export default function Landing() {
       <SeasonalOverlay />
       
       {/* Hero Section */}
-      <div className="hero-glow relative min-h-screen flex items-center justify-center overflow-hidden">
+      <div className="hero-glow relative min-h-[100svh] flex flex-col items-center justify-start md:justify-center overflow-hidden py-10 sm:py-12 md:py-0">
         {/* Background Image with Overlay */}
         <div 
           className="absolute inset-0 z-0"
@@ -36,7 +36,7 @@ export default function Landing() {
         />
         
         {/* Content */}
-        <div className="relative z-10 max-w-5xl mx-auto px-6 sm:px-8 text-center">
+        <div className="relative z-10 w-full max-w-5xl mx-auto px-6 sm:px-8 text-center">
           <div className="mb-8">
             <span className="eyebrow mb-8"><Sparkles className="w-3.5 h-3.5" /> Community operations</span>
             <div className="brand-mark !w-16 !h-16 !rounded-2xl mx-auto mb-7"><Shield className="w-8 h-8" /></div>
@@ -69,7 +69,7 @@ export default function Landing() {
           </div>
         </div>
 
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1 text-slate-300 md:hidden pointer-events-none">
+        <div className="relative z-10 mt-10 flex shrink-0 flex-col items-center gap-1 text-slate-300 md:hidden pointer-events-none">
           <p className="text-xs uppercase tracking-[0.2em]">More details below</p>
           <ChevronDown className="w-5 h-5 text-amber-500 animate-bounce" />
         </div>
