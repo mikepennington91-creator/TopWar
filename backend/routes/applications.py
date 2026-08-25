@@ -19,8 +19,20 @@ from utils.email import (
 
 router = APIRouter(prefix="/applications", tags=["Applications"])
 
-async def require_application_status_manager(current_user: dict = Depends(get_current_moderator)):
-    """Allow elevated moderators and leader-permission users to change application statuses."""
+
+async def require_application_viewer(current_user: dict = Depends(get_current_moderator)):
+    """Require the explicitly grantable application-viewer permission."""
+    moderator = await db.moderators.find_one(
+        {"username": current_user["username"]},
+        {"_id": 0, "can_view_applications": 1}
+    )
+    if not moderator or not moderator.get("can_view_applications", True):
+        raise HTTPException(status_code=403, detail="You do not have permission to view applications")
+    return current_user
+
+
+async def require_application_status_manager(current_user: dict = Depends(require_application_viewer)):
+    """Allow application viewers with elevated or leader permissions to change statuses."""
     allowed_roles = {"admin", "mmod"}
     has_leader_access = current_user.get("is_in_game_leader", False) or current_user.get("is_discord_leader", False)
     if current_user.get("role") not in allowed_roles and not current_user.get("is_admin") and not has_leader_access:
@@ -68,13 +80,10 @@ async def submit_application(app_data: ApplicationCreate, background_tasks: Back
 
 
 @router.get("", response_model=List[Application])
-async def get_applications(search: Optional[str] = None, current_user: dict = Depends(get_current_moderator)):
+async def get_applications(search: Optional[str] = None, current_user: dict = Depends(require_application_viewer)):
     """Get all applications."""
-    # Check if user can view applications
     moderator = await db.moderators.find_one({"username": current_user['username']}, {"_id": 0})
-    if moderator and not moderator.get('can_view_applications', True):
-        raise HTTPException(status_code=403, detail="You do not have permission to view applications")
-    
+
     # Check if user is training manager (for name visibility)
     is_training_manager = moderator.get('is_training_manager', False) if moderator else False
     
@@ -101,7 +110,7 @@ async def get_applications(search: Optional[str] = None, current_user: dict = De
 
 
 @router.get("/{application_id}", response_model=Application)
-async def get_application(application_id: str, current_user: dict = Depends(get_current_moderator)):
+async def get_application(application_id: str, current_user: dict = Depends(require_application_viewer)):
     """Get a specific application."""
     application = await db.applications.find_one({"id": application_id}, {"_id": 0})
     if not application:
@@ -133,7 +142,7 @@ async def get_application(application_id: str, current_user: dict = Depends(get_
 
 
 @router.post("/{application_id}/vote")
-async def vote_on_application(application_id: str, vote_data: VoteCreate, current_user: dict = Depends(get_current_moderator)):
+async def vote_on_application(application_id: str, vote_data: VoteCreate, current_user: dict = Depends(require_application_viewer)):
     """Vote on an application."""
     if vote_data.vote not in ["approve", "reject"]:
         raise HTTPException(status_code=400, detail="Vote must be 'approve' or 'reject'")
@@ -175,7 +184,7 @@ async def vote_on_application(application_id: str, vote_data: VoteCreate, curren
 
 
 @router.post("/{application_id}/comment")
-async def comment_on_application(application_id: str, comment_data: CommentCreate, current_user: dict = Depends(get_current_moderator)):
+async def comment_on_application(application_id: str, comment_data: CommentCreate, current_user: dict = Depends(require_application_viewer)):
     """Add a comment to an application."""
     application = await db.applications.find_one({"id": application_id}, {"_id": 0})
     if not application:
@@ -267,7 +276,7 @@ async def update_application_status(application_id: str, update: ApplicationUpda
 
 
 @router.post("/{application_id}/team-approve")
-async def team_approve_application(application_id: str, update: TeamApprovalUpdate, current_user: dict = Depends(get_current_moderator)):
+async def team_approve_application(application_id: str, update: TeamApprovalUpdate, current_user: dict = Depends(require_application_viewer)):
     """Discord or In-Game leader approves an application for their team."""
     if update.approval_type not in ["discord", "in_game"]:
         raise HTTPException(status_code=400, detail="approval_type must be 'discord' or 'in_game'")
@@ -342,7 +351,7 @@ async def team_approve_application(application_id: str, update: TeamApprovalUpda
 
 
 @router.post("/{application_id}/team-unapprove")
-async def team_unapprove_application(application_id: str, update: TeamApprovalUpdate, current_user: dict = Depends(get_current_moderator)):
+async def team_unapprove_application(application_id: str, update: TeamApprovalUpdate, current_user: dict = Depends(require_application_viewer)):
     """Discord or In-Game leader removes their team approval."""
     if update.approval_type not in ["discord", "in_game"]:
         raise HTTPException(status_code=400, detail="approval_type must be 'discord' or 'in_game'")
