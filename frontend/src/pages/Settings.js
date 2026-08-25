@@ -443,6 +443,29 @@ export default function Settings() {
     }
   };
 
+  const handleUnlockModerator = async (username) => {
+    if (!window.confirm(`Unlock ${username}'s account and clear their failed login attempts?`)) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('moderator_token');
+      await axios.patch(
+        `${API}/moderators/${username}/unlock`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`${username}'s account has been unlocked`);
+      fetchModerators();
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.detail || "Failed to unlock moderator");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDeleteModerator = async (username) => {
     if (!window.confirm(`Are you sure you want to DELETE ${username}? This action cannot be undone!`)) {
       return;
@@ -1272,6 +1295,11 @@ export default function Settings() {
                             </span>
                           </div>
                           <div className="text-sm mt-1">{getRoleBadge(mod.role)}</div>
+                          {mod.locked_at && (
+                            <Badge className="mt-2 bg-red-500/20 border border-red-500 text-red-300">
+                              <Lock className="h-3 w-3 mr-1" /> Account locked after {mod.failed_login_attempts || 0} failed attempts
+                            </Badge>
+                          )}
                           <div className="flex flex-wrap gap-1 mt-1">
                             {(mod.roles || [mod.role]).map((r) => (
                               <Badge key={`${mod.username}-${r}`} variant="outline" className="text-[10px] border-slate-600 text-slate-300">{r.replaceAll("_", " ").toUpperCase()}</Badge>
@@ -1472,6 +1500,17 @@ export default function Settings() {
                             {/* Action Buttons - Deactivate for Admin/MMOD, Delete for Admin only */}
                             {(canDeactivate || showDeleteButton) && (
                               <div className="md:col-span-2 flex gap-2 flex-wrap">
+                                {mod.locked_at && canDeactivate && (
+                                  <Button
+                                    data-testid={`unlock-${mod.username}`}
+                                    onClick={() => handleUnlockModerator(mod.username)}
+                                    disabled={loading}
+                                    size="sm"
+                                    className="bg-sky-500/20 border-2 border-sky-500 text-sky-300 hover:bg-sky-500/30 rounded-sm"
+                                  >
+                                    <Lock className="h-4 w-4 mr-1" /> Unlock Account
+                                  </Button>
+                                )}
                                 {canDeactivate && (
                                   <Button
                                     data-testid={`toggle-status-${mod.username}`}
